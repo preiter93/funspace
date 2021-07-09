@@ -1,4 +1,5 @@
 # funspace
+<img align="right" src="https://rustacean.net/assets/cuddlyferris.png" width="80">
 
 ## Funspace
 
