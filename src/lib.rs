@@ -46,13 +46,19 @@
 //! - ChebDirichlet (Composite)
 //! - ChebNeumann (Composite)
 #![allow(clippy::just_underscores_and_digits)]
+#[macro_use]
+extern crate enum_dispatch;
 pub mod chebyshev;
+mod traits;
 pub mod utils;
-pub use chebyshev::Chebyshev;
+use chebyshev::Chebyshev;
+use chebyshev::CompositeChebyshev;
+pub use chebyshev::{cheb_dirichlet, cheb_neumann, chebyshev};
 use ndarray::prelude::*;
 use ndarray::ScalarOperand;
 use num_traits::{Float, FromPrimitive, Signed, Zero};
 use std::fmt::Debug;
+pub use traits::{Differentiate, LaplacianInverse, Mass, Size, Transform};
 
 /// Generic floating point number, implemented for f32 and f64
 pub trait FloatNum:
@@ -62,62 +68,34 @@ pub trait FloatNum:
 impl FloatNum for f32 {}
 impl FloatNum for f64 {}
 
-/// Returns function space for Chebyshev Polynomials $T_k$ (Orthogonal)
-pub fn test() {
-    todo!()
-}
-
-/// Defines size of basis
-pub trait Size {
-    /// Size in physical space
-    fn len_phys(&self) -> usize;
-    /// Size in spectral space
-    fn len_spec(&self) -> usize;
-}
-
-/// Mass matrix expresses the connection (dot product)
-/// of each basis of a funcion space.
+/// Collection of all implemented basis functions.
 ///
-/// Equals the identity matrix for orthonormal bases.
-pub trait Mass<A> {
-    /// Return mass matrix
-    fn mass(&self) -> Array2<A>;
-    /// Coordinates in physical space
-    fn coords(&self) -> &Array1<A>;
+/// This enum implements the traits
+/// Differentiate, Mass, LaplacianInverse, Size, (Transform)
+///
+/// # Example
+/// Apply diferentioation in ChebDirichlet space
+/// ```
+/// use funspace::{cheb_dirichlet};
+/// use funspace::Differentiate;
+/// use ndarray::prelude::*;
+/// let cd = cheb_dirichlet::<f64>(5);
+/// let input = array![1., 2., 3.,];
+/// let output = cd.differentiate(&input, 2, 0);
+/// ```
+#[allow(clippy::large_enum_variant)]
+#[enum_dispatch(Differentiate<T>, Mass<T>, LaplacianInverse<T>, Size)]
+pub enum Base<T: FloatNum> {
+    Chebyshev(Chebyshev<T>),
+    CompositeChebyshev(CompositeChebyshev<T>),
 }
 
-/// Transform from physical to spectral space and vice versa.
-///
-/// The associated types *Physical* and *Spectral* refer
-/// to the scalar types in the respective space.
-/// For example, a fourier transforms from real-to-complex,
-/// while chebyshev from real-to-real.
-pub trait Transform {
-    /// Scalar type in physical space (before transform)
-    type Physical;
-    /// Scalar type in spectral space (after transfrom)
-    type Spectral;
-    /// Transform physical -> spectral space along axis
-    ///
-    /// *input*: *n*-dimensional array of type Physical.
-    /// Must be mutable, because
-    /// some transform routines swap the axes back and
-    /// forth, but it is effectively not altered.
-    ///
-    /// *axis*: Defines along which axis the array should be
-    /// transformed.
-    ///
-    /// # Example
-    /// Forward transform along first axis
-    /// ```
-    /// use funspace::{Chebyshev, Transform};
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = Chebyshev::new(4);
-    /// let mut input = array![1., 2., 3., 4.];
-    /// let output = cheby.forward(&mut input, 0);
-    /// approx_eq(&output, &array![2.5, 1.33333333, 0. , 0.16666667]);
-    /// ```
+/// Implement transform trait per hand, can't be enum_dispatched
+/// because of associated types.
+impl<A: FloatNum + std::ops::MulAssign> Transform for Base<A> {
+    type Physical = A;
+    type Spectral = A;
+
     fn forward<S, D>(
         &mut self,
         input: &mut ArrayBase<S, D>,
@@ -125,12 +103,14 @@ pub trait Transform {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(ref mut b) => b.forward(input, axis),
+            Self::CompositeChebyshev(ref mut b) => b.forward(input, axis),
+        }
+    }
 
-    /// Transform from spectral to physical space
-    ///
-    /// Same as *backward*, but no output array must
-    /// be supplied instead of being created.
     fn forward_inplace<S1, S2, D>(
         &mut self,
         input: &mut ArrayBase<S1, D>,
@@ -139,26 +119,14 @@ pub trait Transform {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(ref mut b) => b.forward_inplace(input, output, axis),
+            Self::CompositeChebyshev(ref mut b) => b.forward_inplace(input, output, axis),
+        }
+    }
 
-    /// Transform spectral -> physical space along *axis*
-    ///
-    /// *input*: *n*-dimensional array of type Spectral.
-    ///
-    /// *axis*: Defines along which axis the array should be
-    /// transformed.
-    ///
-    /// # Example
-    /// Backward transform along first axis
-    /// ```
-    /// use funspace::{Chebyshev, Transform};
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = Chebyshev::new(4);
-    /// let mut input = array![1., 2., 3., 4.];
-    /// let output = cheby.backward(&mut input, 0);
-    /// approx_eq(&output, &array![-2. ,  2.5, -3.5, 10.]);
-    /// ```
     fn backward<S, D>(
         &mut self,
         input: &mut ArrayBase<S, D>,
@@ -166,12 +134,14 @@ pub trait Transform {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(ref mut b) => b.backward(input, axis),
+            Self::CompositeChebyshev(ref mut b) => b.backward(input, axis),
+        }
+    }
 
-    /// Transform from spectral to physical space
-    ///
-    /// Same as *backward*, but no output array must
-    /// be supplied instead of being created.
     fn backward_inplace<S1, S2, D>(
         &mut self,
         input: &mut ArrayBase<S1, D>,
@@ -180,37 +150,11 @@ pub trait Transform {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis;
-}
-
-/// Perform differentiation in spectral space
-pub trait Differentiate<T> {
-    /// Return differentiated array
-    fn differentiate<S, D>(
-        &self,
-        data: &ArrayBase<S, D>,
-        n_times: usize,
-        axis: usize,
-    ) -> Array<T, D>
-    where
-        S: ndarray::Data<Elem = T>,
-        D: Dimension;
-
-    /// Differentiate on input array
-    fn differentiate_inplace<S, D>(&self, data: &mut ArrayBase<S, D>, n_times: usize, axis: usize)
-    where
-        S: ndarray::Data<Elem = T> + ndarray::DataMut,
-        D: Dimension;
-}
-
-/// Define (Pseudo-) Inverse of Laplacian
-///
-/// These operators are usefull when solving
-/// second order equations
-pub trait LaplacianInverse<T> {
-    /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
-    fn laplace_inv(&self) -> Array2<T>;
-
-    /// Pseudoidentity matrix of laplacian $ L^{-1} L $
-    fn laplace_inv_eye(&self) -> Array2<T>;
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(ref mut b) => b.backward_inplace(input, output, axis),
+            Self::CompositeChebyshev(ref mut b) => b.backward_inplace(input, output, axis),
+        }
+    }
 }

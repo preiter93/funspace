@@ -11,6 +11,7 @@ ndarray = "0.15.0"
 num-traits = "0.2.12"
 #ndrustfft = "0.1.1"
 ndrustfft = { git = "https://github.com/preiter93/ndrustfft", branch="main" }
+enum_dispatch = "0.3.7"
 
 [lib]
 name = "funspace"

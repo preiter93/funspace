@@ -1,10 +1,10 @@
 //! # Orthogonal chebyshev space
 use super::FloatNum;
 use crate::Differentiate;
+use crate::LaplacianInverse;
 use crate::Mass;
 use crate::Size;
 use crate::Transform;
-use crate::LaplacianInverse;
 use ndarray::prelude::*;
 use ndrustfft::DctHandler;
 
@@ -72,7 +72,7 @@ impl<A: FloatNum> Chebyshev<A> {
     /// # Example
     /// Differentiate along lane
     /// ```
-    /// use funspace::Chebyshev;
+    /// use funspace::chebyshev::Chebyshev;
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = Chebyshev::<f64>::new(4);
@@ -149,8 +149,7 @@ impl<A: FloatNum> Chebyshev<A> {
     }
 
     /// Returns eye matrix, where the n ( = deriv) upper rows
-    fn _pinv_eye(n: usize, deriv: usize) -> Array2<A>
-    {
+    fn _pinv_eye(n: usize, deriv: usize) -> Array2<A> {
         let pinv_eye = Array2::<f64>::eye(n).slice(s![deriv.., ..]).to_owned();
         pinv_eye.mapv(|elem| A::from_f64(elem).unwrap())
     }
@@ -185,7 +184,8 @@ impl<A: FloatNum + std::ops::MulAssign> Transform for Chebyshev<A> {
     /// # Example
     /// Forward transform along first axis
     /// ```
-    /// use funspace::{Chebyshev, Transform};
+    /// use funspace::Transform;
+    /// use funspace::chebyshev::Chebyshev;
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = Chebyshev::new(4);
@@ -237,7 +237,8 @@ impl<A: FloatNum + std::ops::MulAssign> Transform for Chebyshev<A> {
     /// # Example
     /// Backward transform along first axis
     /// ```
-    /// use funspace::{Chebyshev, Transform};
+    /// use funspace::Transform;
+    /// use funspace::chebyshev::Chebyshev;
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = Chebyshev::new(4);
@@ -324,13 +325,11 @@ impl<A: FloatNum> LaplacianInverse<A> for Chebyshev<A> {
     ///
     /// Second order equations become banded
     /// when preconditioned with this matrix
-    fn laplace_inv(&self) -> Array2<A>
-    {
+    fn laplace_inv(&self) -> Array2<A> {
         Self::_pinv(self.n, 2)
     }
     /// Pseudoidentity matrix of laplacian
-    fn laplace_inv_eye(&self) -> Array2<A>
-    {
+    fn laplace_inv_eye(&self) -> Array2<A> {
         Self::_pinv_eye(self.n, 2)
     }
 }
