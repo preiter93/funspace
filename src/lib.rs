@@ -138,7 +138,7 @@ pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet(n))
 }
 
-// Function space with Neumann boundary conditions
+/// Function space with Neumann boundary conditions
 ///
 /// $$
 /// \phi_k = T_k - k^{2} \/ (k+2)^2 T_{k+2}
