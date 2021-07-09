@@ -3,14 +3,18 @@ name = "funspace"
 version = "0.1.0"
 authors = ["preiter"]
 edition = "2018"
+description = "N-dimensional function spaces and transforms (Chebyshev)"
+repository = "https://github.com/preiter93/funspace"
+keywords = ["spectral", "numerical", "chebyshev", "simulation", "ndarray"]
+readme = "README.md"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 ndarray = "0.15.0"
 num-traits = "0.2.12"
-#ndrustfft = "0.1.1"
-ndrustfft = { git = "https://github.com/preiter93/ndrustfft", branch="main" }
+ndrustfft = "0.1.2"
 enum_dispatch = "0.3.7"
 
 [lib]
