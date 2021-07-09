@@ -3,6 +3,7 @@ use super::composite_stencil::{ChebyshevStencil, Stencil};
 use super::ortho::Chebyshev;
 use crate::Differentiate;
 use crate::FloatNum;
+use crate::FromOrtho;
 use crate::LaplacianInverse;
 use crate::Mass;
 use crate::Size;
@@ -89,12 +90,20 @@ impl<A: FloatNum> CompositeChebyshev<A> {
         }
     }
 
+    /// Return grid coordinates
+    pub fn coords(&self) -> &Array1<A> {
+        &self.ortho.x
+    }
+}
+
+impl<A: FloatNum> FromOrtho<A> for CompositeChebyshev<A> {
     /// Return coefficents in associated composite space
     ///
     /// ```
     /// use funspace::chebyshev::CompositeChebyshev;
     /// use ndarray::prelude::*;
     /// use funspace::utils::approx_eq;
+    /// use funspace::FromOrtho;
     /// let (nx, ny) = (5, 4);
     /// let mut composite_coeff = Array2::<f64>::zeros((nx - 2, ny));
     /// for (i, v) in composite_coeff.iter_mut().enumerate() {
@@ -112,7 +121,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     /// let parent_coeff = cd.to_ortho(&composite_coeff, 0);
     /// approx_eq(&parent_coeff, &expected);
     /// ```
-    pub fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<A, D>
+    fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<A, D>
     where
         S: ndarray::Data<Elem = A>,
         D: Dimension,
@@ -124,7 +133,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     }
 
     /// See [`CompositeChebyshev::to_ortho`]
-    pub fn to_ortho_inplace<S1, S2, D>(
+    fn to_ortho_inplace<S1, S2, D>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
@@ -155,6 +164,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     /// use funspace::chebyshev::CompositeChebyshev;
     /// use ndarray::prelude::*;
     /// use funspace::utils::approx_eq;
+    /// use funspace::FromOrtho;
     /// let (nx, ny) = (5, 4);
     /// let mut parent_coeff = Array2::<f64>::zeros((nx, ny));
     /// for (i, v) in parent_coeff.iter_mut().enumerate() {
@@ -170,7 +180,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     /// let composite_coeff = cd.from_ortho(&parent_coeff, 0);
     /// approx_eq(&composite_coeff, &expected);
     /// ```
-    pub fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<A, D>
+    fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<A, D>
     where
         S: ndarray::Data<Elem = A>,
         D: Dimension,
@@ -182,7 +192,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     }
 
     /// See [`CompositeChebyshev::from_ortho`]
-    pub fn from_ortho_inplace<S1, S2, D>(
+    fn from_ortho_inplace<S1, S2, D>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
@@ -205,11 +215,6 @@ impl<A: FloatNum> CompositeChebyshev<A> {
             .for_each(|inp, mut out| {
                 self.stencil.solve_vec_inplace(&inp, &mut out);
             });
-    }
-
-    /// Return grid coordinates
-    pub fn coords(&self) -> &Array1<A> {
-        &self.ortho.x
     }
 }
 

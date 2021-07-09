@@ -1,6 +1,7 @@
 //! # Orthogonal chebyshev space
 use super::FloatNum;
 use crate::Differentiate;
+use crate::FromOrtho;
 use crate::LaplacianInverse;
 use crate::Mass;
 use crate::Size;
@@ -331,6 +332,54 @@ impl<A: FloatNum> LaplacianInverse<A> for Chebyshev<A> {
     /// Pseudoidentity matrix of laplacian
     fn laplace_inv_eye(&self) -> Array2<A> {
         Self::_pinv_eye(self.n, 2)
+    }
+}
+
+impl<A: FloatNum> FromOrtho<A> for Chebyshev<A> {
+    /// Return itself
+    fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<A, D>
+    where
+        S: ndarray::Data<Elem = A>,
+        D: Dimension,
+    {
+        input.to_owned()
+    }
+
+    /// Return itself
+    fn to_ortho_inplace<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        _axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = A>,
+        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        D: Dimension,
+    {
+        output.assign(input);
+    }
+
+    /// Return itself
+    fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<A, D>
+    where
+        S: ndarray::Data<Elem = A>,
+        D: Dimension,
+    {
+        input.to_owned()
+    }
+
+    /// Return itself
+    fn from_ortho_inplace<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        _axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = A>,
+        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        D: Dimension,
+    {
+        output.assign(input);
     }
 }
 

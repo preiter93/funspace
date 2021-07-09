@@ -1,4 +1,5 @@
 //! # Funspace
+//! <img align="right" src="https://rustacean.net/assets/cuddlyferris.png" width="80">
 //!
 //! Collection of function spaces.
 //!
@@ -42,9 +43,9 @@
 //! not maintain the same shape (but dimensionality is conserved).
 //!
 //! ## Implemented function spaces:
-//! - Chebyshev (Orthogonal)
-//! - ChebDirichlet (Composite)
-//! - ChebNeumann (Composite)
+//! - Chebyshev (Orthogonal), see [`chebyshev()`]
+//! - ChebDirichlet (Composite), see [`cheb_dirichlet()`]
+//! - ChebNeumann (Composite), see [`cheb_neumann()`]
 //!
 //! # Example
 //! Apply forward transform of 1d array in cheb_dirichlet space
@@ -68,7 +69,7 @@ use ndarray::prelude::*;
 use ndarray::ScalarOperand;
 use num_traits::{Float, FromPrimitive, Signed, Zero};
 use std::fmt::Debug;
-pub use traits::{Differentiate, LaplacianInverse, Mass, Size, Transform};
+pub use traits::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform};
 
 /// Generic floating point number, implemented for f32 and f64
 pub trait FloatNum:
@@ -81,7 +82,7 @@ impl FloatNum for f64 {}
 /// Collection of all implemented basis functions.
 ///
 /// This enum implements the traits
-/// Differentiate, Mass, LaplacianInverse, Size, (Transform)
+/// [`Differentiate`], [`Mass`], [`LaplacianInverse`], [`Size, [`Transform`], [`FromOrtho`]
 ///
 /// # Example
 /// Apply diferentiation in ChebDirichlet space
@@ -94,7 +95,7 @@ impl FloatNum for f64 {}
 /// let output = cd.differentiate(&input, 2, 0);
 /// ```
 #[allow(clippy::large_enum_variant)]
-#[enum_dispatch(Differentiate<T>, Mass<T>, LaplacianInverse<T>, Size)]
+#[enum_dispatch(Differentiate<T>, Mass<T>, LaplacianInverse<T>, Size, FromOrtho<T>)]
 pub enum Base<T: FloatNum> {
     Chebyshev(Chebyshev<T>),
     CompositeChebyshev(CompositeChebyshev<T>),
@@ -106,9 +107,14 @@ pub enum Base<T: FloatNum> {
 /// T_k
 /// $$
 ///
+/// ## Example
+/// Transform array to function space.
 /// ```
 /// use funspace::chebyshev;
-/// let ch = chebyshev::<f64>(10);
+/// use funspace::Transform;
+/// let mut ch = chebyshev::<f64>(10);
+/// let mut y = ndarray::Array::linspace(0., 9., 10);
+/// let yhat = ch.forward(&mut y, 0);
 /// ```
 pub fn chebyshev<A: FloatNum>(n: usize) -> Base<A> {
     Base::Chebyshev(Chebyshev::<A>::new(n))
@@ -119,9 +125,14 @@ pub fn chebyshev<A: FloatNum>(n: usize) -> Base<A> {
 /// $$
 ///  \phi_k = T_k - T_{k+2}
 /// $$
+/// ## Example
+/// Transform array to function space.
 /// ```
 /// use funspace::cheb_dirichlet;
-/// let cd = cheb_dirichlet::<f64>(10);
+/// use funspace::Transform;
+/// let mut cd = cheb_dirichlet::<f64>(10);
+/// let mut y = ndarray::Array::linspace(0., 9., 10);
+/// let yhat = cd.forward(&mut y, 0);
 /// ```
 pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet(n))
@@ -132,15 +143,20 @@ pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
 /// $$
 /// \phi_k = T_k - k^{2} \/ (k+2)^2 T_{k+2}
 /// $$
+/// ## Example
+/// Transform array to function space.
 /// ```
 /// use funspace::cheb_neumann;
-/// let cn = cheb_neumann::<f64>(10);
+/// use funspace::Transform;
+/// let mut cn = cheb_neumann::<f64>(10);
+/// let mut y = ndarray::Array::linspace(0., 9., 10);
+/// let yhat = cn.forward(&mut y, 0);
 /// ```
 pub fn cheb_neumann<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::neumann(n))
 }
 
-/// Functions space for inhomogenoeus Dirichlet
+/// Functions space for inhomogeneous Dirichlet
 /// boundary conditions
 ///
 /// $$
@@ -153,7 +169,7 @@ pub fn cheb_dirichlet_bc<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet_bc(n))
 }
 
-/// Functions space for inhomogenoeus Neumann
+/// Functions space for inhomogeneous Neumann
 /// boundary conditions
 ///
 /// $$

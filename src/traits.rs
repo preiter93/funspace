@@ -154,3 +154,88 @@ pub trait LaplacianInverse<T> {
     /// Pseudoidentity matrix of laplacian $ L^{-1} L $
     fn laplace_inv_eye(&self) -> Array2<T>;
 }
+
+/// Define transformation from and to orthonormal space.
+///
+/// If the space is already the orthonormal (parent)
+/// space, it copies and returns the input.
+#[enum_dispatch]
+pub trait FromOrtho<T> {
+    /// Return coefficents in associated composite space
+    ///
+    /// ```
+    /// use funspace::chebyshev::CompositeChebyshev;
+    /// use ndarray::prelude::*;
+    /// use funspace::utils::approx_eq;
+    /// use funspace::FromOrtho;
+    /// let (nx, ny) = (5, 4);
+    /// let mut composite_coeff = Array2::<f64>::zeros((nx - 2, ny));
+    /// for (i, v) in composite_coeff.iter_mut().enumerate() {
+    ///     *v = i as f64;
+    /// }
+    /// let cd = CompositeChebyshev::<f64>::dirichlet(nx);
+    ///
+    /// let expected = array![
+    ///     [0., 1., 2., 3.],
+    ///     [4., 5., 6., 7.],
+    ///     [8., 8., 8., 8.],
+    ///     [-4., -5., -6., -7.],
+    ///     [-8., -9., -10., -11.],
+    /// ];
+    /// let parent_coeff = cd.to_ortho(&composite_coeff, 0);
+    /// approx_eq(&parent_coeff, &expected);
+    /// ```
+    fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    where
+        S: ndarray::Data<Elem = T>,
+        D: Dimension;
+
+    /// See *to_ortho*
+    fn to_ortho_inplace<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        D: Dimension;
+
+    /// Return coefficents in associated composite space
+    ///
+    /// ```
+    /// use funspace::chebyshev::CompositeChebyshev;
+    /// use ndarray::prelude::*;
+    /// use funspace::utils::approx_eq;
+    /// use funspace::FromOrtho;
+    /// let (nx, ny) = (5, 4);
+    /// let mut parent_coeff = Array2::<f64>::zeros((nx, ny));
+    /// for (i, v) in parent_coeff.iter_mut().enumerate() {
+    ///     *v = i as f64;
+    /// }
+    /// let cd = CompositeChebyshev::<f64>::dirichlet(nx);
+    ///
+    /// let expected = array![
+    ///     [-8., -8., -8., -8.],
+    ///     [-4., -4., -4., -4.],
+    ///     [-8., -8., -8., -8.],
+    /// ];
+    /// let composite_coeff = cd.from_ortho(&parent_coeff, 0);
+    /// approx_eq(&composite_coeff, &expected);
+    /// ```
+    fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    where
+        S: ndarray::Data<Elem = T>,
+        D: Dimension;
+
+    /// See *fom_ortho*
+    fn from_ortho_inplace<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        D: Dimension;
+}
