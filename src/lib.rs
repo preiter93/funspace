@@ -47,23 +47,23 @@
 //! - ChebNeumann (Composite)
 //!
 //! # Example
-//! Apply forward transform in ChebDirichlet space
+//! Apply forward transform of 1d array in cheb_dirichlet space
 //! ```
 //! use funspace::{Transform, cheb_dirichlet};
 //! use ndarray::prelude::*;
-//! let cd = cheb_dirichlet::<f64>(5);
-//! let input = array![1., 2., 3., 4., 5.];
-//! let output = cd.differentiate(&input, 2, 0);
+//! let mut cd = cheb_dirichlet::<f64>(5);
+//! let mut input = array![1., 2., 3., 4., 5.];
+//! let output = cd.forward(&mut input, 0);
 //! ```
 #![allow(clippy::just_underscores_and_digits)]
 #[macro_use]
 extern crate enum_dispatch;
 pub mod chebyshev;
+mod impl_transform;
 mod traits;
 pub mod utils;
 use chebyshev::Chebyshev;
 use chebyshev::CompositeChebyshev;
-pub use chebyshev::{cheb_dirichlet, cheb_neumann, chebyshev};
 use ndarray::prelude::*;
 use ndarray::ScalarOperand;
 use num_traits::{Float, FromPrimitive, Signed, Zero};
@@ -84,7 +84,7 @@ impl FloatNum for f64 {}
 /// Differentiate, Mass, LaplacianInverse, Size, (Transform)
 ///
 /// # Example
-/// Apply diferentioation in ChebDirichlet space
+/// Apply diferentiation in ChebDirichlet space
 /// ```
 /// use funspace::{cheb_dirichlet};
 /// use funspace::Differentiate;
@@ -100,71 +100,68 @@ pub enum Base<T: FloatNum> {
     CompositeChebyshev(CompositeChebyshev<T>),
 }
 
-/// Implement transform trait per hand, can't be enum_dispatched
-/// because of associated types.
-impl<A: FloatNum + std::ops::MulAssign> Transform for Base<A> {
-    type Physical = A;
-    type Spectral = A;
+/// Function space for Chebyshev Polynomials
+///
+/// $$
+/// T_k
+/// $$
+///
+/// ```
+/// use funspace::chebyshev;
+/// let ch = chebyshev::<f64>(10);
+/// ```
+pub fn chebyshev<A: FloatNum>(n: usize) -> Base<A> {
+    Base::Chebyshev(Chebyshev::<A>::new(n))
+}
 
-    fn forward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Spectral, D>
-    where
-        S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
-    {
-        match self {
-            Self::Chebyshev(ref mut b) => b.forward(input, axis),
-            Self::CompositeChebyshev(ref mut b) => b.forward(input, axis),
-        }
-    }
+/// Function space with Dirichlet boundary conditions
+///
+/// $$
+///  \phi_k = T_k - T_{k+2}
+/// $$
+/// ```
+/// use funspace::cheb_dirichlet;
+/// let cd = cheb_dirichlet::<f64>(10);
+/// ```
+pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
+    Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet(n))
+}
 
-    fn forward_inplace<S1, S2, D>(
-        &mut self,
-        input: &mut ArrayBase<S1, D>,
-        output: &mut ArrayBase<S2, D>,
-        axis: usize,
-    ) where
-        S1: ndarray::Data<Elem = Self::Physical>,
-        S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
-    {
-        match self {
-            Self::Chebyshev(ref mut b) => b.forward_inplace(input, output, axis),
-            Self::CompositeChebyshev(ref mut b) => b.forward_inplace(input, output, axis),
-        }
-    }
+// Function space with Neumann boundary conditions
+///
+/// $$
+/// \phi_k = T_k - k^{2} \/ (k+2)^2 T_{k+2}
+/// $$
+/// ```
+/// use funspace::cheb_neumann;
+/// let cn = cheb_neumann::<f64>(10);
+/// ```
+pub fn cheb_neumann<A: FloatNum>(n: usize) -> Base<A> {
+    Base::CompositeChebyshev(CompositeChebyshev::<A>::neumann(n))
+}
 
-    fn backward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Physical, D>
-    where
-        S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
-    {
-        match self {
-            Self::Chebyshev(ref mut b) => b.backward(input, axis),
-            Self::CompositeChebyshev(ref mut b) => b.backward(input, axis),
-        }
-    }
+/// Functions space for inhomogenoeus Dirichlet
+/// boundary conditions
+///
+/// $$
+///     \phi_0 = 0.5 T_0 - 0.5 T_1
+/// $$
+/// $$
+///     \phi_1 = 0.5 T_0 + 0.5 T_1
+/// $$
+pub fn cheb_dirichlet_bc<A: FloatNum>(n: usize) -> Base<A> {
+    Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet_bc(n))
+}
 
-    fn backward_inplace<S1, S2, D>(
-        &mut self,
-        input: &mut ArrayBase<S1, D>,
-        output: &mut ArrayBase<S2, D>,
-        axis: usize,
-    ) where
-        S1: ndarray::Data<Elem = Self::Spectral>,
-        S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
-    {
-        match self {
-            Self::Chebyshev(ref mut b) => b.backward_inplace(input, output, axis),
-            Self::CompositeChebyshev(ref mut b) => b.backward_inplace(input, output, axis),
-        }
-    }
+/// Functions space for inhomogenoeus Neumann
+/// boundary conditions
+///
+/// $$
+///     \phi_0 = 0.5T_0 - 1/8T_1
+/// $$
+/// $$
+///     \phi_1 = 0.5T_0 + 1/8T_1
+/// $$
+pub fn cheb_neumann_bc<A: FloatNum>(n: usize) -> Base<A> {
+    Base::CompositeChebyshev(CompositeChebyshev::<A>::neumann_bc(n))
 }

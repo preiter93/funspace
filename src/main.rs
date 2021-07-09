@@ -1,4 +1,4 @@
-use funspace::{cheb_dirichlet};
+use funspace::cheb_dirichlet;
 // use funspace::{Chebyshev, Transform};
 use funspace::Differentiate;
 use funspace::Transform;

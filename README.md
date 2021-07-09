@@ -47,3 +47,13 @@ not maintain the same shape (but dimensionality is conserved).
 - Chebyshev (Orthogonal)
 - ChebDirichlet (Composite)
 - ChebNeumann (Composite)
+
+## Example
+Apply forward transform of 1d array in cheb_dirichlet space
+```rust
+use funspace::{Transform, cheb_dirichlet};
+use ndarray::prelude::*;
+let mut cd = cheb_dirichlet::<f64>(5);
+let mut input = array![1., 2., 3., 4., 5.];
+let output = cd.forward(&mut input, 0);
+```
