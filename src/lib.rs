@@ -45,6 +45,16 @@
 //! - Chebyshev (Orthogonal)
 //! - ChebDirichlet (Composite)
 //! - ChebNeumann (Composite)
+//!
+//! # Example
+//! Apply forward transform in ChebDirichlet space
+//! ```
+//! use funspace::{Transform, cheb_dirichlet};
+//! use ndarray::prelude::*;
+//! let cd = cheb_dirichlet::<f64>(5);
+//! let input = array![1., 2., 3., 4., 5.];
+//! let output = cd.differentiate(&input, 2, 0);
+//! ```
 #![allow(clippy::just_underscores_and_digits)]
 #[macro_use]
 extern crate enum_dispatch;
