@@ -1,0 +1,22 @@
+[package]
+name = "funspace"
+version = "0.1.0"
+authors = ["preiter"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ndarray = "0.15.0"
+num-traits = "0.2.12"
+#ndrustfft = "0.1.1"
+ndrustfft = { git = "https://github.com/preiter93/ndrustfft", branch="main" }
+
+[lib]
+name = "funspace"
+path = "src/lib.rs"
+
+# Enable katex in documentation
+# RUSTDOCFLAGS="--html-in-header docs-header.html" cargo doc --no-deps --open
+[package.metadata.docs.rs]
+rustdoc-args = [ "--html-in-header", "docs-header.html" ]
