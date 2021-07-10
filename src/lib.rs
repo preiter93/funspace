@@ -82,7 +82,7 @@ impl FloatNum for f64 {}
 /// Collection of all implemented basis functions.
 ///
 /// This enum implements the traits
-/// [`Differentiate`], [`Mass`], [`LaplacianInverse`], [`Size, [`Transform`], [`FromOrtho`]
+/// [`Differentiate`], [`Mass`], [`LaplacianInverse`], [`Size`], [`Transform`], [`FromOrtho`]
 ///
 /// # Example
 /// Apply diferentiation in ChebDirichlet space
