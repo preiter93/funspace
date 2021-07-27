@@ -36,19 +36,19 @@
 //! satisfied. This may be understood under *Galerkin* Method.
 //!
 //! To switch from its composite form to the orthonormal form, each base implements
-//! a *Parental* trait, which defines the transform *to_ortho* and *from_ortho*.
+//! a *Parental* trait, which defines the transform `to_ortho` and `from_ortho`.
 //! If the base is already orthogonal, the input will be returned, otherwise it
 //! is returned. Note that the dimensionality of the composite space is often
 //! less than its orthogonal counterpart.  Therefore the output array must
 //! not maintain the same shape (but dimensionality is conserved).
 //!
 //! ## Implemented function spaces:
-//! - Chebyshev (Orthogonal), see [`chebyshev()`]
-//! - ChebDirichlet (Composite), see [`cheb_dirichlet()`]
-//! - ChebNeumann (Composite), see [`cheb_neumann()`]
+//! - `Chebyshev` (Orthogonal), see [`chebyshev()`]
+//! - `ChebDirichlet` (Composite), see [`cheb_dirichlet()`]
+//! - `ChebNeumann` (Composite), see [`cheb_neumann()`]
 //!
 //! # Example
-//! Apply forward transform of 1d array in cheb_dirichlet space
+//! Apply forward transform of 1d array in `cheb_dirichlet` space
 //! ```
 //! use funspace::{Transform, cheb_dirichlet};
 //! use ndarray::prelude::*;
@@ -57,6 +57,8 @@
 //! let output = cd.forward(&mut input, 0);
 //! ```
 #![allow(clippy::just_underscores_and_digits)]
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::cast_precision_loss)]
 #[macro_use]
 extern crate enum_dispatch;
 pub mod chebyshev;
@@ -116,6 +118,7 @@ pub enum Base<T: FloatNum> {
 /// let mut y = ndarray::Array::linspace(0., 9., 10);
 /// let yhat = ch.forward(&mut y, 0);
 /// ```
+#[must_use]
 pub fn chebyshev<A: FloatNum>(n: usize) -> Base<A> {
     Base::Chebyshev(Chebyshev::<A>::new(n))
 }
@@ -134,6 +137,7 @@ pub fn chebyshev<A: FloatNum>(n: usize) -> Base<A> {
 /// let mut y = ndarray::Array::linspace(0., 9., 10);
 /// let yhat = cd.forward(&mut y, 0);
 /// ```
+#[must_use]
 pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet(n))
 }
@@ -152,6 +156,7 @@ pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
 /// let mut y = ndarray::Array::linspace(0., 9., 10);
 /// let yhat = cn.forward(&mut y, 0);
 /// ```
+#[must_use]
 pub fn cheb_neumann<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::neumann(n))
 }
@@ -165,6 +170,7 @@ pub fn cheb_neumann<A: FloatNum>(n: usize) -> Base<A> {
 /// $$
 ///     \phi_1 = 0.5 T_0 + 0.5 T_1
 /// $$
+#[must_use]
 pub fn cheb_dirichlet_bc<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet_bc(n))
 }
@@ -178,6 +184,7 @@ pub fn cheb_dirichlet_bc<A: FloatNum>(n: usize) -> Base<A> {
 /// $$
 ///     \phi_1 = 0.5T_0 + 1/8T_1
 /// $$
+#[must_use]
 pub fn cheb_neumann_bc<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::neumann_bc(n))
 }

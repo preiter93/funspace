@@ -30,6 +30,10 @@ where
 
 /// Checks size of axis.
 ///
+/// # Panics
+/// Panics when inputs shape does not match
+/// axis' size
+///
 /// # Example
 /// ```should_panic
 /// use funspace::utils::check_array_axis;
@@ -66,6 +70,9 @@ pub fn check_array_axis<A, S, D>(
 }
 
 /// Test approx equality of two arrays element-wise
+///
+/// # Panics
+/// Panics when difference is larger than 1e-3.
 pub fn approx_eq<A, S, D>(result: &ArrayBase<S, D>, expected: &ArrayBase<S, D>)
 where
     A: FloatNum + std::fmt::Display,

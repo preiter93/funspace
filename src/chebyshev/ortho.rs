@@ -21,8 +21,8 @@ pub struct Chebyshev<A> {
     dct_handler: DctHandler<A>,
     /// Only for internal use, defines how to correct dct to obtain
     /// chebyshev transform
-    correct_dct_fwd: Array1<A>,
-    correct_dct_bwd: Array1<A>,
+    correct_dct_forward: Array1<A>,
+    correct_dct_backward: Array1<A>,
 }
 
 impl<A: FloatNum> Chebyshev<A> {
@@ -31,25 +31,30 @@ impl<A: FloatNum> Chebyshev<A> {
     /// # Arguments
     /// * `n` - Length of array's dimension which shall live in chebyshev space.
     ///
+    /// # Panics
+    /// Panics when input type cannot be cast from f64.
+    ///
     /// # Examples
     /// ```
     /// use funspace::chebyshev::Chebyshev;
     /// let cheby = Chebyshev::<f64>::new(10);
     /// ```
+    #[must_use]
     pub fn new(n: usize) -> Self {
         let mut correct_dct = Array1::<A>::zeros(n);
         for (i, s) in correct_dct.iter_mut().enumerate() {
             *s = A::from_f64((-1.0_f64).powf(i as f64)).unwrap();
         }
-        let correct_dct_fwd = correct_dct.mapv(|x| x * A::from_f64(1. / (n - 1) as f64).unwrap());
-        let correct_dct_bwd = correct_dct.mapv(|x| x / A::from_f64(2.0).unwrap());
+        let correct_dct_forward =
+            correct_dct.mapv(|x| x * A::from_f64(1. / (n - 1) as f64).unwrap());
+        let correct_dct_backward = correct_dct.mapv(|x| x / A::from_f64(2.0).unwrap());
         Self {
             n,
             m: n,
             x: Self::_nodes_2nd_kind(n),
             dct_handler: DctHandler::new(n),
-            correct_dct_fwd,
-            correct_dct_bwd,
+            correct_dct_forward,
+            correct_dct_backward,
         }
     }
 
@@ -70,6 +75,9 @@ impl<A: FloatNum> Chebyshev<A> {
     ///
     /// Differentiation is performed on input array directly.
     ///
+    /// # Panics
+    /// Panics when input type cannot be cast from f64.
+    ///
     /// # Example
     /// Differentiate along lane
     /// ```
@@ -86,6 +94,7 @@ impl<A: FloatNum> Chebyshev<A> {
     /// cheby.differentiate_lane(&mut input, 0);
     /// approx_eq(&input, &array![1., 2., 3., 4.]);
     /// ```
+    #[allow(clippy::used_underscore_binding)]
     pub fn differentiate_lane<T, S>(&self, data: &mut ArrayBase<S, Ix1>, n_times: usize)
     where
         T: FloatNum,
@@ -210,6 +219,7 @@ impl<A: FloatNum + std::ops::MulAssign> Transform for Chebyshev<A> {
     }
 
     /// See [`Chebyshev::forward`]
+    #[allow(clippy::used_underscore_binding)]
     fn forward_inplace<S1, S2, D>(
         &mut self,
         input: &mut ArrayBase<S1, D>,
@@ -229,7 +239,7 @@ impl<A: FloatNum + std::ops::MulAssign> Transform for Chebyshev<A> {
         // Correct DCT
         let _05 = A::from_f64(1. / 2.).unwrap();
         for mut v in output.lanes_mut(Axis(axis)) {
-            v *= &self.correct_dct_fwd;
+            v *= &self.correct_dct_forward;
             v[0] *= _05;
             v[self.n - 1] *= _05;
         }
@@ -263,6 +273,10 @@ impl<A: FloatNum + std::ops::MulAssign> Transform for Chebyshev<A> {
     }
 
     /// See [`Chebyshev::backward`]
+    ///
+    /// # Panics
+    /// Panics when input type cannot be cast from f64.
+    #[allow(clippy::used_underscore_binding)]
     fn backward_inplace<S1, S2, D>(
         &mut self,
         input: &mut ArrayBase<S1, D>,
@@ -281,7 +295,7 @@ impl<A: FloatNum + std::ops::MulAssign> Transform for Chebyshev<A> {
         let mut buffer = input.to_owned();
         let _2 = A::from_f64(2.).unwrap();
         for mut v in buffer.lanes_mut(Axis(axis)) {
-            v *= &self.correct_dct_bwd;
+            v *= &self.correct_dct_backward;
             v[0] *= _2;
             v[self.n - 1] *= _2;
         }

@@ -10,6 +10,7 @@ use crate::Size;
 use crate::Transform;
 use ndarray::prelude::*;
 
+#[allow(clippy::module_name_repetitions)]
 pub struct CompositeChebyshev<A: FloatNum> {
     /// Number of coefficients in physical space
     pub n: usize,
@@ -27,6 +28,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     /// $$
     ///  \phi_k = T_k - T_{k+2}
     /// $$
+    #[must_use]
     pub fn dirichlet(n: usize) -> Self {
         use super::composite_stencil::StencilChebyshev;
         let stencil = StencilChebyshev::dirichlet(n);
@@ -43,6 +45,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     /// $$
     /// \phi_k = T_k - k^{2} \/ (k+2)^2 T_{k+2}
     /// $$
+    #[must_use]
     pub fn neumann(n: usize) -> Self {
         use super::composite_stencil::StencilChebyshev;
         let stencil = StencilChebyshev::neumann(n);
@@ -54,13 +57,14 @@ impl<A: FloatNum> CompositeChebyshev<A> {
         }
     }
 
-    /// dirichlet_bc basis
+    /// Dirichlet boundary condition basis
     /// $$
     ///     \phi_0 = 0.5 T_0 - 0.5 T_1
     /// $$
     /// $$
     ///     \phi_1 = 0.5 T_0 + 0.5 T_1
     /// $$
+    #[must_use]
     pub fn dirichlet_bc(n: usize) -> Self {
         use super::composite_stencil::StencilChebyshevBoundary;
         let stencil = StencilChebyshevBoundary::dirichlet(n);
@@ -72,13 +76,14 @@ impl<A: FloatNum> CompositeChebyshev<A> {
         }
     }
 
-    /// neumann_bc basis
+    /// Neumann boundary condition basis
     /// $$
     ///     \phi_0 = 0.5T_0 - 1/8T_1
     /// $$
     /// $$
     ///     \phi_1 = 0.5T_0 + 1/8T_1
     /// $$
+    #[must_use]
     pub fn neumann_bc(n: usize) -> Self {
         use super::composite_stencil::StencilChebyshevBoundary;
         let stencil = StencilChebyshevBoundary::neumann(n);
@@ -91,6 +96,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     }
 
     /// Return grid coordinates
+    #[must_use]
     pub fn coords(&self) -> &Array1<A> {
         &self.ortho.x
     }
