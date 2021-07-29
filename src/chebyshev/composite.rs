@@ -8,9 +8,11 @@ use crate::LaplacianInverse;
 use crate::Mass;
 use crate::Size;
 use crate::Transform;
+use crate::TransformPar;
 use ndarray::prelude::*;
 
 #[allow(clippy::module_name_repetitions)]
+#[derive(Clone)]
 pub struct CompositeChebyshev<A: FloatNum> {
     /// Number of coefficients in physical space
     pub n: usize,
@@ -350,6 +352,114 @@ impl<A: FloatNum + std::ops::MulAssign> Transform for CompositeChebyshev<A> {
     {
         let mut parent_coeff = self.to_ortho(input, axis);
         self.ortho.backward_inplace(&mut parent_coeff, output, axis);
+    }
+}
+
+impl<A: FloatNum + std::ops::MulAssign> TransformPar for CompositeChebyshev<A> {
+    type Physical = A;
+    type Spectral = A;
+
+    /// # Example
+    /// Forward transform along first axis
+    /// ```
+    /// use funspace::TransformPar;
+    /// use funspace::chebyshev::CompositeChebyshev;
+    /// use funspace::utils::approx_eq;
+    /// use ndarray::prelude::*;
+    /// let mut cheby = CompositeChebyshev::dirichlet(5);
+    /// let mut input = array![1., 2., 3., 4., 5.];
+    /// let output = cheby.forward_par(&mut input, 0);
+    /// approx_eq(&output, &array![2., 0.70710678, 1.]);
+    /// ```
+    fn forward_par<S, D>(
+        &mut self,
+        input: &mut ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Spectral, D>
+    where
+        S: ndarray::Data<Elem = Self::Physical>,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        let parent_coeff = self.ortho.forward_par(input, axis);
+        self.from_ortho(&parent_coeff, axis)
+    }
+
+    /// See [`CompositeChebyshev::forward_par`]
+    /// ```
+    /// use funspace::TransformPar;
+    /// use funspace::chebyshev::CompositeChebyshev;
+    /// use funspace::utils::approx_eq;
+    /// use ndarray::prelude::*;
+    /// let mut cheby = CompositeChebyshev::dirichlet(5);
+    /// let mut input = array![1., 2., 3., 4., 5.];
+    /// let mut output = Array1::<f64>::zeros(3);
+    /// cheby.forward_inplace_par(&mut input, &mut output, 0);
+    /// approx_eq(&output, &array![2., 0.70710678, 1.]);
+    /// ```
+    fn forward_inplace_par<S1, S2, D>(
+        &mut self,
+        input: &mut ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Self::Physical>,
+        S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        let parent_coeff = self.ortho.forward_par(input, axis);
+        self.from_ortho_inplace(&parent_coeff, output, axis)
+    }
+
+    /// # Example
+    /// Backward transform along first axis
+    /// ```
+    /// use funspace::TransformPar;
+    /// use funspace::chebyshev::CompositeChebyshev;
+    /// use funspace::utils::approx_eq;
+    /// use ndarray::prelude::*;
+    /// let mut cheby = CompositeChebyshev::dirichlet(5);
+    /// let mut input = array![1., 2., 3.];
+    /// let output = cheby.backward_par(&mut input, 0);
+    /// approx_eq(&output, &array![0.,1.1716, -4., 6.8284, 0. ]);
+    /// ```
+    fn backward_par<S, D>(
+        &mut self,
+        input: &mut ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Physical, D>
+    where
+        S: ndarray::Data<Elem = Self::Spectral>,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        let mut parent_coeff = self.to_ortho(input, axis);
+        self.ortho.backward_par(&mut parent_coeff, axis)
+    }
+
+    /// See [`CompositeChebyshev::backward_par`]
+    /// ```
+    /// use funspace::TransformPar;
+    /// use funspace::chebyshev::CompositeChebyshev;
+    /// use funspace::utils::approx_eq;
+    /// use ndarray::prelude::*;
+    /// let mut cheby = CompositeChebyshev::dirichlet(5);
+    /// let mut input = array![1., 2., 3.];
+    /// let  mut output = Array1::<f64>::zeros(5);
+    /// cheby.backward_inplace_par(&mut input, &mut output, 0);
+    /// approx_eq(&output, &array![0.,1.1716, -4., 6.8284, 0. ]);
+    /// ```
+    fn backward_inplace_par<S1, S2, D>(
+        &mut self,
+        input: &mut ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Self::Spectral>,
+        S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        let mut parent_coeff = self.to_ortho(input, axis);
+        self.ortho
+            .backward_inplace_par(&mut parent_coeff, output, axis);
     }
 }
 

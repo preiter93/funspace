@@ -43,12 +43,14 @@ pub trait Stencil<A> {
 }
 
 #[enum_dispatch(Stencil<A>)]
+#[derive(Clone)]
 pub enum ChebyshevStencil<A: FloatNum> {
     StencilChebyshev(StencilChebyshev<A>),
     StencilChebyshevBoundary(StencilChebyshevBoundary<A>),
 }
 
 /// Container for Chebyshev Stencil (internally used)
+#[derive(Clone)]
 pub struct StencilChebyshev<A> {
     /// Number of coefficients in parent space
     n: usize,
@@ -71,6 +73,7 @@ pub struct StencilChebyshev<A> {
 /// 2 coefficients that act on $T_1$, where $T$
 /// are the basis function of the orthonormal
 /// chebyshev basis.
+#[derive(Clone)]
 pub struct StencilChebyshevBoundary<A> {
     /// Number of coefficients in parent space
     n: usize,

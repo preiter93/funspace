@@ -71,7 +71,7 @@ use ndarray::prelude::*;
 use ndarray::ScalarOperand;
 use num_traits::{Float, FromPrimitive, Signed, Zero};
 use std::fmt::Debug;
-pub use traits::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform};
+pub use traits::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform, TransformPar};
 
 /// Generic floating point number, implemented for f32 and f64
 pub trait FloatNum:

@@ -121,6 +121,106 @@ pub trait Transform {
         D: Dimension + ndarray::RemoveAxis;
 }
 
+/// Transform from physical to spectral space and vice versa.
+/// Parallel version of Transform, using Rayon,
+///
+/// The associated types *Physical* and *Spectral* refer
+/// to the scalar types in the respective space.
+/// For example, a fourier transforms from real-to-complex,
+/// while chebyshev from real-to-real.
+pub trait TransformPar {
+    /// Scalar type in physical space (before transform)
+    type Physical;
+    /// Scalar type in spectral space (after transfrom)
+    type Spectral;
+    /// Transform physical -> spectral space along axis
+    ///
+    /// *input*: *n*-dimensional array of type Physical.
+    /// Must be mutable, because
+    /// some transform routines swap the axes back and
+    /// forth, but it is effectively not altered.
+    ///
+    /// *axis*: Defines along which axis the array should be
+    /// transformed.
+    ///
+    /// # Example
+    /// Forward transform along first axis
+    /// ```
+    /// use funspace::Transform;
+    /// use funspace::chebyshev::Chebyshev;
+    /// use funspace::utils::approx_eq;
+    /// use ndarray::prelude::*;
+    /// let mut cheby = Chebyshev::new(4);
+    /// let mut input = array![1., 2., 3., 4.];
+    /// let output = cheby.forward(&mut input, 0);
+    /// approx_eq(&output, &array![2.5, 1.33333333, 0. , 0.16666667]);
+    /// ```
+    fn forward_par<S, D>(
+        &mut self,
+        input: &mut ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Spectral, D>
+    where
+        S: ndarray::Data<Elem = Self::Physical>,
+        D: Dimension + ndarray::RemoveAxis;
+
+    /// Transform from spectral to physical space
+    ///
+    /// Same as *backward*, but no output array must
+    /// be supplied instead of being created.
+    fn forward_inplace_par<S1, S2, D>(
+        &mut self,
+        input: &mut ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Self::Physical>,
+        S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+        D: Dimension + ndarray::RemoveAxis;
+
+    /// Transform spectral -> physical space along *axis*
+    ///
+    /// *input*: *n*-dimensional array of type Spectral.
+    ///
+    /// *axis*: Defines along which axis the array should be
+    /// transformed.
+    ///
+    /// # Example
+    /// Backward transform along first axis
+    /// ```
+    /// use funspace::Transform;
+    /// use funspace::chebyshev::Chebyshev;
+    /// use funspace::utils::approx_eq;
+    /// use ndarray::prelude::*;
+    /// let mut cheby = Chebyshev::new(4);
+    /// let mut input = array![1., 2., 3., 4.];
+    /// let output = cheby.backward(&mut input, 0);
+    /// approx_eq(&output, &array![-2. ,  2.5, -3.5, 10.]);
+    /// ```
+    fn backward_par<S, D>(
+        &mut self,
+        input: &mut ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Physical, D>
+    where
+        S: ndarray::Data<Elem = Self::Spectral>,
+        D: Dimension + ndarray::RemoveAxis;
+
+    /// Transform from spectral to physical space
+    ///
+    /// Same as *backward*, but no output array must
+    /// be supplied instead of being created.
+    fn backward_inplace_par<S1, S2, D>(
+        &mut self,
+        input: &mut ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Self::Spectral>,
+        S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+        D: Dimension + ndarray::RemoveAxis;
+}
+
 /// Perform differentiation in spectral space
 #[enum_dispatch]
 pub trait Differentiate<T> {
