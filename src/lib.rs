@@ -98,6 +98,7 @@ impl FloatNum for f64 {}
 /// ```
 #[allow(clippy::large_enum_variant)]
 #[enum_dispatch(Differentiate<T>, Mass<T>, LaplacianInverse<T>, Size, FromOrtho<T>)]
+#[derive(Clone)]
 pub enum Base<T: FloatNum> {
     Chebyshev(Chebyshev<T>),
     CompositeChebyshev(CompositeChebyshev<T>),
