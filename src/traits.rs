@@ -1,4 +1,5 @@
 //! Collection of usefull traits for function spaces
+use crate::Scalar;
 use ndarray::prelude::*;
 
 /// Defines size of basis
@@ -225,21 +226,27 @@ pub trait TransformPar {
 #[enum_dispatch]
 pub trait Differentiate<T> {
     /// Return differentiated array
-    fn differentiate<S, D>(
+    fn differentiate<S, D, T2>(
         &self,
         data: &ArrayBase<S, D>,
         n_times: usize,
         axis: usize,
-    ) -> Array<T, D>
+    ) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = T>,
-        D: Dimension;
+        S: ndarray::Data<Elem = T2>,
+        D: Dimension,
+        T2: Scalar + From<T>;
 
     /// Differentiate on input array
-    fn differentiate_inplace<S, D>(&self, data: &mut ArrayBase<S, D>, n_times: usize, axis: usize)
-    where
-        S: ndarray::Data<Elem = T> + ndarray::DataMut,
-        D: Dimension;
+    fn differentiate_inplace<S, D, T2>(
+        &self,
+        data: &mut ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) where
+        S: ndarray::Data<Elem = T2> + ndarray::DataMut,
+        D: Dimension,
+        T2: Scalar + From<T>;
 }
 
 /// Define (Pseudo-) Inverse of Laplacian
@@ -285,21 +292,23 @@ pub trait FromOrtho<T> {
     /// let parent_coeff = cd.to_ortho(&composite_coeff, 0);
     /// approx_eq(&parent_coeff, &expected);
     /// ```
-    fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    fn to_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = T>,
-        D: Dimension;
+        S: ndarray::Data<Elem = T2>,
+        D: Dimension,
+        T2: Scalar + From<T>;
 
     /// See *to_ortho*
-    fn to_ortho_inplace<S1, S2, D>(
+    fn to_ortho_inplace<S1, S2, D, T2>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
-        S1: ndarray::Data<Elem = T>,
-        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
-        D: Dimension;
+        S1: ndarray::Data<Elem = T2>,
+        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
+        D: Dimension,
+        T2: Scalar + From<T>;
 
     /// Return coefficents in associated composite space
     ///
@@ -323,19 +332,21 @@ pub trait FromOrtho<T> {
     /// let composite_coeff = cd.from_ortho(&parent_coeff, 0);
     /// approx_eq(&composite_coeff, &expected);
     /// ```
-    fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    fn from_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = T>,
-        D: Dimension;
+        S: ndarray::Data<Elem = T2>,
+        D: Dimension,
+        T2: Scalar + From<T>;
 
     /// See *fom_ortho*
-    fn from_ortho_inplace<S1, S2, D>(
+    fn from_ortho_inplace<S1, S2, D, T2>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
-        S1: ndarray::Data<Elem = T>,
-        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
-        D: Dimension;
+        S1: ndarray::Data<Elem = T2>,
+        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
+        D: Dimension,
+        T2: Scalar + From<T>;
 }

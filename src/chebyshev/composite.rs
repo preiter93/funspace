@@ -6,6 +6,7 @@ use crate::FloatNum;
 use crate::FromOrtho;
 use crate::LaplacianInverse;
 use crate::Mass;
+use crate::Scalar;
 use crate::Size;
 use crate::Transform;
 use crate::TransformPar;
@@ -129,10 +130,11 @@ impl<A: FloatNum> FromOrtho<A> for CompositeChebyshev<A> {
     /// let parent_coeff = cd.to_ortho(&composite_coeff, 0);
     /// approx_eq(&parent_coeff, &expected);
     /// ```
-    fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<A, D>
+    fn to_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T2>,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         use crate::utils::array_resized_axis;
         let mut output = array_resized_axis(input, self.ortho.len_spec(), axis);
@@ -141,15 +143,16 @@ impl<A: FloatNum> FromOrtho<A> for CompositeChebyshev<A> {
     }
 
     /// See [`CompositeChebyshev::to_ortho`]
-    fn to_ortho_inplace<S1, S2, D>(
+    fn to_ortho_inplace<S1, S2, D, T2>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T2>,
+        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         use crate::utils::check_array_axis;
         check_array_axis(input, self.len_spec(), axis, Some("composite to_ortho"));
@@ -188,10 +191,11 @@ impl<A: FloatNum> FromOrtho<A> for CompositeChebyshev<A> {
     /// let composite_coeff = cd.from_ortho(&parent_coeff, 0);
     /// approx_eq(&composite_coeff, &expected);
     /// ```
-    fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<A, D>
+    fn from_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T2>,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         use crate::utils::array_resized_axis;
         let mut output = array_resized_axis(input, self.len_spec(), axis);
@@ -200,15 +204,16 @@ impl<A: FloatNum> FromOrtho<A> for CompositeChebyshev<A> {
     }
 
     /// See [`CompositeChebyshev::from_ortho`]
-    fn from_ortho_inplace<S1, S2, D>(
+    fn from_ortho_inplace<S1, S2, D, T2>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T2>,
+        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         use crate::utils::check_array_axis;
         check_array_axis(
@@ -470,20 +475,21 @@ impl<A: FloatNum> Differentiate<A> for CompositeChebyshev<A> {
     /// use funspace::chebyshev::CompositeChebyshev;
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
-    /// let mut cheby = CompositeChebyshev::dirichlet(5);
+    /// let mut cheby = CompositeChebyshev::<f64>::dirichlet(5);
     /// let mut input = array![1., 2., 3.];
     /// let output = cheby.differentiate(&input, 2, 0);
     /// approx_eq(&output, &array![-88.,  -48., -144., 0., 0. ]);
     /// ```
-    fn differentiate<S, D>(
+    fn differentiate<S, D, T2>(
         &self,
         data: &ArrayBase<S, D>,
         n_times: usize,
         axis: usize,
-    ) -> Array<A, D>
+    ) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T2>,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         let mut parent_coeff = self.to_ortho(data, axis);
         self.ortho
@@ -492,12 +498,19 @@ impl<A: FloatNum> Differentiate<A> for CompositeChebyshev<A> {
     }
 
     #[allow(unused_variables)]
-    fn differentiate_inplace<S, D>(&self, data: &mut ArrayBase<S, D>, n_times: usize, axis: usize)
-    where
-        S: ndarray::Data<Elem = A> + ndarray::DataMut,
+    fn differentiate_inplace<S, D, T2>(
+        &self,
+        data: &mut ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) where
+        S: ndarray::Data<Elem = T2> + ndarray::DataMut,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
-        panic!("Method differentiate_inplace for composite basis. Non static array size.");
+        panic!(
+            "Method differentiate_inplace not impl for composite basis (array size would change)."
+        );
     }
 }
 

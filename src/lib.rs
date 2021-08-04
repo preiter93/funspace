@@ -62,24 +62,18 @@
 #[macro_use]
 extern crate enum_dispatch;
 pub mod chebyshev;
+pub mod fourier;
+mod impl_differentiate;
 mod impl_transform;
 mod traits;
+pub mod types;
 pub mod utils;
 use chebyshev::Chebyshev;
 use chebyshev::CompositeChebyshev;
+// use fourier::Fourier;
 use ndarray::prelude::*;
-use ndarray::ScalarOperand;
-use num_traits::{Float, FromPrimitive, Signed, Zero};
-use std::fmt::Debug;
 pub use traits::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform, TransformPar};
-
-/// Generic floating point number, implemented for f32 and f64
-pub trait FloatNum:
-    Copy + Zero + FromPrimitive + Signed + Sync + Send + Float + Debug + 'static + ScalarOperand
-{
-}
-impl FloatNum for f32 {}
-impl FloatNum for f64 {}
+pub use types::{FloatNum, Scalar};
 
 /// Collection of all implemented basis functions.
 ///
@@ -97,7 +91,7 @@ impl FloatNum for f64 {}
 /// let output = cd.differentiate(&input, 2, 0);
 /// ```
 #[allow(clippy::large_enum_variant)]
-#[enum_dispatch(Differentiate<T>, Mass<T>, LaplacianInverse<T>, Size, FromOrtho<T>)]
+#[enum_dispatch(Mass<T>, LaplacianInverse<T>, Size, FromOrtho<T>)]
 #[derive(Clone)]
 pub enum Base<T: FloatNum> {
     Chebyshev(Chebyshev<T>),

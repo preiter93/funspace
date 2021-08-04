@@ -4,6 +4,7 @@ use crate::Differentiate;
 use crate::FromOrtho;
 use crate::LaplacianInverse;
 use crate::Mass;
+use crate::Scalar;
 use crate::Size;
 use crate::Transform;
 use crate::TransformPar;
@@ -99,14 +100,14 @@ impl<A: FloatNum> Chebyshev<A> {
     #[allow(clippy::used_underscore_binding)]
     pub fn differentiate_lane<T, S>(&self, data: &mut ArrayBase<S, Ix1>, n_times: usize)
     where
-        T: FloatNum,
+        T: Scalar + From<A>,
         S: ndarray::Data<Elem = T> + ndarray::DataMut,
     {
-        let _2 = T::from_f64(2.).unwrap();
+        let _2 = T::one() + T::one();
         for _ in 0..n_times {
             data[0] = data[1];
             for i in 1..data.len() - 1 {
-                let _i = T::from_usize(i + 1).unwrap();
+                let _i: T = (A::from(i + 1).unwrap()).into();
                 data[i] = _2 * _i * data[i + 1];
             }
             data[self.n - 1] = T::zero();
@@ -424,15 +425,16 @@ impl<A: FloatNum + std::ops::MulAssign> TransformPar for Chebyshev<A> {
 }
 
 impl<A: FloatNum> Differentiate<A> for Chebyshev<A> {
-    fn differentiate<S, D>(
+    fn differentiate<S, D, T2>(
         &self,
         data: &ArrayBase<S, D>,
         n_times: usize,
         axis: usize,
-    ) -> Array<A, D>
+    ) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T2>,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         // Copy input
         let mut output = data.to_owned();
@@ -440,10 +442,15 @@ impl<A: FloatNum> Differentiate<A> for Chebyshev<A> {
         output
     }
 
-    fn differentiate_inplace<S, D>(&self, data: &mut ArrayBase<S, D>, n_times: usize, axis: usize)
-    where
-        S: ndarray::Data<Elem = A> + ndarray::DataMut,
+    fn differentiate_inplace<S, D, T2>(
+        &self,
+        data: &mut ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) where
+        S: ndarray::Data<Elem = T2> + ndarray::DataMut,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         use crate::utils::check_array_axis;
         check_array_axis(data, self.m, axis, Some("chebyshev differentiate"));
@@ -470,47 +477,51 @@ impl<A: FloatNum> LaplacianInverse<A> for Chebyshev<A> {
 
 impl<A: FloatNum> FromOrtho<A> for Chebyshev<A> {
     /// Return itself
-    fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<A, D>
+    fn to_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T2>,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         input.to_owned()
     }
 
     /// Return itself
-    fn to_ortho_inplace<S1, S2, D>(
+    fn to_ortho_inplace<S1, S2, D, T2>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         _axis: usize,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T2>,
+        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         output.assign(input);
     }
 
     /// Return itself
-    fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<A, D>
+    fn from_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T2>,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         input.to_owned()
     }
 
     /// Return itself
-    fn from_ortho_inplace<S1, S2, D>(
+    fn from_ortho_inplace<S1, S2, D, T2>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         _axis: usize,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T2>,
+        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
         D: Dimension,
+        T2: Scalar + From<A>,
     {
         output.assign(input);
     }
@@ -529,7 +540,7 @@ mod test {
         let mut data = Array::<f64, Dim<[Ix; 2]>>::zeros((nx, ny));
 
         // Axis 0
-        let cheby = Chebyshev::new(nx);
+        let cheby = Chebyshev::<f64>::new(nx);
         for (i, v) in data.iter_mut().enumerate() {
             *v = i as f64;
         }
@@ -545,7 +556,7 @@ mod test {
         approx_eq(&diff, &expected);
 
         // Axis 1
-        let cheby = Chebyshev::new(ny);
+        let cheby = Chebyshev::<f64>::new(ny);
         for (i, v) in data.iter_mut().enumerate() {
             *v = i as f64;
         }

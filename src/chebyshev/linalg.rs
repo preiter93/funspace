@@ -1,6 +1,6 @@
 //! # Linalg functions for chebyshev space
+use crate::Scalar;
 use ndarray::prelude::*;
-use ndarray::LinalgScalar;
 
 /// Tridiagonal matrix solver
 ///     Ax = d
@@ -10,12 +10,16 @@ use ndarray::LinalgScalar;
 /// b: main-diagonal
 /// c: sub-diagonal (+2)
 #[allow(clippy::many_single_char_names)]
-pub fn tdma<T: LinalgScalar>(
-    a: &ArrayView1<T>,
-    b: &ArrayView1<T>,
-    c: &ArrayView1<T>,
-    d: &mut ArrayViewMut1<T>,
-) {
+pub fn tdma<S1, S2, T>(
+    a: &ArrayBase<S1, Ix1>,
+    b: &ArrayBase<S1, Ix1>,
+    c: &ArrayBase<S1, Ix1>,
+    d: &mut ArrayBase<S2, Ix1>,
+) where
+    S1: ndarray::Data<Elem = T>,
+    S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+    T: Scalar,
+{
     let n = d.len();
     let mut x = Array1::zeros(n);
     let mut w = Array1::zeros(n - 2);

@@ -4,39 +4,43 @@
 //! $$
 //! where $S$ is a two-dimensional transform matrix.
 #![allow(clippy::used_underscore_binding)]
-use crate::FloatNum;
+use crate::{FloatNum, Scalar};
 use ndarray::prelude::*;
 
 /// Elementary methods for stencils
 #[enum_dispatch]
 pub trait Stencil<A> {
     /// Multiply stencil with a 1d array
-    fn multiply_vec<S>(&self, composite_coeff: &ArrayBase<S, Ix1>) -> Array1<A>
+    fn multiply_vec<S, T>(&self, composite_coeff: &ArrayBase<S, Ix1>) -> Array1<T>
     where
-        S: ndarray::Data<Elem = A>;
+        S: ndarray::Data<Elem = T>,
+        T: Scalar + From<A>;
 
     /// Multiply stencil with a 1d array (output must be supplied)
-    fn multiply_vec_inplace<S1, S2>(
+    fn multiply_vec_inplace<S1, S2, T>(
         &self,
         composite_coeff: &ArrayBase<S1, Ix1>,
         parent_coeff: &mut ArrayBase<S2, Ix1>,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut;
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        T: Scalar + From<A>;
 
     /// Solve linear system $A c = p$, where stencil is matrix $A$.
-    fn solve_vec<S>(&self, parent_coeff: &ArrayBase<S, Ix1>) -> Array1<A>
+    fn solve_vec<S, T>(&self, parent_coeff: &ArrayBase<S, Ix1>) -> Array1<T>
     where
-        S: ndarray::Data<Elem = A>;
+        S: ndarray::Data<Elem = T>,
+        T: Scalar + From<A>;
 
     /// Solve linear system $A c = p$, where stencil is matrix $A$ (output must be supplied)
-    fn solve_vec_inplace<S1, S2>(
+    fn solve_vec_inplace<S1, S2, T>(
         &self,
         parent_coeff: &ArrayBase<S1, Ix1>,
         composite_coeff: &mut ArrayBase<S2, Ix1>,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut;
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        T: Scalar + From<A>;
 
     /// Return stencil as 2d array
     fn to_array(&self) -> Array2<A>;
@@ -168,70 +172,73 @@ impl<A: FloatNum> Stencil<A> for StencilChebyshev<A> {
 
     /// Multiply stencil with a 1d array (transforms to parent coefficents)
     /// input and output array do usually differ in size.
-    fn multiply_vec<S>(&self, composite_coeff: &ArrayBase<S, Ix1>) -> Array1<A>
+    fn multiply_vec<S, T>(&self, composite_coeff: &ArrayBase<S, Ix1>) -> Array1<T>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T>,
+        T: Scalar + From<A>,
     {
-        let mut parent_coeff = Array1::<A>::zeros(self.n);
+        let mut parent_coeff = Array1::<T>::zeros(self.n);
         self.multiply_vec_inplace(composite_coeff, &mut parent_coeff);
         parent_coeff
     }
 
     /// See [`StencilChebyshev::multiply_vec`]
-    fn multiply_vec_inplace<S1, S2>(
+    fn multiply_vec_inplace<S1, S2, T>(
         &self,
         composite_coeff: &ArrayBase<S1, Ix1>,
         parent_coeff: &mut ArrayBase<S2, Ix1>,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        T: Scalar + From<A>,
     {
-        parent_coeff.mapv_inplace(|x| x * A::zero());
-        parent_coeff[0] = self.diag[0] * composite_coeff[0];
-        parent_coeff[1] = self.diag[1] * composite_coeff[1];
+        parent_coeff.mapv_inplace(|x| x * T::zero());
+        parent_coeff[0] = composite_coeff[0] * self.diag[0].into();
+        parent_coeff[1] = composite_coeff[1] * self.diag[1].into();
         for i in 2..self.n - 2 {
-            parent_coeff[i] =
-                self.diag[i] * composite_coeff[i] + self.low2[i - 2] * composite_coeff[i - 2];
+            parent_coeff[i] = composite_coeff[i] * self.diag[i].into()
+                + composite_coeff[i - 2] * self.low2[i - 2].into();
         }
-        parent_coeff[self.n - 2] = self.low2[self.n - 4] * composite_coeff[self.n - 4];
-        parent_coeff[self.n - 1] = self.low2[self.n - 3] * composite_coeff[self.n - 3];
+        parent_coeff[self.n - 2] = composite_coeff[self.n - 4] * self.low2[self.n - 4].into();
+        parent_coeff[self.n - 1] = composite_coeff[self.n - 3] * self.low2[self.n - 3].into();
     }
 
     /// Solve linear algebraic system $p = S c$ for $p$ with given composite
     /// coefficents $c$.
     ///
     /// Input and output array do usually differ in size.
-    fn solve_vec<S>(&self, parent_coeff: &ArrayBase<S, Ix1>) -> Array1<A>
+    fn solve_vec<S, T>(&self, parent_coeff: &ArrayBase<S, Ix1>) -> Array1<T>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T>,
+        T: Scalar + From<A>,
     {
-        let mut composite_coeff = Array1::<A>::zeros(self.m);
+        let mut composite_coeff = Array1::<T>::zeros(self.m);
         self.solve_vec_inplace(parent_coeff, &mut composite_coeff);
         composite_coeff
     }
 
     /// See [`StencilChebyshev::solve_vec`]
-    fn solve_vec_inplace<S1, S2>(
+    fn solve_vec_inplace<S1, S2, T>(
         &self,
         parent_coeff: &ArrayBase<S1, Ix1>,
         composite_coeff: &mut ArrayBase<S2, Ix1>,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        T: Scalar + From<A>,
     {
         use super::linalg::tdma;
         // Multiply right hand side
         for i in 0..self.m {
             composite_coeff[i] =
-                self.diag[i] * parent_coeff[i] + self.low2[i] * parent_coeff[i + 2];
+                parent_coeff[i] * self.diag[i].into() + parent_coeff[i + 2] * self.low2[i].into();
         }
         // Solve tridiagonal system
-        tdma(
-            &self.off.view(),
-            &self.main.view(),
-            &self.off.view(),
-            &mut composite_coeff.view_mut(),
-        );
+        let a: Array1<T> = self.off.mapv(T::from);
+        let b: Array1<T> = self.main.mapv(T::from);
+        let c: Array1<T> = self.off.mapv(T::from);
+
+        tdma(&a, &b, &c, composite_coeff);
     }
 }
 
@@ -286,53 +293,59 @@ impl<A: FloatNum> Stencil<A> for StencilChebyshevBoundary<A> {
 
     /// Multiply stencil with a 1d array (transforms to parent coefficents)
     /// input and output array do usually differ in size.
-    fn multiply_vec<S>(&self, composite_coeff: &ArrayBase<S, Ix1>) -> Array1<A>
+    fn multiply_vec<S, T>(&self, composite_coeff: &ArrayBase<S, Ix1>) -> Array1<T>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T>,
+        T: Scalar + From<A>,
     {
-        let mut parent_coeff = Array1::<A>::zeros(self.n);
+        let mut parent_coeff = Array1::<T>::zeros(self.n);
         self.multiply_vec_inplace(composite_coeff, &mut parent_coeff);
         parent_coeff
     }
 
     /// See [`StencilChebyshevBoundary::multiply_vec`]
-    fn multiply_vec_inplace<S1, S2>(
+    fn multiply_vec_inplace<S1, S2, T>(
         &self,
         composite_coeff: &ArrayBase<S1, Ix1>,
         parent_coeff: &mut ArrayBase<S2, Ix1>,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        T: Scalar + From<A>,
     {
-        parent_coeff.mapv_inplace(|x| x * A::zero());
-        parent_coeff[0] = self.t0[0] * composite_coeff[0] + self.t0[1] * composite_coeff[1];
-        parent_coeff[1] = self.t1[0] * composite_coeff[0] + self.t1[1] * composite_coeff[1];
+        parent_coeff.mapv_inplace(|x| x * T::zero());
+        parent_coeff[0] =
+            composite_coeff[0] * self.t0[0].into() + composite_coeff[1] * self.t0[1].into();
+        parent_coeff[1] =
+            composite_coeff[0] * self.t1[0].into() + composite_coeff[1] * self.t1[1].into();
     }
 
     /// Solve linear algebraic system $p = S c$ for $p$ with given composite
     /// coefficents $c$.
     ///
     /// Input and output array do usually differ in size.
-    fn solve_vec<S>(&self, parent_coeff: &ArrayBase<S, Ix1>) -> Array1<A>
+    fn solve_vec<S, T>(&self, parent_coeff: &ArrayBase<S, Ix1>) -> Array1<T>
     where
-        S: ndarray::Data<Elem = A>,
+        S: ndarray::Data<Elem = T>,
+        T: Scalar + From<A>,
     {
-        let mut composite_coeff = Array1::<A>::zeros(self.m);
+        let mut composite_coeff = Array1::<T>::zeros(self.m);
         self.solve_vec_inplace(parent_coeff, &mut composite_coeff);
         composite_coeff
     }
 
     /// See [`StencilChebyshevBoundary::solve_vec`]
-    fn solve_vec_inplace<S1, S2>(
+    fn solve_vec_inplace<S1, S2, T>(
         &self,
         parent_coeff: &ArrayBase<S1, Ix1>,
         composite_coeff: &mut ArrayBase<S2, Ix1>,
     ) where
-        S1: ndarray::Data<Elem = A>,
-        S2: ndarray::Data<Elem = A> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        T: Scalar + From<A>,
     {
-        let c0 = self.t0[0] * parent_coeff[0] + self.t1[0] * parent_coeff[1];
-        let c1 = self.t0[1] * parent_coeff[0] + self.t1[1] * parent_coeff[1];
+        let c0 = parent_coeff[0] * self.t0[0].into() + parent_coeff[1] * self.t1[0].into();
+        let c1 = parent_coeff[0] * self.t0[1].into() + parent_coeff[1] * self.t1[1].into();
         // Determinante
         let a = self.t0[0] * self.t0[0] + self.t1[0] * self.t1[0];
         let b = self.t0[0] * self.t0[1] + self.t1[0] * self.t1[1];
@@ -340,15 +353,16 @@ impl<A: FloatNum> Stencil<A> for StencilChebyshevBoundary<A> {
         let d = self.t0[1] * self.t0[1] + self.t1[1] * self.t1[1];
 
         let det = A::one() / (a * d - b * c);
-        composite_coeff[0] = det * (d * c0 - b * c1);
-        composite_coeff[1] = det * (a * c1 - c * c0);
+        composite_coeff[0] = (c0 * d.into() - c1 * b.into()) * det.into();
+        composite_coeff[1] = (c1 * a.into() - c0 * c.into()) * det.into();
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::utils::approx_eq;
+    use crate::utils::{approx_eq, approx_eq_complex};
+    use num_complex::Complex;
 
     #[test]
     fn test_stench_cheb() {
@@ -361,6 +375,21 @@ mod test {
         let composite = Array::from_vec(vec![2., 0.70710678, 1.]);
         let parent = stencil.multiply_vec(&composite);
         approx_eq(&parent, &array![2., 0.7071, -1., -0.7071, -1.]);
+    }
+
+    #[test]
+    fn test_stench_cheb_complex() {
+        let stencil = StencilChebyshev::<f64>::dirichlet(5);
+        let parent = array![2., 0.7071, -1., -0.7071, -1.].mapv(|x| Complex::new(x, x));
+        let expected = array![2., 0.70710678, 1.].mapv(|x| Complex::new(x, x));
+        let composite = stencil.solve_vec(&parent);
+        approx_eq_complex(&composite, &expected);
+
+        let stencil = StencilChebyshev::<f64>::dirichlet(5);
+        let composite = array![2., 0.70710678, 1.].mapv(|x| Complex::new(x, x));
+        let expected = array![2., 0.7071, -1., -0.7071, -1.].mapv(|x| Complex::new(x, x));
+        let parent = stencil.multiply_vec(&composite);
+        approx_eq_complex(&parent, &expected);
     }
 
     #[test]
