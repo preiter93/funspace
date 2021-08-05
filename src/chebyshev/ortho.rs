@@ -10,6 +10,7 @@ use crate::Transform;
 use crate::TransformPar;
 use ndarray::prelude::*;
 use ndrustfft::DctHandler;
+use num_complex::Complex;
 
 /// # Container for chebyshev space
 #[derive(Clone)]
@@ -424,41 +425,82 @@ impl<A: FloatNum + std::ops::MulAssign> TransformPar for Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum> Differentiate<A> for Chebyshev<A> {
-    fn differentiate<S, D, T2>(
-        &self,
-        data: &ArrayBase<S, D>,
-        n_times: usize,
-        axis: usize,
-    ) -> Array<T2, D>
-    where
-        S: ndarray::Data<Elem = T2>,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        // Copy input
-        let mut output = data.to_owned();
-        self.differentiate_inplace(&mut output, n_times, axis);
-        output
-    }
+// impl<A: FloatNum> Differentiate<A> for Chebyshev<A> {
+//     fn differentiate<S, D, T2>(
+//         &self,
+//         data: &ArrayBase<S, D>,
+//         n_times: usize,
+//         axis: usize,
+//     ) -> Array<T2, D>
+//     where
+//         S: ndarray::Data<Elem = T2>,
+//         D: Dimension,
+//         T2: Scalar + From<A>,
+//     {
+//         // Copy input
+//         let mut output = data.to_owned();
+//         Differentiate::differentiate_inplace(self, &mut output, n_times, axis);
+//         output
+//     }
 
-    fn differentiate_inplace<S, D, T2>(
-        &self,
-        data: &mut ArrayBase<S, D>,
-        n_times: usize,
-        axis: usize,
-    ) where
-        S: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        use crate::utils::check_array_axis;
-        check_array_axis(data, self.m, axis, Some("chebyshev differentiate"));
-        ndarray::Zip::from(data.lanes_mut(Axis(axis))).for_each(|mut lane| {
-            self.differentiate_lane(&mut lane, n_times);
-        });
-    }
+//     fn differentiate_inplace<S, D, T2>(
+//         &self,
+//         data: &mut ArrayBase<S, D>,
+//         n_times: usize,
+//         axis: usize,
+//     ) where
+//         S: ndarray::Data<Elem = T2> + ndarray::DataMut,
+//         D: Dimension,
+//         T2: Scalar + From<A>,
+//     {
+//         use crate::utils::check_array_axis;
+//         check_array_axis(data, self.m, axis, Some("chebyshev differentiate"));
+//         ndarray::Zip::from(data.lanes_mut(Axis(axis))).for_each(|mut lane| {
+//             self.differentiate_lane(&mut lane, n_times);
+//         });
+//     }
+// }
+
+macro_rules! impl_differentiate_chebyshev {
+    ($a: ty) => {
+        impl<A: FloatNum> Differentiate<$a> for Chebyshev<A> {
+            fn differentiate<S, D>(
+                &self,
+                data: &ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                // Copy input
+                let mut output = data.to_owned();
+                self.differentiate_inplace(&mut output, n_times, axis);
+                output
+            }
+
+            fn differentiate_inplace<S, D>(
+                &self,
+                data: &mut ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) where
+                S: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                use crate::utils::check_array_axis;
+                check_array_axis(data, self.m, axis, Some("chebyshev differentiate"));
+                ndarray::Zip::from(data.lanes_mut(Axis(axis))).for_each(|mut lane| {
+                    self.differentiate_lane(&mut lane, n_times);
+                });
+            }
+        }
+    };
 }
+
+impl_differentiate_chebyshev!(A);
+impl_differentiate_chebyshev!(Complex<A>);
 
 impl<A: FloatNum> LaplacianInverse<A> for Chebyshev<A> {
     /// Pseudoinverse Laplacian of chebyshev spectral

@@ -11,6 +11,7 @@ use crate::Size;
 use crate::Transform;
 use crate::TransformPar;
 use ndarray::prelude::*;
+use num_complex::Complex;
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone)]
@@ -468,51 +469,54 @@ impl<A: FloatNum + std::ops::MulAssign> TransformPar for CompositeChebyshev<A> {
     }
 }
 
-impl<A: FloatNum> Differentiate<A> for CompositeChebyshev<A> {
-    /// Differentiation in spectral space
-    /// ```
-    /// use funspace::Differentiate;
-    /// use funspace::chebyshev::CompositeChebyshev;
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = CompositeChebyshev::<f64>::dirichlet(5);
-    /// let mut input = array![1., 2., 3.];
-    /// let output = cheby.differentiate(&input, 2, 0);
-    /// approx_eq(&output, &array![-88.,  -48., -144., 0., 0. ]);
-    /// ```
-    fn differentiate<S, D, T2>(
-        &self,
-        data: &ArrayBase<S, D>,
-        n_times: usize,
-        axis: usize,
-    ) -> Array<T2, D>
-    where
-        S: ndarray::Data<Elem = T2>,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        let mut parent_coeff = self.to_ortho(data, axis);
-        self.ortho
-            .differentiate_inplace(&mut parent_coeff, n_times, axis);
-        parent_coeff
-    }
+macro_rules! impl_differentiate_composite_chebyshev {
+    ($a: ty) => {
+        impl<A: FloatNum> Differentiate<$a> for CompositeChebyshev<A> {
+            /// Differentiation in spectral space
+            /// ```
+            /// use funspace::Differentiate;
+            /// use funspace::chebyshev::CompositeChebyshev;
+            /// use funspace::utils::approx_eq;
+            /// use ndarray::prelude::*;
+            /// let mut cheby = CompositeChebyshev::<f64>::dirichlet(5);
+            /// let mut input = array![1., 2., 3.];
+            /// let output = cheby.differentiate(&input, 2, 0);
+            /// approx_eq(&output, &array![-88.,  -48., -144., 0., 0. ]);
+            /// ```
+            fn differentiate<S, D>(
+                &self,
+                data: &ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                let mut parent_coeff = self.to_ortho(data, axis);
+                self.ortho.differentiate_inplace(&mut parent_coeff, n_times, axis);
+                parent_coeff
+            }
 
-    #[allow(unused_variables)]
-    fn differentiate_inplace<S, D, T2>(
-        &self,
-        data: &mut ArrayBase<S, D>,
-        n_times: usize,
-        axis: usize,
-    ) where
-        S: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        panic!(
-            "Method differentiate_inplace not impl for composite basis (array size would change)."
-        );
-    }
+            #[allow(unused_variables)]
+            fn differentiate_inplace<S, D>(
+                &self,
+                data: &mut ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) where
+                S: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                panic!(
+                    "Method differentiate_inplace not impl for composite basis (array size would change)."
+                );
+            }
+        }
+    };
 }
+impl_differentiate_composite_chebyshev!(A);
+impl_differentiate_composite_chebyshev!(Complex<A>);
 
 impl<A: FloatNum> LaplacianInverse<A> for CompositeChebyshev<A> {
     /// See [`Chebyshev::laplace_inv`]

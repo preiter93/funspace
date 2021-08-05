@@ -223,30 +223,23 @@ pub trait TransformPar {
 }
 
 /// Perform differentiation in spectral space
-#[enum_dispatch]
 pub trait Differentiate<T> {
     /// Return differentiated array
-    fn differentiate<S, D, T2>(
+    fn differentiate<S, D>(
         &self,
         data: &ArrayBase<S, D>,
         n_times: usize,
         axis: usize,
-    ) -> Array<T2, D>
+    ) -> Array<T, D>
     where
-        S: ndarray::Data<Elem = T2>,
-        D: Dimension,
-        T2: Scalar + From<T>;
+        S: ndarray::Data<Elem = T>,
+        D: Dimension;
 
     /// Differentiate on input array
-    fn differentiate_inplace<S, D, T2>(
-        &self,
-        data: &mut ArrayBase<S, D>,
-        n_times: usize,
-        axis: usize,
-    ) where
-        S: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension,
-        T2: Scalar + From<T>;
+    fn differentiate_inplace<S, D>(&self, data: &mut ArrayBase<S, D>, n_times: usize, axis: usize)
+    where
+        S: ndarray::Data<Elem = T> + ndarray::DataMut,
+        D: Dimension;
 }
 
 /// Define (Pseudo-) Inverse of Laplacian

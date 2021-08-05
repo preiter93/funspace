@@ -10,14 +10,11 @@
 use super::Complex;
 use super::FloatNum;
 use crate::Scalar;
-
+use crate::Differentiate;
 use crate::Mass;
 use crate::Size;
-
 use core::f64::consts::PI;
-
 use ndarray::prelude::*;
-
 use ndrustfft::FftHandler;
 
 /// # Container for fourier space (Complex-to-complex)
@@ -125,69 +122,36 @@ impl<A: FloatNum> Size for Fourier<A> {
     }
 }
 
-// pub trait Differentiate2<T> {
-//     /// Differentiate on input array
-//     fn differentiate_inplace<S, D, T2>(
-//         &self,
-//         data: &mut ArrayBase<S, D>,
-//         n_times: usize,
-//         axis: usize,
-//     ) where
-//         S: ndarray::Data<Elem = T2> + ndarray::DataMut,
-//         D: Dimension;
-// }
+/// Perform differentiation in spectral space
+impl<A: FloatNum> Differentiate<Complex<A>> for Fourier<A> {
+    fn differentiate<S, D>(
+        &self,
+        data: &ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) -> Array<Complex<A>, D>
+    where
+        S: ndarray::Data<Elem = Complex<A>>,
+        D: Dimension,
+    {
+        let mut output = data.to_owned();
+        self.differentiate_inplace(&mut output, n_times, axis);
+        output
+    }
 
-// // impl<A: FloatNum> Differentiate2<A> for Fourier<A> {
-
-// //     fn differentiate_inplace<S, D, T2>(&self, data: &mut ArrayBase<S, D>, n_times: usize, axis: usize)
-// //     where
-// //         S: ndarray::Data<Elem = T2> + ndarray::DataMut,
-// //         D: Dimension,
-// //         //T: Scalar,
-// //     {
-// //         let n_a = A::from_f64(n_times as f64).unwrap();
-// //         let k: Array1<Complex<A>> = self.k.mapv(|x| Complex::new(A::zero(), x).powf(n_a));
-// //         for mut v in data.lanes_mut(Axis(axis)) {
-// //             if n_times % 2 == 0 {
-// //                 for (vi,ki) in v.iter_mut().zip(k.iter()) {
-// //                     vi.re = vi.re * ki.re;
-// //                 }
-// //             } else {
-// //                 for (vi,ki) in v.iter_mut().zip(k.iter()) {
-// //                     vi.im = vi.im * ki.im;
-// //                 }
-// //             }
-// //         }
-// //     }
-
-// // }
-
-// /// Perform differentiation in spectral space
-// impl<A: FloatNum> Differentiate<Complex<A>> for Fourier<A> {
-//     fn differentiate<S, D>(
-//         &self,
-//         data: &ArrayBase<S, D>,
-//         n_times: usize,
-//         axis: usize,
-//     ) -> Array<Complex<A>, D>
-//     where
-//         S: ndarray::Data<Elem = Complex<A>>,
-//         D: Dimension,
-//     {
-//         let mut output = data.to_owned();
-//         self.differentiate_inplace(&mut output, n_times, axis);
-//         output
-//     }
-
-//     fn differentiate_inplace<S, D>(&self, data: &mut ArrayBase<S, D>, n_times: usize, axis: usize)
-//     where
-//         S: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
-//         D: Dimension,
-//     {
-//         use crate::utils::check_array_axis;
-//         check_array_axis(data, self.m, axis, Some("fourier differentiate"));
-//         ndarray::Zip::from(data.lanes_mut(Axis(axis))).for_each(|mut lane| {
-//             self.differentiate_lane(&mut lane, n_times);
-//         });
-//     }
-// }
+    fn differentiate_inplace<S, D>(
+        &self,
+        data: &mut ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) where
+        S: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
+        D: Dimension,
+    {
+        use crate::utils::check_array_axis;
+        check_array_axis(data, self.m, axis, Some("fourier differentiate"));
+        ndarray::Zip::from(data.lanes_mut(Axis(axis))).for_each(|mut lane| {
+            self.differentiate_lane(&mut lane, n_times);
+        });
+    }
+}
