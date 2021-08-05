@@ -93,7 +93,7 @@ impl<A: FloatNum> Fourier<A> {
     pub fn differentiate_lane<S, T2>(&self, data: &mut ArrayBase<S, Ix1>, n_times: usize)
     where
         S: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        T2: Scalar + From<A> + From<Complex<A>>,
+        T2: Scalar + From<Complex<A>>,
     {
         let deriv = A::from_f64(n_times as f64).unwrap();
         let kpow = self.k.mapv(|x| x.powf(deriv));
