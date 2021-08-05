@@ -46,6 +46,7 @@
 //! - `Chebyshev` (Orthogonal), see [`chebyshev()`]
 //! - `ChebDirichlet` (Composite), see [`cheb_dirichlet()`]
 //! - `ChebNeumann` (Composite), see [`cheb_neumann()`]
+//! - `Fourier` (Orthogonal), see [`fourier`]
 //!
 //! # Example
 //! Apply forward transform of 1d array in `cheb_dirichlet` space
@@ -70,10 +71,11 @@ pub mod types;
 pub mod utils;
 use chebyshev::Chebyshev;
 use chebyshev::CompositeChebyshev;
+use fourier::Fourier;
 // use fourier::Fourier;
 use ndarray::prelude::*;
 pub use traits::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform, TransformPar};
-pub use types::{FloatNum, Scalar};
+pub use types::{Complex, FloatNum, Scalar};
 
 /// Collection of all implemented basis functions.
 ///
@@ -96,6 +98,7 @@ pub use types::{FloatNum, Scalar};
 pub enum Base<T: FloatNum> {
     Chebyshev(Chebyshev<T>),
     CompositeChebyshev(CompositeChebyshev<T>),
+    Fourier(Fourier<T>),
 }
 
 /// Function space for Chebyshev Polynomials
@@ -182,4 +185,26 @@ pub fn cheb_dirichlet_bc<A: FloatNum>(n: usize) -> Base<A> {
 #[must_use]
 pub fn cheb_neumann_bc<A: FloatNum>(n: usize) -> Base<A> {
     Base::CompositeChebyshev(CompositeChebyshev::<A>::neumann_bc(n))
+}
+
+/// Function space for Fourier Polynomials
+///
+/// $$
+/// F_k
+/// $$
+///
+/// ## Example
+/// Transform array to function space.
+/// ```
+/// use funspace::fourier;
+/// use funspace::Transform;
+/// use funspace::Complex;
+/// let mut fo = fourier::<f64>(10);
+/// let real = ndarray::Array::linspace(0., 9., 10);
+/// let mut y = real.mapv(|x| Complex::new(x,x));
+/// let yhat = fo.forward(&mut y, 0);
+/// ```
+#[must_use]
+pub fn fourier<A: FloatNum>(n: usize) -> Base<A> {
+    Base::Fourier(Fourier::<A>::new(n))
 }

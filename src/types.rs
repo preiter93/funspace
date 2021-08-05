@@ -8,6 +8,7 @@ use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 // use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 use ndarray::ScalarOperand;
+pub use num_complex::Complex;
 
 /// Generic floating point number, implemented for f32 and f64
 pub trait FloatNum:

@@ -191,7 +191,7 @@ impl<A: FloatNum> Size for Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum + std::ops::MulAssign> Transform for Chebyshev<A> {
+impl<A: FloatNum + std::ops::MulAssign> Transform<A, A> for Chebyshev<A> {
     type Physical = A;
     type Spectral = A;
 
@@ -308,7 +308,7 @@ impl<A: FloatNum + std::ops::MulAssign> Transform for Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum + std::ops::MulAssign> TransformPar for Chebyshev<A> {
+impl<A: FloatNum + std::ops::MulAssign> TransformPar<A, A> for Chebyshev<A> {
     type Physical = A;
     type Spectral = A;
 
@@ -424,42 +424,6 @@ impl<A: FloatNum + std::ops::MulAssign> TransformPar for Chebyshev<A> {
         nddct1_par(&mut buffer, output, &mut self.dct_handler, axis);
     }
 }
-
-// impl<A: FloatNum> Differentiate<A> for Chebyshev<A> {
-//     fn differentiate<S, D, T2>(
-//         &self,
-//         data: &ArrayBase<S, D>,
-//         n_times: usize,
-//         axis: usize,
-//     ) -> Array<T2, D>
-//     where
-//         S: ndarray::Data<Elem = T2>,
-//         D: Dimension,
-//         T2: Scalar + From<A>,
-//     {
-//         // Copy input
-//         let mut output = data.to_owned();
-//         Differentiate::differentiate_inplace(self, &mut output, n_times, axis);
-//         output
-//     }
-
-//     fn differentiate_inplace<S, D, T2>(
-//         &self,
-//         data: &mut ArrayBase<S, D>,
-//         n_times: usize,
-//         axis: usize,
-//     ) where
-//         S: ndarray::Data<Elem = T2> + ndarray::DataMut,
-//         D: Dimension,
-//         T2: Scalar + From<A>,
-//     {
-//         use crate::utils::check_array_axis;
-//         check_array_axis(data, self.m, axis, Some("chebyshev differentiate"));
-//         ndarray::Zip::from(data.lanes_mut(Axis(axis))).for_each(|mut lane| {
-//             self.differentiate_lane(&mut lane, n_times);
-//         });
-//     }
-// }
 
 macro_rules! impl_differentiate_chebyshev {
     ($a: ty) => {

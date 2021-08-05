@@ -29,10 +29,10 @@ pub trait Mass<T> {
 /// to the scalar types in the respective space.
 /// For example, a fourier transforms from real-to-complex,
 /// while chebyshev from real-to-real.
-pub trait Transform {
-    /// Scalar type in physical space (before transform)
+pub trait Transform<T1, T2> {
+    // /// Scalar type in physical space (before transform)
     type Physical;
-    /// Scalar type in spectral space (after transfrom)
+    // /// Scalar type in spectral space (after transfrom)
     type Spectral;
     /// Transform physical -> spectral space along axis
     ///
@@ -56,13 +56,9 @@ pub trait Transform {
     /// let output = cheby.forward(&mut input, 0);
     /// approx_eq(&output, &array![2.5, 1.33333333, 0. , 0.16666667]);
     /// ```
-    fn forward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Spectral, D>
+    fn forward<S, D>(&mut self, input: &mut ArrayBase<S, D>, axis: usize) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = Self::Physical>,
+        S: ndarray::Data<Elem = T1>,
         D: Dimension + ndarray::RemoveAxis;
 
     /// Transform from spectral to physical space
@@ -75,8 +71,8 @@ pub trait Transform {
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
-        S1: ndarray::Data<Elem = Self::Physical>,
-        S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T1>,
+        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
         D: Dimension + ndarray::RemoveAxis;
 
     /// Transform spectral -> physical space along *axis*
@@ -98,13 +94,9 @@ pub trait Transform {
     /// let output = cheby.backward(&mut input, 0);
     /// approx_eq(&output, &array![-2. ,  2.5, -3.5, 10.]);
     /// ```
-    fn backward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Physical, D>
+    fn backward<S, D>(&mut self, input: &mut ArrayBase<S, D>, axis: usize) -> Array<T1, D>
     where
-        S: ndarray::Data<Elem = Self::Spectral>,
+        S: ndarray::Data<Elem = T2>,
         D: Dimension + ndarray::RemoveAxis;
 
     /// Transform from spectral to physical space
@@ -117,8 +109,8 @@ pub trait Transform {
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
-        S1: ndarray::Data<Elem = Self::Spectral>,
-        S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T2>,
+        S2: ndarray::Data<Elem = T1> + ndarray::DataMut,
         D: Dimension + ndarray::RemoveAxis;
 }
 
@@ -129,7 +121,7 @@ pub trait Transform {
 /// to the scalar types in the respective space.
 /// For example, a fourier transforms from real-to-complex,
 /// while chebyshev from real-to-real.
-pub trait TransformPar {
+pub trait TransformPar<T1, T2> {
     /// Scalar type in physical space (before transform)
     type Physical;
     /// Scalar type in spectral space (after transfrom)
@@ -156,13 +148,9 @@ pub trait TransformPar {
     /// let output = cheby.forward(&mut input, 0);
     /// approx_eq(&output, &array![2.5, 1.33333333, 0. , 0.16666667]);
     /// ```
-    fn forward_par<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Spectral, D>
+    fn forward_par<S, D>(&mut self, input: &mut ArrayBase<S, D>, axis: usize) -> Array<T2, D>
     where
-        S: ndarray::Data<Elem = Self::Physical>,
+        S: ndarray::Data<Elem = T1>,
         D: Dimension + ndarray::RemoveAxis;
 
     /// Transform from spectral to physical space
@@ -175,8 +163,8 @@ pub trait TransformPar {
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
-        S1: ndarray::Data<Elem = Self::Physical>,
-        S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T1>,
+        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
         D: Dimension + ndarray::RemoveAxis;
 
     /// Transform spectral -> physical space along *axis*
@@ -198,13 +186,9 @@ pub trait TransformPar {
     /// let output = cheby.backward(&mut input, 0);
     /// approx_eq(&output, &array![-2. ,  2.5, -3.5, 10.]);
     /// ```
-    fn backward_par<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Physical, D>
+    fn backward_par<S, D>(&mut self, input: &mut ArrayBase<S, D>, axis: usize) -> Array<T1, D>
     where
-        S: ndarray::Data<Elem = Self::Spectral>,
+        S: ndarray::Data<Elem = T2>,
         D: Dimension + ndarray::RemoveAxis;
 
     /// Transform from spectral to physical space
@@ -217,8 +201,8 @@ pub trait TransformPar {
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
-        S1: ndarray::Data<Elem = Self::Spectral>,
-        S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = T2>,
+        S2: ndarray::Data<Elem = T1> + ndarray::DataMut,
         D: Dimension + ndarray::RemoveAxis;
 }
 
