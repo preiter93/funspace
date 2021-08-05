@@ -5,8 +5,9 @@
 //!
 //! Fourier polynomials are usefull in problems with periodic.
 //!
-//! See [`complex::Fourier`]
-mod complex;
+//! See [`c2c::Fourier`]
+mod c2c;
+mod r2c;
 use crate::FloatNum;
-pub use complex::Fourier;
+pub use c2c::Fourier;
 use ndrustfft::Complex;

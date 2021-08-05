@@ -1,4 +1,4 @@
-//! # Complex fourier space
+//! # Complex - to - complex fourier space
 //!
 //! # Example
 //! Initialize new fourier basis
@@ -33,7 +33,7 @@ pub struct Fourier<A> {
     /// Complex wavenumber vector
     pub k: Array1<Complex<A>>,
     /// Handles discrete cosine transform
-    fft_handler: FftHandler<A>,
+    pub fft_handler: FftHandler<A>,
 }
 
 impl<A: FloatNum> Fourier<A> {
@@ -50,12 +50,16 @@ impl<A: FloatNum> Fourier<A> {
     }
 
     /// Return equispaced points on intervall [0, 2pi[
-    fn nodes(n: usize) -> Array1<A> {
+    ///
+    /// ## Panics
+    /// **Panics** when conversion f64 to generic A fails
+    #[allow(clippy::must_use_candidate)]
+    pub fn nodes(n: usize) -> Array1<A> {
         let n64 = n as f64;
         Array1::range(0., 2. * PI, 2. * PI / n64).mapv(|elem| A::from_f64(elem).unwrap())
     }
 
-    /// Return complex wavenumber vector
+    /// Return complex wavenumber vector(0, 1, 2, 3, -2, -1)
     #[allow(clippy::missing_panics_doc)]
     fn wavenumber(n: usize) -> Array1<Complex<A>> {
         let mut k: Array1<A> = Array1::zeros(n);
@@ -443,53 +447,49 @@ impl<A: FloatNum> LaplacianInverse<A> for Fourier<A> {
     }
 }
 
-impl<A: FloatNum> FromOrtho<A> for Fourier<A> {
+impl<A: FloatNum> FromOrtho<Complex<A>> for Fourier<A> {
     /// Return itself
-    fn to_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<T2, D>
+    fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<Complex<A>, D>
     where
-        S: ndarray::Data<Elem = T2>,
+        S: ndarray::Data<Elem = Complex<A>>,
         D: Dimension,
-        T2: Scalar + From<A>,
     {
         input.to_owned()
     }
 
     /// Return itself
-    fn to_ortho_inplace<S1, S2, D, T2>(
+    fn to_ortho_inplace<S1, S2, D>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         _axis: usize,
     ) where
-        S1: ndarray::Data<Elem = T2>,
-        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = Complex<A>>,
+        S2: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
         D: Dimension,
-        T2: Scalar + From<A>,
     {
         output.assign(input);
     }
 
     /// Return itself
-    fn from_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<T2, D>
+    fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<Complex<A>, D>
     where
-        S: ndarray::Data<Elem = T2>,
+        S: ndarray::Data<Elem = Complex<A>>,
         D: Dimension,
-        T2: Scalar + From<A>,
     {
         input.to_owned()
     }
 
     /// Return itself
-    fn from_ortho_inplace<S1, S2, D, T2>(
+    fn from_ortho_inplace<S1, S2, D>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         _axis: usize,
     ) where
-        S1: ndarray::Data<Elem = T2>,
-        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
+        S1: ndarray::Data<Elem = Complex<A>>,
+        S2: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
         D: Dimension,
-        T2: Scalar + From<A>,
     {
         output.assign(input);
     }

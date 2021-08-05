@@ -46,7 +46,7 @@
 //! - `Chebyshev` (Orthogonal), see [`chebyshev()`]
 //! - `ChebDirichlet` (Composite), see [`cheb_dirichlet()`]
 //! - `ChebNeumann` (Composite), see [`cheb_neumann()`]
-//! - `Fourier` (Orthogonal), see [`fourier`]
+//! - `Fourier` (Orthogonal), see [`fourier()`]
 //!
 //! # Example
 //! Apply forward transform of 1d array in `cheb_dirichlet` space
@@ -65,6 +65,7 @@ extern crate enum_dispatch;
 pub mod chebyshev;
 pub mod fourier;
 mod impl_differentiate;
+mod impl_from_ortho;
 mod impl_transform;
 mod traits;
 pub mod types;
@@ -93,7 +94,7 @@ pub use types::{Complex, FloatNum, Scalar};
 /// let output = cd.differentiate(&input, 2, 0);
 /// ```
 #[allow(clippy::large_enum_variant)]
-#[enum_dispatch(Mass<T>, LaplacianInverse<T>, Size, FromOrtho<T>)]
+#[enum_dispatch(Mass<T>, LaplacianInverse<T>, Size)]
 #[derive(Clone)]
 pub enum Base<T: FloatNum> {
     Chebyshev(Chebyshev<T>),

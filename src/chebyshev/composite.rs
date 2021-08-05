@@ -6,7 +6,6 @@ use crate::FloatNum;
 use crate::FromOrtho;
 use crate::LaplacianInverse;
 use crate::Mass;
-use crate::Scalar;
 use crate::Size;
 use crate::Transform;
 use crate::TransformPar;
@@ -106,131 +105,134 @@ impl<A: FloatNum> CompositeChebyshev<A> {
     }
 }
 
-impl<A: FloatNum> FromOrtho<A> for CompositeChebyshev<A> {
-    /// Return coefficents in associated composite space
-    ///
-    /// ```
-    /// use funspace::chebyshev::CompositeChebyshev;
-    /// use ndarray::prelude::*;
-    /// use funspace::utils::approx_eq;
-    /// use funspace::FromOrtho;
-    /// let (nx, ny) = (5, 4);
-    /// let mut composite_coeff = Array2::<f64>::zeros((nx - 2, ny));
-    /// for (i, v) in composite_coeff.iter_mut().enumerate() {
-    ///     *v = i as f64;
-    /// }
-    /// let cd = CompositeChebyshev::<f64>::dirichlet(nx);
-    ///
-    /// let expected = array![
-    ///     [0., 1., 2., 3.],
-    ///     [4., 5., 6., 7.],
-    ///     [8., 8., 8., 8.],
-    ///     [-4., -5., -6., -7.],
-    ///     [-8., -9., -10., -11.],
-    /// ];
-    /// let parent_coeff = cd.to_ortho(&composite_coeff, 0);
-    /// approx_eq(&parent_coeff, &expected);
-    /// ```
-    fn to_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T2, D>
-    where
-        S: ndarray::Data<Elem = T2>,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        use crate::utils::array_resized_axis;
-        let mut output = array_resized_axis(input, self.ortho.len_spec(), axis);
-        self.to_ortho_inplace(input, &mut output, axis);
-        output
-    }
+macro_rules! impl_from_ortho_composite_chebyshev {
+    ($a: ty) => {
+        impl<A: FloatNum> FromOrtho<$a> for CompositeChebyshev<A> {
+            /// Return coefficents in associated composite space
+            ///
+            /// ```
+            /// use funspace::chebyshev::CompositeChebyshev;
+            /// use ndarray::prelude::*;
+            /// use funspace::utils::approx_eq;
+            /// use funspace::FromOrtho;
+            /// let (nx, ny) = (5, 4);
+            /// let mut composite_coeff = Array2::<f64>::zeros((nx - 2, ny));
+            /// for (i, v) in composite_coeff.iter_mut().enumerate() {
+            ///     *v = i as f64;
+            /// }
+            /// let cd = CompositeChebyshev::<f64>::dirichlet(nx);
+            ///
+            /// let expected = array![
+            ///     [0., 1., 2., 3.],
+            ///     [4., 5., 6., 7.],
+            ///     [8., 8., 8., 8.],
+            ///     [-4., -5., -6., -7.],
+            ///     [-8., -9., -10., -11.],
+            /// ];
+            /// let parent_coeff = cd.to_ortho(&composite_coeff, 0);
+            /// approx_eq(&parent_coeff, &expected);
+            /// ```
+            fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                use crate::utils::array_resized_axis;
+                let mut output = array_resized_axis(input, self.ortho.len_spec(), axis);
+                self.to_ortho_inplace(input, &mut output, axis);
+                output
+            }
 
-    /// See [`CompositeChebyshev::to_ortho`]
-    fn to_ortho_inplace<S1, S2, D, T2>(
-        &self,
-        input: &ArrayBase<S1, D>,
-        output: &mut ArrayBase<S2, D>,
-        axis: usize,
-    ) where
-        S1: ndarray::Data<Elem = T2>,
-        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        use crate::utils::check_array_axis;
-        check_array_axis(input, self.len_spec(), axis, Some("composite to_ortho"));
-        check_array_axis(
-            output,
-            self.ortho.len_spec(),
-            axis,
-            Some("composite to_ortho"),
-        );
-        ndarray::Zip::from(input.lanes(Axis(axis)))
-            .and(output.lanes_mut(Axis(axis)))
-            .for_each(|inp, mut out| {
-                self.stencil.multiply_vec_inplace(&inp, &mut out);
-            });
-    }
+            /// See [`CompositeChebyshev::to_ortho`]
+            fn to_ortho_inplace<S1, S2, D>(
+                &self,
+                input: &ArrayBase<S1, D>,
+                output: &mut ArrayBase<S2, D>,
+                axis: usize,
+            ) where
+                S1: ndarray::Data<Elem = $a>,
+                S2: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                use crate::utils::check_array_axis;
+                check_array_axis(input, self.len_spec(), axis, Some("composite to_ortho"));
+                check_array_axis(
+                    output,
+                    self.ortho.len_spec(),
+                    axis,
+                    Some("composite to_ortho"),
+                );
+                ndarray::Zip::from(input.lanes(Axis(axis)))
+                    .and(output.lanes_mut(Axis(axis)))
+                    .for_each(|inp, mut out| {
+                        self.stencil.multiply_vec_inplace(&inp, &mut out);
+                    });
+            }
 
-    /// Return coefficents in associated composite space
-    ///
-    /// ```
-    /// use funspace::chebyshev::CompositeChebyshev;
-    /// use ndarray::prelude::*;
-    /// use funspace::utils::approx_eq;
-    /// use funspace::FromOrtho;
-    /// let (nx, ny) = (5, 4);
-    /// let mut parent_coeff = Array2::<f64>::zeros((nx, ny));
-    /// for (i, v) in parent_coeff.iter_mut().enumerate() {
-    ///     *v = i as f64;
-    /// }
-    /// let cd = CompositeChebyshev::<f64>::dirichlet(nx);
-    ///
-    /// let expected = array![
-    ///     [-8., -8., -8., -8.],
-    ///     [-4., -4., -4., -4.],
-    ///     [-8., -8., -8., -8.],
-    /// ];
-    /// let composite_coeff = cd.from_ortho(&parent_coeff, 0);
-    /// approx_eq(&composite_coeff, &expected);
-    /// ```
-    fn from_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T2, D>
-    where
-        S: ndarray::Data<Elem = T2>,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        use crate::utils::array_resized_axis;
-        let mut output = array_resized_axis(input, self.len_spec(), axis);
-        self.from_ortho_inplace(input, &mut output, axis);
-        output
-    }
+            /// Return coefficents in associated composite space
+            ///
+            /// ```
+            /// use funspace::chebyshev::CompositeChebyshev;
+            /// use ndarray::prelude::*;
+            /// use funspace::utils::approx_eq;
+            /// use funspace::FromOrtho;
+            /// let (nx, ny) = (5, 4);
+            /// let mut parent_coeff = Array2::<f64>::zeros((nx, ny));
+            /// for (i, v) in parent_coeff.iter_mut().enumerate() {
+            ///     *v = i as f64;
+            /// }
+            /// let cd = CompositeChebyshev::<f64>::dirichlet(nx);
+            ///
+            /// let expected = array![
+            ///     [-8., -8., -8., -8.],
+            ///     [-4., -4., -4., -4.],
+            ///     [-8., -8., -8., -8.],
+            /// ];
+            /// let composite_coeff = cd.from_ortho(&parent_coeff, 0);
+            /// approx_eq(&composite_coeff, &expected);
+            /// ```
+            fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                use crate::utils::array_resized_axis;
+                let mut output = array_resized_axis(input, self.len_spec(), axis);
+                self.from_ortho_inplace(input, &mut output, axis);
+                output
+            }
 
-    /// See [`CompositeChebyshev::from_ortho`]
-    fn from_ortho_inplace<S1, S2, D, T2>(
-        &self,
-        input: &ArrayBase<S1, D>,
-        output: &mut ArrayBase<S2, D>,
-        axis: usize,
-    ) where
-        S1: ndarray::Data<Elem = T2>,
-        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        use crate::utils::check_array_axis;
-        check_array_axis(
-            input,
-            self.ortho.len_spec(),
-            axis,
-            Some("composite from_ortho"),
-        );
-        check_array_axis(output, self.len_spec(), axis, Some("composite from_ortho"));
-        ndarray::Zip::from(input.lanes(Axis(axis)))
-            .and(output.lanes_mut(Axis(axis)))
-            .for_each(|inp, mut out| {
-                self.stencil.solve_vec_inplace(&inp, &mut out);
-            });
-    }
+            /// See [`CompositeChebyshev::from_ortho`]
+            fn from_ortho_inplace<S1, S2, D>(
+                &self,
+                input: &ArrayBase<S1, D>,
+                output: &mut ArrayBase<S2, D>,
+                axis: usize,
+            ) where
+                S1: ndarray::Data<Elem = $a>,
+                S2: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                use crate::utils::check_array_axis;
+                check_array_axis(
+                    input,
+                    self.ortho.len_spec(),
+                    axis,
+                    Some("composite from_ortho"),
+                );
+                check_array_axis(output, self.len_spec(), axis, Some("composite from_ortho"));
+                ndarray::Zip::from(input.lanes(Axis(axis)))
+                    .and(output.lanes_mut(Axis(axis)))
+                    .for_each(|inp, mut out| {
+                        self.stencil.solve_vec_inplace(&inp, &mut out);
+                    });
+            }
+        }
+    };
 }
+
+impl_from_ortho_composite_chebyshev!(A);
+impl_from_ortho_composite_chebyshev!(Complex<A>);
 
 impl<A: FloatNum> Mass<A> for CompositeChebyshev<A> {
     /// Returns transformation stencil

@@ -506,57 +506,60 @@ impl<A: FloatNum> LaplacianInverse<A> for Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum> FromOrtho<A> for Chebyshev<A> {
-    /// Return itself
-    fn to_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<T2, D>
-    where
-        S: ndarray::Data<Elem = T2>,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        input.to_owned()
-    }
+macro_rules! impl_from_ortho_chebyshev {
+    ($a: ty) => {
+        impl<A: FloatNum> FromOrtho<$a> for Chebyshev<A> {
+            /// Return itself
+            fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                input.to_owned()
+            }
 
-    /// Return itself
-    fn to_ortho_inplace<S1, S2, D, T2>(
-        &self,
-        input: &ArrayBase<S1, D>,
-        output: &mut ArrayBase<S2, D>,
-        _axis: usize,
-    ) where
-        S1: ndarray::Data<Elem = T2>,
-        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        output.assign(input);
-    }
+            /// Return itself
+            fn to_ortho_inplace<S1, S2, D>(
+                &self,
+                input: &ArrayBase<S1, D>,
+                output: &mut ArrayBase<S2, D>,
+                _axis: usize,
+            ) where
+                S1: ndarray::Data<Elem = $a>,
+                S2: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                output.assign(input);
+            }
 
-    /// Return itself
-    fn from_ortho<S, D, T2>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<T2, D>
-    where
-        S: ndarray::Data<Elem = T2>,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        input.to_owned()
-    }
+            /// Return itself
+            fn from_ortho<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                input.to_owned()
+            }
 
-    /// Return itself
-    fn from_ortho_inplace<S1, S2, D, T2>(
-        &self,
-        input: &ArrayBase<S1, D>,
-        output: &mut ArrayBase<S2, D>,
-        _axis: usize,
-    ) where
-        S1: ndarray::Data<Elem = T2>,
-        S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension,
-        T2: Scalar + From<A>,
-    {
-        output.assign(input);
-    }
+            /// Return itself
+            fn from_ortho_inplace<S1, S2, D>(
+                &self,
+                input: &ArrayBase<S1, D>,
+                output: &mut ArrayBase<S2, D>,
+                _axis: usize,
+            ) where
+                S1: ndarray::Data<Elem = $a>,
+                S2: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                output.assign(input);
+            }
+        }
+    };
 }
+
+impl_from_ortho_chebyshev!(A);
+impl_from_ortho_chebyshev!(Complex<A>);
 
 #[cfg(test)]
 mod test {
