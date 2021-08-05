@@ -121,6 +121,12 @@ impl<A: FloatNum> Chebyshev<A> {
 }
 
 impl<A: FloatNum> Chebyshev<A> {
+    /// Differentation Matrix see [`chebyshev::dmsuite::diffmat_chebyshev`]
+    #[allow(clippy::must_use_candidate)]
+    fn _dmat(n: usize, deriv: usize) -> Array2<A> {
+        use super::dmsuite::diffmat_chebyshev;
+        diffmat_chebyshev(n, deriv)
+    }
     /// Pseudoinverse matrix of chebyshev spectral
     /// differentiation matrices
     ///
@@ -467,14 +473,33 @@ impl_differentiate_chebyshev!(A);
 impl_differentiate_chebyshev!(Complex<A>);
 
 impl<A: FloatNum> LaplacianInverse<A> for Chebyshev<A> {
+    /// Laplacian
+    fn laplace(&self) -> Array2<A> {
+        Self::_dmat(self.n, 2)
+    }
+
     /// Pseudoinverse Laplacian of chebyshev spectral
     /// differentiation matrices
     ///
     /// Second order equations become banded
     /// when preconditioned with this matrix
+    ///
+    /// # Example
+    /// ```
+    /// use funspace::chebyshev::Chebyshev;
+    /// use funspace::LaplacianInverse;
+    /// use funspace::utils::approx_eq;
+    /// use ndarray::s;
+    /// let ch = Chebyshev::<f64>::new(5);
+    /// let lap = ch.laplace();
+    /// let pinv = ch.laplace_inv();
+    /// let peye = pinv.dot(&lap);
+    /// approx_eq(&peye.slice(s![2..,..]).to_owned(), &ch.laplace_inv_eye());
+    /// ```
     fn laplace_inv(&self) -> Array2<A> {
         Self::_pinv(self.n, 2)
     }
+
     /// Pseudoidentity matrix of laplacian
     fn laplace_inv_eye(&self) -> Array2<A> {
         Self::_pinv_eye(self.n, 2)

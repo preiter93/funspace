@@ -232,6 +232,9 @@ pub trait Differentiate<T> {
 /// second order equations
 #[enum_dispatch]
 pub trait LaplacianInverse<T> {
+    /// Laplacian $ L $
+    fn laplace(&self) -> Array2<T>;
+
     /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
     fn laplace_inv(&self) -> Array2<T>;
 

@@ -519,6 +519,10 @@ impl_differentiate_composite_chebyshev!(A);
 impl_differentiate_composite_chebyshev!(Complex<A>);
 
 impl<A: FloatNum> LaplacianInverse<A> for CompositeChebyshev<A> {
+    /// See [`Chebyshev::laplace`]
+    fn laplace(&self) -> Array2<A> {
+        self.ortho.laplace()
+    }
     /// See [`Chebyshev::laplace_inv`]
     fn laplace_inv(&self) -> Array2<A> {
         self.ortho.laplace_inv()

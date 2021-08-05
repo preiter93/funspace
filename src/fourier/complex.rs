@@ -403,31 +403,38 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Fourier<A> {
 }
 
 impl<A: FloatNum> LaplacianInverse<A> for Fourier<A> {
+    /// Laplacian ( = |k^2| ) diagonal matrix
+    fn laplace(&self) -> Array2<A> {
+        let mut lap = Array2::<A>::zeros((self.m, self.m));
+        for (l, k) in lap.diag_mut().iter_mut().zip(self.k.iter()) {
+            *l = k.im * k.im;
+        }
+        lap
+    }
+
     /// Pseudoinverse Laplacian for `Fourier` basis
-    /// ( = 1 / k^2 )
+    /// ( = 1 / |k^2| ) diagonal matrix
     ///
     /// ```
     /// use funspace::fourier::Fourier;
     /// use funspace::LaplacianInverse;
     /// use ndarray::prelude::*;
     /// use funspace::utils::approx_eq;
-    /// let fo = Fourier::new(4);
-    /// let mut laplacian = Array2::<f64>::zeros((fo.m, fo.m));
-    /// for i in 0..fo.m {
-    ///     laplacian[[i,i]] = fo.k[i].im * fo.k[i].im;
-    /// }
+    /// let fo = Fourier::<f64>::new(4);
+    /// let mut laplacian = fo.laplace();
+    /// let result = fo.laplace_inv().dot(&laplacian);
     /// approx_eq(
-    ///     &fo.laplace_inv_eye(), &fo.laplace_inv().dot(&laplacian)
+    ///     &fo.laplace_inv_eye(), &result.slice(s![1..,..]).to_owned()
     /// );
     /// ```
     fn laplace_inv(&self) -> Array2<A> {
-        let mut pinv = Array2::<A>::zeros((self.m - 1, self.m));
-        let two = A::one() + A::one();
-        for i in 1..self.m {
-            pinv[[i - 1, i]] = A::one() / self.k[i].im.powf(two);
+        let mut pinv = self.laplace();
+        for p in pinv.slice_mut(s![1.., 1..]).diag_mut().iter_mut() {
+            *p = A::one() / *p;
         }
         pinv
     }
+
     /// Pseudoidentity matrix (= eye matrix with removed
     /// first row for `Fourier`)
     fn laplace_inv_eye(&self) -> Array2<A> {

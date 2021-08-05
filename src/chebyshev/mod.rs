@@ -9,6 +9,7 @@
 //! See [`ortho::Chebyshev`]
 mod composite;
 mod composite_stencil;
+mod dmsuite;
 mod linalg;
 mod ortho;
 use crate::FloatNum;
