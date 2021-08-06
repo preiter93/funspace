@@ -5,12 +5,25 @@
 //! Implements `Transform`, `Differentiate` and `FromOrtho` trait as defined
 //! for `Base` itself. Other traits, who do not act along an axis, are defined
 //! on the `SpaceBase` struct itself, without a respective trait.
+//!
+//! # Example
+//! ```
+//! use funspace::{fourier_r2c, cheb_dirichlet, Space2, Transform};
+//! use ndarray::prelude::*;
+//! use num_complex::Complex;
+//! let mut space = Space2::new(&[fourier_r2c(5), cheb_dirichlet(5)]);
+//! let mut data: Array2<f64> = space.ndarray_physical();
+//! let mut vhat: Array2<Complex<f64>> = space.ndarray_spectral();
+//! data += 1.;
+//! let mut inter: Array2<f64> = space.forward(&mut data, 1);
+//! space.forward_inplace(&mut inter, &mut vhat, 0);
+//! ```
 #![allow(clippy::module_name_repetitions, clippy::must_use_candidate)]
 use crate::Base;
 use crate::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform, TransformPar};
 use crate::{FloatNum, Scalar};
 use ndarray::prelude::*;
-use ndarray::IntoDimension;
+use ndarray::{IntoDimension, Ix};
 use num_complex::Complex;
 use std::convert::TryInto;
 
@@ -31,8 +44,8 @@ pub struct SpaceBase<T: FloatNum, const N: usize> {
 impl<T, const N: usize> SpaceBase<T, N>
 where
     T: FloatNum,
-    [usize; N]: Dimension + IntoDimension<Dim = Dim<[usize; N]>>,
-    Dim<[usize; N]>: Dimension,
+    [Ix; N]: IntoDimension<Dim = Dim<[Ix; N]>>,
+    Dim<[Ix; N]>: Dimension,
 {
     /// Return new space
     #[must_use]

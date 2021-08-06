@@ -47,15 +47,17 @@
 //! - `ChebDirichlet` (Composite), see [`cheb_dirichlet()`]
 //! - `ChebNeumann` (Composite), see [`cheb_neumann()`]
 //! - `Fourier` (Orthogonal), see [`fourier()`]
+//! - `FourierR2c` (Orthogonal), see [`fourier_r2c()`]
 //!
 //! # Example
 //! Apply forward transform of 1d array in `cheb_dirichlet` space
 //! ```
 //! use funspace::{Transform, cheb_dirichlet};
 //! use ndarray::prelude::*;
+//! use ndarray::Array1;
 //! let mut cd = cheb_dirichlet::<f64>(5);
 //! let mut input = array![1., 2., 3., 4., 5.];
-//! let output = cd.forward(&mut input, 0);
+//! let output: Array1<f64> = cd.forward(&mut input, 0);
 //! ```
 #![allow(clippy::just_underscores_and_digits)]
 #![allow(clippy::doc_markdown)]
@@ -73,7 +75,7 @@ pub mod types;
 pub mod utils;
 use chebyshev::Chebyshev;
 use chebyshev::CompositeChebyshev;
-use fourier::Fourier;
+use fourier::{Fourier, FourierR2c};
 // use fourier::Fourier;
 use ndarray::prelude::*;
 pub use space::{Space1, Space2, SpaceBase};
@@ -102,6 +104,7 @@ pub enum Base<T: FloatNum> {
     Chebyshev(Chebyshev<T>),
     CompositeChebyshev(CompositeChebyshev<T>),
     Fourier(Fourier<T>),
+    FourierR2c(FourierR2c<T>),
 }
 
 /// Function space for Chebyshev Polynomials
@@ -115,9 +118,10 @@ pub enum Base<T: FloatNum> {
 /// ```
 /// use funspace::chebyshev;
 /// use funspace::Transform;
+/// use ndarray::Array1;
 /// let mut ch = chebyshev::<f64>(10);
 /// let mut y = ndarray::Array::linspace(0., 9., 10);
-/// let yhat = ch.forward(&mut y, 0);
+/// let yhat: Array1<f64> = ch.forward(&mut y, 0);
 /// ```
 #[must_use]
 pub fn chebyshev<A: FloatNum>(n: usize) -> Base<A> {
@@ -134,9 +138,10 @@ pub fn chebyshev<A: FloatNum>(n: usize) -> Base<A> {
 /// ```
 /// use funspace::cheb_dirichlet;
 /// use funspace::Transform;
+/// use ndarray::Array1;
 /// let mut cd = cheb_dirichlet::<f64>(10);
 /// let mut y = ndarray::Array::linspace(0., 9., 10);
-/// let yhat = cd.forward(&mut y, 0);
+/// let yhat: Array1<f64> = cd.forward(&mut y, 0);
 /// ```
 #[must_use]
 pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
@@ -153,9 +158,10 @@ pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
 /// ```
 /// use funspace::cheb_neumann;
 /// use funspace::Transform;
+/// use ndarray::Array1;
 /// let mut cn = cheb_neumann::<f64>(10);
 /// let mut y = ndarray::Array::linspace(0., 9., 10);
-/// let yhat = cn.forward(&mut y, 0);
+/// let yhat: Array1<f64> = cn.forward(&mut y, 0);
 /// ```
 #[must_use]
 pub fn cheb_neumann<A: FloatNum>(n: usize) -> Base<A> {
@@ -210,4 +216,27 @@ pub fn cheb_neumann_bc<A: FloatNum>(n: usize) -> Base<A> {
 #[must_use]
 pub fn fourier<A: FloatNum>(n: usize) -> Base<A> {
     Base::Fourier(Fourier::<A>::new(n))
+}
+
+/// Function space for Fourier Polynomials
+/// (Real-to-complex)
+///
+/// $$
+/// F_k
+/// $$
+///
+/// ## Example
+/// Transform array to function space.
+/// ```
+/// use funspace::fourier_r2c;
+/// use funspace::Transform;
+/// use funspace::Complex;
+/// use ndarray::Array1;
+/// let mut fo = fourier_r2c::<f64>(10);
+/// let mut y = ndarray::Array::linspace(0., 9., 10);
+/// let yhat: Array1<Complex<f64>> = fo.forward(&mut y, 0);
+/// ```
+#[must_use]
+pub fn fourier_r2c<A: FloatNum>(n: usize) -> Base<A> {
+    Base::FourierR2c(FourierR2c::<A>::new(n))
 }

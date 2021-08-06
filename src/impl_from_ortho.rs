@@ -15,7 +15,7 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.to_ortho(input, axis),
             Self::CompositeChebyshev(ref b) => b.to_ortho(input, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expect complex array for Fourier, but got real!")
             }
         }
@@ -34,7 +34,7 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.to_ortho_inplace(input, output, axis),
             Self::CompositeChebyshev(ref b) => b.to_ortho_inplace(input, output, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expect complex array for Fourier, but got real!")
             }
         }
@@ -48,7 +48,7 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.from_ortho(input, axis),
             Self::CompositeChebyshev(ref b) => b.from_ortho(input, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expect complex array for Fourier, but got real!")
             }
         }
@@ -67,7 +67,7 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.from_ortho_inplace(input, output, axis),
             Self::CompositeChebyshev(ref b) => b.from_ortho_inplace(input, output, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expect complex array for Fourier, but got real!")
             }
         }
@@ -85,6 +85,7 @@ impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
             Self::Chebyshev(ref b) => b.to_ortho(input, axis),
             Self::CompositeChebyshev(ref b) => b.to_ortho(input, axis),
             Self::Fourier(ref b) => b.to_ortho(input, axis),
+            Self::FourierR2c(ref b) => b.to_ortho(input, axis),
         }
     }
 
@@ -102,6 +103,7 @@ impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
             Self::Chebyshev(ref b) => b.to_ortho_inplace(input, output, axis),
             Self::CompositeChebyshev(ref b) => b.to_ortho_inplace(input, output, axis),
             Self::Fourier(ref b) => b.to_ortho_inplace(input, output, axis),
+            Self::FourierR2c(ref b) => b.to_ortho_inplace(input, output, axis),
         }
     }
 
@@ -114,6 +116,7 @@ impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
             Self::Chebyshev(ref b) => b.from_ortho(input, axis),
             Self::CompositeChebyshev(ref b) => b.from_ortho(input, axis),
             Self::Fourier(ref b) => b.from_ortho(input, axis),
+            Self::FourierR2c(ref b) => b.from_ortho(input, axis),
         }
     }
 
@@ -131,38 +134,7 @@ impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
             Self::Chebyshev(ref b) => b.from_ortho_inplace(input, output, axis),
             Self::CompositeChebyshev(ref b) => b.from_ortho_inplace(input, output, axis),
             Self::Fourier(ref b) => b.from_ortho_inplace(input, output, axis),
+            Self::FourierR2c(ref b) => b.from_ortho_inplace(input, output, axis),
         }
     }
 }
-
-// /// Implement Differentiate for Complex
-// impl<A: FloatNum> Differentiate<Complex<A>> for Base<A> {
-//     fn differentiate<S, D>(
-//         &self,
-//         data: &ArrayBase<S, D>,
-//         n_times: usize,
-//         axis: usize,
-//     ) -> Array<Complex<A>, D>
-//     where
-//         S: ndarray::Data<Elem = Complex<A>>,
-//         D: Dimension,
-//     {
-//         match self {
-//             Self::Chebyshev(ref b) => b.differentiate(data, n_times, axis),
-//             Self::CompositeChebyshev(ref b) => b.differentiate(data, n_times, axis),
-//             Self::Fourier(ref b) => b.differentiate(data, n_times, axis),
-//         }
-//     }
-
-//     fn differentiate_inplace<S, D>(&self, data: &mut ArrayBase<S, D>, n_times: usize, axis: usize)
-//     where
-//         S: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
-//         D: Dimension,
-//     {
-//         match self {
-//             Self::Chebyshev(ref b) => b.differentiate_inplace(data, n_times, axis),
-//             Self::CompositeChebyshev(ref b) => b.differentiate_inplace(data, n_times, axis),
-//             Self::Fourier(ref b) => b.differentiate_inplace(data, n_times, axis),
-//         }
-//     }
-// }

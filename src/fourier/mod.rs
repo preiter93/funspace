@@ -11,3 +11,4 @@ mod r2c;
 use crate::FloatNum;
 pub use c2c::Fourier;
 use ndrustfft::Complex;
+pub use r2c::FourierR2c;

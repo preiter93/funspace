@@ -23,7 +23,7 @@ impl<A: FloatNum> Transform<A, A> for Base<A> {
         match self {
             Self::Chebyshev(ref mut b) => b.forward(input, axis),
             Self::CompositeChebyshev(ref mut b) => b.forward(input, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expected real-to-real transform, but Fourier is complex-to-complex.")
             }
         }
@@ -42,7 +42,7 @@ impl<A: FloatNum> Transform<A, A> for Base<A> {
         match self {
             Self::Chebyshev(ref mut b) => b.forward_inplace(input, output, axis),
             Self::CompositeChebyshev(ref mut b) => b.forward_inplace(input, output, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expected real-to-real transform, but Fourier is complex-to-complex.")
             }
         }
@@ -60,7 +60,7 @@ impl<A: FloatNum> Transform<A, A> for Base<A> {
         match self {
             Self::Chebyshev(ref mut b) => b.backward(input, axis),
             Self::CompositeChebyshev(ref mut b) => b.backward(input, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expected real-to-real transform, but Fourier is complex-to-complex.")
             }
         }
@@ -79,7 +79,7 @@ impl<A: FloatNum> Transform<A, A> for Base<A> {
         match self {
             Self::Chebyshev(ref mut b) => b.backward_inplace(input, output, axis),
             Self::CompositeChebyshev(ref mut b) => b.backward_inplace(input, output, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expected real-to-real transform, but Fourier is complex-to-complex.")
             }
         }
@@ -103,7 +103,7 @@ impl<A: FloatNum> TransformPar<A, A> for Base<A> {
         match self {
             Self::Chebyshev(ref mut b) => b.forward_par(input, axis),
             Self::CompositeChebyshev(ref mut b) => b.forward_par(input, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expected real-to-real transform, but Fourier is complex-to-complex.")
             }
         }
@@ -122,7 +122,7 @@ impl<A: FloatNum> TransformPar<A, A> for Base<A> {
         match self {
             Self::Chebyshev(ref mut b) => b.forward_inplace_par(input, output, axis),
             Self::CompositeChebyshev(ref mut b) => b.forward_inplace_par(input, output, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expected real-to-real transform, but Fourier is complex-to-complex.")
             }
         }
@@ -140,7 +140,7 @@ impl<A: FloatNum> TransformPar<A, A> for Base<A> {
         match self {
             Self::Chebyshev(ref mut b) => b.backward_par(input, axis),
             Self::CompositeChebyshev(ref mut b) => b.backward_par(input, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expected real-to-real transform, but Fourier is complex-to-complex.")
             }
         }
@@ -159,7 +159,7 @@ impl<A: FloatNum> TransformPar<A, A> for Base<A> {
         match self {
             Self::Chebyshev(ref mut b) => b.backward_inplace_par(input, output, axis),
             Self::CompositeChebyshev(ref mut b) => b.backward_inplace_par(input, output, axis),
-            Self::Fourier(_) => {
+            Self::Fourier(_) | Self::FourierR2c(_) => {
                 panic!("Expected real-to-real transform, but Fourier is complex-to-complex.")
             }
         }
@@ -185,6 +185,9 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
                 panic!("Expected complex-to-complex transform, but Chebyshev is real-to-real.")
             }
             Self::Fourier(ref mut b) => b.forward(input, axis),
+            Self::FourierR2c(_) => {
+                panic!("Expected complex-to-complex transform, but FourierR2c is real-to-complex.")
+            }
         }
     }
 
@@ -203,6 +206,9 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
                 panic!("Expected complex-to-complex transform, but Chebyshev is real-to-real.")
             }
             Self::Fourier(ref mut b) => b.forward_inplace(input, output, axis),
+            Self::FourierR2c(_) => {
+                panic!("Expected complex-to-complex transform, but FourierR2c is real-to-complex.")
+            }
         }
     }
 
@@ -220,6 +226,9 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
                 panic!("Expected complex-to-complex transform, but Chebyshev is real-to-real.")
             }
             Self::Fourier(ref mut b) => b.backward(input, axis),
+            Self::FourierR2c(_) => {
+                panic!("Expected complex-to-complex transform, but FourierR2c is real-to-complex.")
+            }
         }
     }
 
@@ -238,6 +247,9 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
                 panic!("Expected complex-to-complex transform, but Chebyshev is real-to-real.")
             }
             Self::Fourier(ref mut b) => b.backward_inplace(input, output, axis),
+            Self::FourierR2c(_) => {
+                panic!("Expected complex-to-complex transform, but FourierR2c is real-to-complex.")
+            }
         }
     }
 }
@@ -260,6 +272,9 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
                 panic!("Expected complex-to-complex transform, but Chebyshev is real-to-real.")
             }
             Self::Fourier(ref mut b) => b.forward_par(input, axis),
+            Self::FourierR2c(_) => {
+                panic!("Expected complex-to-complex transform, but FourierR2c is real-to-complex.")
+            }
         }
     }
 
@@ -278,6 +293,9 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
                 panic!("Expected complex-to-complex transform, but Chebyshev is real-to-real.")
             }
             Self::Fourier(ref mut b) => b.forward_inplace_par(input, output, axis),
+            Self::FourierR2c(_) => {
+                panic!("Expected complex-to-complex transform, but FourierR2c is real-to-complex.")
+            }
         }
     }
 
@@ -295,6 +313,9 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
                 panic!("Expected complex-to-complex transform, but Chebyshev is real-to-real.")
             }
             Self::Fourier(ref mut b) => b.backward_par(input, axis),
+            Self::FourierR2c(_) => {
+                panic!("Expected complex-to-complex transform, but FourierR2c is real-to-complex.")
+            }
         }
     }
 
@@ -313,6 +334,9 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
                 panic!("Expected complex-to-complex transform, but Chebyshev is real-to-real.")
             }
             Self::Fourier(ref mut b) => b.backward_inplace_par(input, output, axis),
+            Self::FourierR2c(_) => {
+                panic!("Expected complex-to-complex transform, but FourierR2c is real-to-complex.")
+            }
         }
     }
 }
@@ -335,7 +359,10 @@ impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
                 panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
             }
-            Self::Fourier(ref mut b) => b.forward(input, axis),
+            Self::Fourier(_) => {
+                panic!("Expected real-to-complex transform, but Fourier is complex-to-complex.")
+            }
+            Self::FourierR2c(ref mut b) => b.forward(input, axis),
         }
     }
 
@@ -353,7 +380,10 @@ impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
                 panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
             }
-            Self::Fourier(ref mut b) => b.forward_inplace(input, output, axis),
+            Self::Fourier(_) => {
+                panic!("Expected real-to-complex transform, but Fourier is complex-to-complex.")
+            }
+            Self::FourierR2c(ref mut b) => b.forward_inplace(input, output, axis),
         }
     }
 
@@ -370,7 +400,10 @@ impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
                 panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
             }
-            Self::Fourier(ref mut b) => b.backward(input, axis),
+            Self::Fourier(_) => {
+                panic!("Expected real-to-complex transform, but Fourier is complex-to-complex.")
+            }
+            Self::FourierR2c(ref mut b) => b.backward(input, axis),
         }
     }
 
@@ -388,7 +421,10 @@ impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
                 panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
             }
-            Self::Fourier(ref mut b) => b.backward_inplace(input, output, axis),
+            Self::Fourier(_) => {
+                panic!("Expected real-to-complex transform, but Fourier is complex-to-complex.")
+            }
+            Self::FourierR2c(ref mut b) => b.backward_inplace(input, output, axis),
         }
     }
 }
@@ -410,7 +446,10 @@ impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
                 panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
             }
-            Self::Fourier(ref mut b) => b.forward_par(input, axis),
+            Self::Fourier(_) => {
+                panic!("Expected real-to-complex transform, but Fourier is complex-to-complex.")
+            }
+            Self::FourierR2c(ref mut b) => b.forward_par(input, axis),
         }
     }
 
@@ -428,7 +467,10 @@ impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
                 panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
             }
-            Self::Fourier(ref mut b) => b.forward_inplace_par(input, output, axis),
+            Self::Fourier(_) => {
+                panic!("Expected real-to-complex transform, but Fourier is complex-to-complex.")
+            }
+            Self::FourierR2c(ref mut b) => b.forward_inplace_par(input, output, axis),
         }
     }
 
@@ -445,7 +487,10 @@ impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
                 panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
             }
-            Self::Fourier(ref mut b) => b.backward_par(input, axis),
+            Self::Fourier(_) => {
+                panic!("Expected real-to-complex transform, but Fourier is complex-to-complex.")
+            }
+            Self::FourierR2c(ref mut b) => b.backward_par(input, axis),
         }
     }
 
@@ -463,7 +508,10 @@ impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
                 panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
             }
-            Self::Fourier(ref mut b) => b.backward_inplace_par(input, output, axis),
+            Self::Fourier(_) => {
+                panic!("Expected real-to-complex transform, but Fourier is complex-to-complex.")
+            }
+            Self::FourierR2c(ref mut b) => b.backward_inplace_par(input, output, axis),
         }
     }
 }
