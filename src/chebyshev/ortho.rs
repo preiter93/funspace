@@ -277,7 +277,7 @@ impl<A: FloatNum + std::ops::MulAssign> Transform<A, A> for Chebyshev<A> {
         D: Dimension + ndarray::RemoveAxis,
     {
         use crate::utils::array_resized_axis;
-        let mut output = array_resized_axis(input, self.m, axis);
+        let mut output = array_resized_axis(input, self.n, axis);
         self.backward_inplace(input, &mut output, axis);
         output
     }
@@ -394,7 +394,7 @@ impl<A: FloatNum + std::ops::MulAssign> TransformPar<A, A> for Chebyshev<A> {
         D: Dimension + ndarray::RemoveAxis,
     {
         use crate::utils::array_resized_axis;
-        let mut output = array_resized_axis(input, self.m, axis);
+        let mut output = array_resized_axis(input, self.n, axis);
         self.backward_inplace_par(input, &mut output, axis);
         output
     }

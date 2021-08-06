@@ -18,9 +18,16 @@ num-complex = "0.4"
 ndrustfft = "0.1"
 enum_dispatch = "0.3.7"
 
+[dev-dependencies]
+criterion = { version = "0.3", features = ["html_reports"] }
+
 [lib]
 name = "funspace"
 path = "src/lib.rs"
+
+[[bench]]
+name = "benchmark_chebyshev"
+harness = false
 
 # Enable katex in documentation
 # RUSTDOCFLAGS="--html-in-header docs-header.html" cargo doc --no-deps --open
