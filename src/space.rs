@@ -35,7 +35,9 @@ where
     /// Return new space
     #[must_use]
     pub fn new(bases: &[Base<T>; N]) -> Self {
-        Self { bases: bases.clone() }
+        Self {
+            bases: bases.clone(),
+        }
     }
 
     /// Shape in physical space
@@ -160,7 +162,7 @@ macro_rules! impl_transform {
                 S: ndarray::Data<Elem = Self::Physical>,
                 D: Dimension + ndarray::RemoveAxis,
             {
-                self.bases[axis].forward_par(input, axis)
+                self.bases[axis].forward(input, axis)
             }
 
             fn forward_inplace<S1, S2, D>(
@@ -173,7 +175,7 @@ macro_rules! impl_transform {
                 S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
                 D: Dimension + ndarray::RemoveAxis,
             {
-                self.bases[axis].forward_inplace_par(input, output, axis)
+                self.bases[axis].forward_inplace(input, output, axis)
             }
 
             fn backward<S, D>(
@@ -185,10 +187,74 @@ macro_rules! impl_transform {
                 S: ndarray::Data<Elem = Self::Spectral>,
                 D: Dimension + ndarray::RemoveAxis,
             {
-                self.bases[axis].backward_par(input, axis)
+                self.bases[axis].backward(input, axis)
             }
 
             fn backward_inplace<S1, S2, D>(
+                &mut self,
+                input: &mut ArrayBase<S1, D>,
+                output: &mut ArrayBase<S2, D>,
+                axis: usize,
+            ) where
+                S1: ndarray::Data<Elem = Self::Spectral>,
+                S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+                D: Dimension + ndarray::RemoveAxis,
+            {
+                self.bases[axis].backward_inplace(input, output, axis)
+            }
+        }
+    };
+}
+
+// Real to real
+impl_transform!(A);
+// Real to complex
+impl_transform!(Complex<A>);
+
+macro_rules! impl_transform_par {
+    ($a: ty) => {
+        impl<A: FloatNum, const N: usize> TransformPar<A, $a> for SpaceBase<A, N> {
+            type Physical = A;
+            type Spectral = $a;
+
+            fn forward_par<S, D>(
+                &mut self,
+                input: &mut ArrayBase<S, D>,
+                axis: usize,
+            ) -> Array<Self::Spectral, D>
+            where
+                S: ndarray::Data<Elem = Self::Physical>,
+                D: Dimension + ndarray::RemoveAxis,
+            {
+                self.bases[axis].forward_par(input, axis)
+            }
+
+            fn forward_inplace_par<S1, S2, D>(
+                &mut self,
+                input: &mut ArrayBase<S1, D>,
+                output: &mut ArrayBase<S2, D>,
+                axis: usize,
+            ) where
+                S1: ndarray::Data<Elem = Self::Physical>,
+                S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+                D: Dimension + ndarray::RemoveAxis,
+            {
+                self.bases[axis].forward_inplace_par(input, output, axis)
+            }
+
+            fn backward_par<S, D>(
+                &mut self,
+                input: &mut ArrayBase<S, D>,
+                axis: usize,
+            ) -> Array<Self::Physical, D>
+            where
+                S: ndarray::Data<Elem = Self::Spectral>,
+                D: Dimension + ndarray::RemoveAxis,
+            {
+                self.bases[axis].backward_par(input, axis)
+            }
+
+            fn backward_inplace_par<S1, S2, D>(
                 &mut self,
                 input: &mut ArrayBase<S1, D>,
                 output: &mut ArrayBase<S2, D>,
@@ -205,9 +271,9 @@ macro_rules! impl_transform {
 }
 
 // Real to real
-impl_transform!(A);
+impl_transform_par!(A);
 // Real to complex
-impl_transform!(Complex<A>);
+impl_transform_par!(Complex<A>);
 
 macro_rules! impl_differentiate {
     ($a: ty) => {
