@@ -106,9 +106,42 @@ where
         self.bases[axis].mass()
     }
 
-    /// Coordinates in physical space
-    pub fn coords(&self, axis: usize) -> &Array1<T> {
+    /// Coordinates in physical space along axis
+    pub fn coords_axis(&self, axis: usize) -> Array1<T> {
+        self.bases[axis].coords().clone()
+    }
+
+    /// Array of coordinates in physical space
+    ///
+    /// ## Panics
+    /// When vector of size *N* cannot be
+    /// cast to static array
+    pub fn coords(&self) -> [Array1<T>; N] {
+        self.bases
+            .iter()
+            .map(|x| x.coords().clone())
+            .collect::<Vec<Array1<T>>>()
+            .try_into()
+            .unwrap()
+    }
+
+    /// Reference to coordinates in physical space along axis
+    pub fn coords_ref_axis(&self, axis: usize) -> &Array1<T> {
         self.bases[axis].coords()
+    }
+
+    /// Array of references to coordinates in physical space
+    ///
+    /// ## Panics
+    /// When vector of size *N* cannot be
+    /// cast to static array
+    pub fn coords_ref(&self) -> [&Array1<T>; N] {
+        self.bases
+            .iter()
+            .map(|x| x.coords())
+            .collect::<Vec<&Array1<T>>>()
+            .try_into()
+            .unwrap()
     }
 }
 

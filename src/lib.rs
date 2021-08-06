@@ -67,18 +67,18 @@ pub mod fourier;
 mod impl_differentiate;
 mod impl_from_ortho;
 mod impl_transform;
+pub mod space;
 mod traits;
 pub mod types;
 pub mod utils;
-pub mod space;
 use chebyshev::Chebyshev;
 use chebyshev::CompositeChebyshev;
 use fourier::Fourier;
 // use fourier::Fourier;
 use ndarray::prelude::*;
+pub use space::{Space1, Space2, SpaceBase};
 pub use traits::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform, TransformPar};
 pub use types::{Complex, FloatNum, Scalar};
-pub use space::{SpaceBase, Space1, Space2};
 
 /// Collection of all implemented basis functions.
 ///
