@@ -316,3 +316,155 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
         }
     }
 }
+
+
+/// Implement for Real-to-complex
+impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
+    type Physical = A;
+    type Spectral = Complex<A>;
+
+    fn forward<S, D>(
+        &mut self,
+        input: &mut ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Spectral, D>
+    where
+        S: ndarray::Data<Elem = Self::Physical>,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
+                panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
+            }
+            Self::Fourier(ref mut b) => b.forward(input, axis),
+        }
+    }
+
+    fn forward_inplace<S1, S2, D>(
+        &mut self,
+        input: &mut ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Self::Physical>,
+        S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
+                panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
+            }
+            Self::Fourier(ref mut b) => b.forward_inplace(input, output, axis),
+        }
+    }
+
+    fn backward<S, D>(
+        &mut self,
+        input: &mut ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Physical, D>
+    where
+        S: ndarray::Data<Elem = Self::Spectral>,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
+                panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
+            }
+            Self::Fourier(ref mut b) => b.backward(input, axis),
+        }
+    }
+
+    fn backward_inplace<S1, S2, D>(
+        &mut self,
+        input: &mut ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Self::Spectral>,
+        S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
+                panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
+            }
+            Self::Fourier(ref mut b) => b.backward_inplace(input, output, axis),
+        }
+    }
+}
+/// Implement for Real-to-complex
+impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
+    type Physical = A;
+    type Spectral = Complex<A>;
+
+    fn forward_par<S, D>(
+        &mut self,
+        input: &mut ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Spectral, D>
+    where
+        S: ndarray::Data<Elem = Self::Physical>,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
+                panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
+            }
+            Self::Fourier(ref mut b) => b.forward_par(input, axis),
+        }
+    }
+
+    fn forward_inplace_par<S1, S2, D>(
+        &mut self,
+        input: &mut ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Self::Physical>,
+        S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
+                panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
+            }
+            Self::Fourier(ref mut b) => b.forward_inplace_par(input, output, axis),
+        }
+    }
+
+    fn backward_par<S, D>(
+        &mut self,
+        input: &mut ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Physical, D>
+    where
+        S: ndarray::Data<Elem = Self::Spectral>,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
+                panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
+            }
+            Self::Fourier(ref mut b) => b.backward_par(input, axis),
+        }
+    }
+
+    fn backward_inplace_par<S1, S2, D>(
+        &mut self,
+        input: &mut ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Self::Spectral>,
+        S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+        D: Dimension + ndarray::RemoveAxis,
+    {
+        match self {
+            Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
+                panic!("Expected real-to-complex transform, but Chebyshev is real-to-real.")
+            }
+            Self::Fourier(ref mut b) => b.backward_inplace_par(input, output, axis),
+        }
+    }
+}
