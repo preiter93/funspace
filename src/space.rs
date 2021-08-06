@@ -24,7 +24,7 @@ pub type Space2 = SpaceBase<f64, 2>;
 /// initialize field with it.
 #[derive(Clone)]
 pub struct SpaceBase<T: FloatNum, const N: usize> {
-    bases: [Base<T>; N],
+    pub bases: [Base<T>; N],
 }
 
 impl<T, const N: usize> SpaceBase<T, N>
