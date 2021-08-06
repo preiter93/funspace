@@ -34,8 +34,8 @@ where
 {
     /// Return new space
     #[must_use]
-    pub fn new(bases: [Base<T>; N]) -> Self {
-        Self { bases }
+    pub fn new(bases: &[Base<T>; N]) -> Self {
+        Self { bases: bases.clone() }
     }
 
     /// Shape in physical space
