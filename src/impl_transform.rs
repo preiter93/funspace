@@ -7,7 +7,7 @@ use ndarray::prelude::*;
 use num_complex::Complex;
 
 /// Implement for Real-to-real
-impl<A: FloatNum + std::ops::MulAssign> Transform<A, A> for Base<A> {
+impl<A: FloatNum> Transform<A, A> for Base<A> {
     type Physical = A;
     type Spectral = A;
 
@@ -87,7 +87,7 @@ impl<A: FloatNum + std::ops::MulAssign> Transform<A, A> for Base<A> {
 }
 
 /// Implement for Real-to-real
-impl<A: FloatNum + std::ops::MulAssign> TransformPar<A, A> for Base<A> {
+impl<A: FloatNum> TransformPar<A, A> for Base<A> {
     type Physical = A;
     type Spectral = A;
 
@@ -167,7 +167,7 @@ impl<A: FloatNum + std::ops::MulAssign> TransformPar<A, A> for Base<A> {
 }
 
 /// Implement for Complex-to-complex
-impl<A: FloatNum + std::ops::MulAssign> Transform<Complex<A>, Complex<A>> for Base<A> {
+impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
     type Physical = Complex<A>;
     type Spectral = Complex<A>;
 
@@ -242,7 +242,7 @@ impl<A: FloatNum + std::ops::MulAssign> Transform<Complex<A>, Complex<A>> for Ba
     }
 }
 /// Implement for Complex-to-complex
-impl<A: FloatNum + std::ops::MulAssign> TransformPar<Complex<A>, Complex<A>> for Base<A> {
+impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
     type Physical = Complex<A>;
     type Spectral = Complex<A>;
 

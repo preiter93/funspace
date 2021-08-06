@@ -197,7 +197,7 @@ impl<A: FloatNum> Size for Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum + std::ops::MulAssign> Transform<A, A> for Chebyshev<A> {
+impl<A: FloatNum> Transform<A, A> for Chebyshev<A> {
     type Physical = A;
     type Spectral = A;
 
@@ -314,7 +314,7 @@ impl<A: FloatNum + std::ops::MulAssign> Transform<A, A> for Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum + std::ops::MulAssign> TransformPar<A, A> for Chebyshev<A> {
+impl<A: FloatNum> TransformPar<A, A> for Chebyshev<A> {
     type Physical = A;
     type Spectral = A;
 

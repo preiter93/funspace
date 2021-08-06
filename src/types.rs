@@ -12,7 +12,17 @@ pub use num_complex::Complex;
 
 /// Generic floating point number, implemented for f32 and f64
 pub trait FloatNum:
-    Copy + Zero + FromPrimitive + Signed + Sync + Send + Float + Debug + 'static + ScalarOperand
+    'static
+    + Copy
+    + Zero
+    + FromPrimitive
+    + Signed
+    + Sync
+    + Send
+    + Float
+    + Debug
+    + ScalarOperand
+    + std::ops::MulAssign
 {
 }
 impl FloatNum for f32 {}
