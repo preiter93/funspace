@@ -51,7 +51,7 @@ impl<A: FloatNum> FourierR2c<A> {
     /// Return complex wavenumber vector for r2c transform (0, 1, 2, 3)
     #[allow(clippy::missing_panics_doc)]
     fn wavenumber(n: usize) -> Array1<Complex<A>> {
-        let n2 = (n - 1) / 2 + 1;
+        let n2 = n / 2 + 1;
         let mut k: Array1<A> = Array1::zeros(n2);
 
         for (i, ki) in Array1::range(0., n2 as f64, 1.)
@@ -223,7 +223,9 @@ impl<A: FloatNum> Transform<A, Complex<A>> for FourierR2c<A> {
         use ndrustfft::ndifft_r2c;
         check_array_axis(input, self.m, axis, Some("fourier backward"));
         check_array_axis(output, self.n, axis, Some("fourier backward"));
+        println!("{:?}", input);
         ndifft_r2c(input, output, &mut self.fft_handler, axis);
+        println!("{:?}", output);
     }
 }
 
