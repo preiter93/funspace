@@ -195,7 +195,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Fourier<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         use crate::utils::array_resized_axis;
         let mut output = array_resized_axis(input, self.m, axis);
@@ -212,7 +212,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Fourier<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         use crate::utils::check_array_axis;
         use ndrustfft::ndfft;
@@ -252,7 +252,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Fourier<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         use crate::utils::array_resized_axis;
         let mut output = array_resized_axis(input, self.n, axis);
@@ -273,7 +273,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Fourier<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         use crate::utils::check_array_axis;
         use ndrustfft::ndifft;
@@ -318,7 +318,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Fourier<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         use crate::utils::array_resized_axis;
         let mut output = array_resized_axis(input, self.m, axis);
@@ -335,7 +335,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Fourier<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         use crate::utils::check_array_axis;
         use ndrustfft::ndfft_par;
@@ -375,7 +375,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Fourier<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         use crate::utils::array_resized_axis;
         let mut output = array_resized_axis(input, self.n, axis);
@@ -396,7 +396,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Fourier<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         use crate::utils::check_array_axis;
         use ndrustfft::ndifft_par;

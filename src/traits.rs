@@ -58,7 +58,7 @@ pub trait Transform<T1, T2> {
     fn forward<S, D>(&mut self, input: &mut ArrayBase<S, D>, axis: usize) -> Array<T2, D>
     where
         S: ndarray::Data<Elem = T1>,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension;
 
     /// Transform from spectral to physical space
     ///
@@ -72,7 +72,7 @@ pub trait Transform<T1, T2> {
     ) where
         S1: ndarray::Data<Elem = T1>,
         S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension;
 
     /// Transform spectral -> physical space along *axis*
     ///
@@ -96,7 +96,7 @@ pub trait Transform<T1, T2> {
     fn backward<S, D>(&mut self, input: &mut ArrayBase<S, D>, axis: usize) -> Array<T1, D>
     where
         S: ndarray::Data<Elem = T2>,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension;
 
     /// Transform from spectral to physical space
     ///
@@ -110,7 +110,7 @@ pub trait Transform<T1, T2> {
     ) where
         S1: ndarray::Data<Elem = T2>,
         S2: ndarray::Data<Elem = T1> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension;
 }
 
 /// Transform from physical to spectral space and vice versa.
@@ -150,7 +150,7 @@ pub trait TransformPar<T1, T2> {
     fn forward_par<S, D>(&mut self, input: &mut ArrayBase<S, D>, axis: usize) -> Array<T2, D>
     where
         S: ndarray::Data<Elem = T1>,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension;
 
     /// Transform from spectral to physical space
     ///
@@ -164,7 +164,7 @@ pub trait TransformPar<T1, T2> {
     ) where
         S1: ndarray::Data<Elem = T1>,
         S2: ndarray::Data<Elem = T2> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension;
 
     /// Transform spectral -> physical space along *axis*
     ///
@@ -188,7 +188,7 @@ pub trait TransformPar<T1, T2> {
     fn backward_par<S, D>(&mut self, input: &mut ArrayBase<S, D>, axis: usize) -> Array<T1, D>
     where
         S: ndarray::Data<Elem = T2>,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension;
 
     /// Transform from spectral to physical space
     ///
@@ -202,7 +202,7 @@ pub trait TransformPar<T1, T2> {
     ) where
         S1: ndarray::Data<Elem = T2>,
         S2: ndarray::Data<Elem = T1> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis;
+        D: Dimension;
 }
 
 /// Perform differentiation in spectral space

@@ -10,6 +10,7 @@ use crate::Base;
 use crate::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform, TransformPar};
 use crate::{FloatNum, Scalar};
 use ndarray::prelude::*;
+use ndarray::IntoDimension;
 use num_complex::Complex;
 use std::convert::TryInto;
 
@@ -30,7 +31,8 @@ pub struct SpaceBase<T: FloatNum, const N: usize> {
 impl<T, const N: usize> SpaceBase<T, N>
 where
     T: FloatNum,
-    [usize; N]: ndarray::Dimension,
+    [usize; N]: Dimension + IntoDimension<Dim = Dim<[usize; N]>>,
+    Dim<[usize; N]>: Dimension,
 {
     /// Return new space
     #[must_use]
@@ -53,6 +55,7 @@ where
             .try_into()
             .unwrap()
     }
+
     /// Shape in spectral space
     ///
     /// ## Panics
@@ -68,21 +71,19 @@ where
     }
 
     /// Return ndarray with shape of physical space
-    pub fn ndarray_physical<A: Scalar>(&self) -> Array<A, [usize; N]> {
-        Self::ndarray_from_shape(self.shape_phys())
+    pub fn ndarray_physical<A>(&self) -> Array<A, Dim<[usize; N]>>
+    where
+        A: Scalar,
+    {
+        Array::zeros(self.shape_phys())
     }
 
     /// Return ndarray with shape of spectral space
-    pub fn ndarray_spectral<A: Scalar>(&self) -> Array<A, [usize; N]> {
-        Self::ndarray_from_shape(self.shape_spec())
-    }
-
-    fn ndarray_from_shape<A, S>(shape: S) -> Array<A, S>
+    pub fn ndarray_spectral<A>(&self) -> Array<A, Dim<[usize; N]>>
     where
         A: Scalar,
-        S: ndarray::Dimension,
     {
-        Array::zeros(shape)
+        Array::zeros(self.shape_spec())
     }
 
     /// Laplacian $ L $
@@ -160,7 +161,7 @@ macro_rules! impl_transform {
             ) -> Array<Self::Spectral, D>
             where
                 S: ndarray::Data<Elem = Self::Physical>,
-                D: Dimension + ndarray::RemoveAxis,
+                D: Dimension,
             {
                 self.bases[axis].forward(input, axis)
             }
@@ -173,7 +174,7 @@ macro_rules! impl_transform {
             ) where
                 S1: ndarray::Data<Elem = Self::Physical>,
                 S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-                D: Dimension + ndarray::RemoveAxis,
+                D: Dimension,
             {
                 self.bases[axis].forward_inplace(input, output, axis)
             }
@@ -185,7 +186,7 @@ macro_rules! impl_transform {
             ) -> Array<Self::Physical, D>
             where
                 S: ndarray::Data<Elem = Self::Spectral>,
-                D: Dimension + ndarray::RemoveAxis,
+                D: Dimension,
             {
                 self.bases[axis].backward(input, axis)
             }
@@ -198,7 +199,7 @@ macro_rules! impl_transform {
             ) where
                 S1: ndarray::Data<Elem = Self::Spectral>,
                 S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-                D: Dimension + ndarray::RemoveAxis,
+                D: Dimension,
             {
                 self.bases[axis].backward_inplace(input, output, axis)
             }
@@ -224,7 +225,7 @@ macro_rules! impl_transform_par {
             ) -> Array<Self::Spectral, D>
             where
                 S: ndarray::Data<Elem = Self::Physical>,
-                D: Dimension + ndarray::RemoveAxis,
+                D: Dimension,
             {
                 self.bases[axis].forward_par(input, axis)
             }
@@ -237,7 +238,7 @@ macro_rules! impl_transform_par {
             ) where
                 S1: ndarray::Data<Elem = Self::Physical>,
                 S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-                D: Dimension + ndarray::RemoveAxis,
+                D: Dimension,
             {
                 self.bases[axis].forward_inplace_par(input, output, axis)
             }
@@ -249,7 +250,7 @@ macro_rules! impl_transform_par {
             ) -> Array<Self::Physical, D>
             where
                 S: ndarray::Data<Elem = Self::Spectral>,
-                D: Dimension + ndarray::RemoveAxis,
+                D: Dimension,
             {
                 self.bases[axis].backward_par(input, axis)
             }
@@ -262,7 +263,7 @@ macro_rules! impl_transform_par {
             ) where
                 S1: ndarray::Data<Elem = Self::Spectral>,
                 S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-                D: Dimension + ndarray::RemoveAxis,
+                D: Dimension,
             {
                 self.bases[axis].backward_inplace_par(input, output, axis)
             }

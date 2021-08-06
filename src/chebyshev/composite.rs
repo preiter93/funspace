@@ -279,7 +279,7 @@ impl<A: FloatNum> Transform<A, A> for CompositeChebyshev<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         let parent_coeff = self.ortho.forward(input, axis);
         self.from_ortho(&parent_coeff, axis)
@@ -305,7 +305,7 @@ impl<A: FloatNum> Transform<A, A> for CompositeChebyshev<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         let parent_coeff = self.ortho.forward(input, axis);
         self.from_ortho_inplace(&parent_coeff, output, axis)
@@ -330,7 +330,7 @@ impl<A: FloatNum> Transform<A, A> for CompositeChebyshev<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         let mut parent_coeff = self.to_ortho(input, axis);
         self.ortho.backward(&mut parent_coeff, axis)
@@ -356,7 +356,7 @@ impl<A: FloatNum> Transform<A, A> for CompositeChebyshev<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         let mut parent_coeff = self.to_ortho(input, axis);
         self.ortho.backward_inplace(&mut parent_coeff, output, axis);
@@ -386,7 +386,7 @@ impl<A: FloatNum> TransformPar<A, A> for CompositeChebyshev<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         let parent_coeff = self.ortho.forward_par(input, axis);
         self.from_ortho(&parent_coeff, axis)
@@ -412,7 +412,7 @@ impl<A: FloatNum> TransformPar<A, A> for CompositeChebyshev<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         let parent_coeff = self.ortho.forward_par(input, axis);
         self.from_ortho_inplace(&parent_coeff, output, axis)
@@ -437,7 +437,7 @@ impl<A: FloatNum> TransformPar<A, A> for CompositeChebyshev<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         let mut parent_coeff = self.to_ortho(input, axis);
         self.ortho.backward_par(&mut parent_coeff, axis)
@@ -463,7 +463,7 @@ impl<A: FloatNum> TransformPar<A, A> for CompositeChebyshev<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         let mut parent_coeff = self.to_ortho(input, axis);
         self.ortho

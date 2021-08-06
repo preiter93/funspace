@@ -18,7 +18,7 @@ impl<A: FloatNum> Transform<A, A> for Base<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(ref mut b) => b.forward(input, axis),
@@ -37,7 +37,7 @@ impl<A: FloatNum> Transform<A, A> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(ref mut b) => b.forward_inplace(input, output, axis),
@@ -55,7 +55,7 @@ impl<A: FloatNum> Transform<A, A> for Base<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(ref mut b) => b.backward(input, axis),
@@ -74,7 +74,7 @@ impl<A: FloatNum> Transform<A, A> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(ref mut b) => b.backward_inplace(input, output, axis),
@@ -98,7 +98,7 @@ impl<A: FloatNum> TransformPar<A, A> for Base<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(ref mut b) => b.forward_par(input, axis),
@@ -117,7 +117,7 @@ impl<A: FloatNum> TransformPar<A, A> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(ref mut b) => b.forward_inplace_par(input, output, axis),
@@ -135,7 +135,7 @@ impl<A: FloatNum> TransformPar<A, A> for Base<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(ref mut b) => b.backward_par(input, axis),
@@ -154,7 +154,7 @@ impl<A: FloatNum> TransformPar<A, A> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(ref mut b) => b.backward_inplace_par(input, output, axis),
@@ -178,7 +178,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -196,7 +196,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -213,7 +213,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -231,7 +231,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -253,7 +253,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -271,7 +271,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -288,7 +288,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -306,7 +306,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -329,7 +329,7 @@ impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -347,7 +347,7 @@ impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -364,7 +364,7 @@ impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -382,7 +382,7 @@ impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -404,7 +404,7 @@ impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
     ) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -422,7 +422,7 @@ impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Physical>,
         S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -439,7 +439,7 @@ impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
@@ -457,7 +457,7 @@ impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
     ) where
         S1: ndarray::Data<Elem = Self::Spectral>,
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
-        D: Dimension + ndarray::RemoveAxis,
+        D: Dimension,
     {
         match self {
             Self::Chebyshev(_) | Self::CompositeChebyshev(_) => {
