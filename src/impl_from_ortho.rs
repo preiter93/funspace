@@ -5,7 +5,7 @@ use crate::FromOrtho;
 use ndarray::prelude::*;
 use num_complex::Complex;
 
-/// Implement Differentiate for Float
+/// Implement FromOrtho for Float
 impl<T: FloatNum> FromOrtho<T> for Base<T> {
     fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
     where
@@ -74,7 +74,7 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
     }
 }
 
-/// Implement Differentiate for Complex
+/// Implement FromOrtho for Complex
 impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
     fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<Complex<T>, D>
     where

@@ -317,7 +317,6 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
     }
 }
 
-
 /// Implement for Real-to-complex
 impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
     type Physical = A;

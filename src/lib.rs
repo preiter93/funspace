@@ -67,6 +67,7 @@ pub mod fourier;
 mod impl_differentiate;
 mod impl_from_ortho;
 mod impl_transform;
+pub mod space;
 mod traits;
 pub mod types;
 pub mod utils;
@@ -75,6 +76,7 @@ use chebyshev::CompositeChebyshev;
 use fourier::Fourier;
 // use fourier::Fourier;
 use ndarray::prelude::*;
+pub use space::SpaceBase;
 pub use traits::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform, TransformPar};
 pub use types::{Complex, FloatNum, Scalar};
 
