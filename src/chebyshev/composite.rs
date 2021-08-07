@@ -1,14 +1,14 @@
 //! # Composite chebyshev spaces
 use super::composite_stencil::{ChebyshevStencil, Stencil};
 use super::ortho::Chebyshev;
-use crate::Differentiate;
-use crate::FloatNum;
-use crate::FromOrtho;
-use crate::LaplacianInverse;
-use crate::Mass;
-use crate::Size;
-use crate::Transform;
-use crate::TransformPar;
+use crate::traits::BaseBasics;
+use crate::traits::Differentiate;
+use crate::traits::FromOrtho;
+use crate::traits::LaplacianInverse;
+use crate::traits::Transform;
+use crate::traits::TransformKind;
+use crate::traits::TransformPar;
+use crate::types::FloatNum;
 use ndarray::prelude::*;
 use num_complex::Complex;
 
@@ -23,6 +23,8 @@ pub struct CompositeChebyshev<A: FloatNum> {
     pub ortho: Chebyshev<A>,
     /// Transform stencil
     pub stencil: ChebyshevStencil<A>,
+    /// Transform kind (real-to-real)
+    transform_kind: TransformKind,
 }
 
 impl<A: FloatNum> CompositeChebyshev<A> {
@@ -40,6 +42,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
             m: StencilChebyshev::<A>::get_m(n),
             stencil: ChebyshevStencil::StencilChebyshev(stencil),
             ortho: Chebyshev::<A>::new(n),
+            transform_kind: TransformKind::RealToReal,
         }
     }
 
@@ -57,6 +60,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
             m: StencilChebyshev::<A>::get_m(n),
             stencil: ChebyshevStencil::StencilChebyshev(stencil),
             ortho: Chebyshev::<A>::new(n),
+            transform_kind: TransformKind::RealToReal,
         }
     }
 
@@ -76,6 +80,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
             m: StencilChebyshevBoundary::<A>::get_m(n),
             stencil: ChebyshevStencil::StencilChebyshevBoundary(stencil),
             ortho: Chebyshev::<A>::new(n),
+            transform_kind: TransformKind::RealToReal,
         }
     }
 
@@ -95,6 +100,7 @@ impl<A: FloatNum> CompositeChebyshev<A> {
             m: StencilChebyshevBoundary::<A>::get_m(n),
             stencil: ChebyshevStencil::StencilChebyshevBoundary(stencil),
             ortho: Chebyshev::<A>::new(n),
+            transform_kind: TransformKind::RealToReal,
         }
     }
 
@@ -234,18 +240,7 @@ macro_rules! impl_from_ortho_composite_chebyshev {
 impl_from_ortho_composite_chebyshev!(A);
 impl_from_ortho_composite_chebyshev!(Complex<A>);
 
-impl<A: FloatNum> Mass<A> for CompositeChebyshev<A> {
-    /// Returns transformation stencil
-    fn mass(&self) -> Array2<A> {
-        self.stencil.to_array()
-    }
-    /// Coordinates in physical space
-    fn coords(&self) -> &Array1<A> {
-        &self.ortho.x
-    }
-}
-
-impl<A: FloatNum> Size for CompositeChebyshev<A> {
+impl<A: FloatNum> BaseBasics<A> for CompositeChebyshev<A> {
     /// Size in physical space
     fn len_phys(&self) -> usize {
         self.n
@@ -253,6 +248,18 @@ impl<A: FloatNum> Size for CompositeChebyshev<A> {
     /// Size in spectral space
     fn len_spec(&self) -> usize {
         self.m
+    }
+    /// Coordinates in physical space
+    fn coords(&self) -> &Array1<A> {
+        &self.ortho.x
+    }
+    /// Returns transformation stencil
+    fn mass(&self) -> Array2<A> {
+        self.stencil.to_array()
+    }
+    /// Return transform kind
+    fn get_transform_kind(&self) -> &TransformKind {
+        &self.transform_kind
     }
 }
 
@@ -308,7 +315,7 @@ impl<A: FloatNum> Transform<A, A> for CompositeChebyshev<A> {
         D: Dimension,
     {
         let parent_coeff = self.ortho.forward(input, axis);
-        self.from_ortho_inplace(&parent_coeff, output, axis)
+        self.from_ortho_inplace(&parent_coeff, output, axis);
     }
 
     /// # Example
@@ -415,7 +422,7 @@ impl<A: FloatNum> TransformPar<A, A> for CompositeChebyshev<A> {
         D: Dimension,
     {
         let parent_coeff = self.ortho.forward_par(input, axis);
-        self.from_ortho_inplace(&parent_coeff, output, axis)
+        self.from_ortho_inplace(&parent_coeff, output, axis);
     }
 
     /// # Example

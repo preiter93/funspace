@@ -1,12 +1,12 @@
 //! Implement Differentiate trait.
-use crate::Base;
+use crate::BaseKind;
 use crate::Differentiate;
 use crate::FloatNum;
 use ndarray::prelude::*;
 use num_complex::Complex;
 
 /// Implement Differentiate for Float
-impl<A: FloatNum> Differentiate<A> for Base<A> {
+impl<A: FloatNum> Differentiate<A> for BaseKind<A> {
     fn differentiate<S, D>(
         &self,
         data: &ArrayBase<S, D>,
@@ -20,8 +20,8 @@ impl<A: FloatNum> Differentiate<A> for Base<A> {
         match self {
             Self::Chebyshev(ref b) => b.differentiate(data, n_times, axis),
             Self::CompositeChebyshev(ref b) => b.differentiate(data, n_times, axis),
-            Self::Fourier(_) | Self::FourierR2c(_) => {
-                panic!("Expect complex array for Fourier, but got real!")
+            Self::FourierC2c(_) | Self::FourierR2c(_) => {
+                panic!("Expect complex array for Fourier, but got real!");
             }
         }
     }
@@ -34,15 +34,15 @@ impl<A: FloatNum> Differentiate<A> for Base<A> {
         match self {
             Self::Chebyshev(ref b) => b.differentiate_inplace(data, n_times, axis),
             Self::CompositeChebyshev(ref b) => b.differentiate_inplace(data, n_times, axis),
-            Self::Fourier(_) | Self::FourierR2c(_) => {
-                panic!("Expect complex array for Fourier, but got real!")
+            Self::FourierC2c(_) | Self::FourierR2c(_) => {
+                panic!("Expect complex array for Fourier, but got real!");
             }
         }
     }
 }
 
 /// Implement Differentiate for Complex
-impl<A: FloatNum> Differentiate<Complex<A>> for Base<A> {
+impl<A: FloatNum> Differentiate<Complex<A>> for BaseKind<A> {
     fn differentiate<S, D>(
         &self,
         data: &ArrayBase<S, D>,
@@ -56,7 +56,7 @@ impl<A: FloatNum> Differentiate<Complex<A>> for Base<A> {
         match self {
             Self::Chebyshev(ref b) => b.differentiate(data, n_times, axis),
             Self::CompositeChebyshev(ref b) => b.differentiate(data, n_times, axis),
-            Self::Fourier(ref b) => b.differentiate(data, n_times, axis),
+            Self::FourierC2c(ref b) => b.differentiate(data, n_times, axis),
             Self::FourierR2c(ref b) => b.differentiate(data, n_times, axis),
         }
     }
@@ -69,7 +69,7 @@ impl<A: FloatNum> Differentiate<Complex<A>> for Base<A> {
         match self {
             Self::Chebyshev(ref b) => b.differentiate_inplace(data, n_times, axis),
             Self::CompositeChebyshev(ref b) => b.differentiate_inplace(data, n_times, axis),
-            Self::Fourier(ref b) => b.differentiate_inplace(data, n_times, axis),
+            Self::FourierC2c(ref b) => b.differentiate_inplace(data, n_times, axis),
             Self::FourierR2c(ref b) => b.differentiate_inplace(data, n_times, axis),
         }
     }

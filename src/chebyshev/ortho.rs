@@ -1,13 +1,13 @@
 //! # Orthogonal chebyshev space
-use super::FloatNum;
-use crate::Differentiate;
-use crate::FromOrtho;
-use crate::LaplacianInverse;
-use crate::Mass;
+use crate::traits::BaseBasics;
+use crate::traits::Differentiate;
+use crate::traits::FromOrtho;
+use crate::traits::LaplacianInverse;
+use crate::traits::Transform;
+use crate::traits::TransformKind;
+use crate::traits::TransformPar;
+use crate::types::FloatNum;
 use crate::Scalar;
-use crate::Size;
-use crate::Transform;
-use crate::TransformPar;
 use ndarray::prelude::*;
 use ndrustfft::DctHandler;
 use num_complex::Complex;
@@ -27,6 +27,8 @@ pub struct Chebyshev<A> {
     /// chebyshev transform
     correct_dct_forward: Array1<A>,
     correct_dct_backward: Array1<A>,
+    /// Transform kind (real-to-real)
+    transform_kind: TransformKind,
 }
 
 impl<A: FloatNum> Chebyshev<A> {
@@ -59,6 +61,7 @@ impl<A: FloatNum> Chebyshev<A> {
             dct_handler: DctHandler::new(n),
             correct_dct_forward,
             correct_dct_backward,
+            transform_kind: TransformKind::RealToReal,
         }
     }
 
@@ -141,7 +144,7 @@ impl<A: FloatNum> Chebyshev<A> {
     /// ndarray (n x n) matrix, acts in spectral space
     fn _pinv(n: usize, deriv: usize) -> Array2<A> {
         if deriv > 2 {
-            panic!("pinv does only support deriv's 1 & 2, got {}", deriv)
+            panic!("pinv does only support deriv's 1 & 2, got {}", deriv);
         }
         let mut pinv = Array2::<f64>::zeros([n, n]);
         if deriv == 1 {
@@ -175,18 +178,7 @@ impl<A: FloatNum> Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum> Mass<A> for Chebyshev<A> {
-    /// Return mass matrix (= eye)
-    fn mass(&self) -> Array2<A> {
-        Array2::<A>::eye(self.n)
-    }
-    /// Coordinates in physical space
-    fn coords(&self) -> &Array1<A> {
-        &self.x
-    }
-}
-
-impl<A: FloatNum> Size for Chebyshev<A> {
+impl<A: FloatNum> BaseBasics<A> for Chebyshev<A> {
     /// Size in physical space
     fn len_phys(&self) -> usize {
         self.n
@@ -194,6 +186,18 @@ impl<A: FloatNum> Size for Chebyshev<A> {
     /// Size in spectral space
     fn len_spec(&self) -> usize {
         self.m
+    }
+    /// Coordinates in physical space
+    fn coords(&self) -> &Array1<A> {
+        &self.x
+    }
+    /// Return mass matrix (= eye)
+    fn mass(&self) -> Array2<A> {
+        Array2::<A>::eye(self.n)
+    }
+    /// Return transform kind
+    fn get_transform_kind(&self) -> &TransformKind {
+        &self.transform_kind
     }
 }
 

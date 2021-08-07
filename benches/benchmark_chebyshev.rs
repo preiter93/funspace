@@ -6,19 +6,23 @@ use ndarray::Array1;
 const SIZES: [usize; 4] = [128, 264, 512, 1024];
 
 pub fn bench_transform(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Transform");
+    let mut group = c.benchmark_group("TransformChebDirichlet");
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
-        let mut ch = cheb_dirichlet(*n);
+        let mut ch = cheb_dirichlet::<f64>(*n);
         let mut arr = Array1::from_elem(*n, 1.);
         let name = format!("Size: {}", *n);
-        group.bench_function(&name, |b| b.iter(|| ch.forward(&mut arr, 0)));
+        group.bench_function(&name, |b| {
+            b.iter(|| {
+                let _: Array1<f64> = ch.forward(&mut arr, 0);
+            })
+        });
     }
     group.finish();
 }
 
 pub fn bench_to_ortho(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ToOrtho");
+    let mut group = c.benchmark_group("ToOrthoChebDirichlet");
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
         let ch = cheb_dirichlet(*n);
@@ -30,7 +34,7 @@ pub fn bench_to_ortho(c: &mut Criterion) {
 }
 
 pub fn bench_differentiate(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Differentiate");
+    let mut group = c.benchmark_group("DifferentiateChebDirichlet");
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
         let ch = cheb_dirichlet(*n);

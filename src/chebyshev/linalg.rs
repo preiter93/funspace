@@ -44,7 +44,7 @@ pub fn tdma<S1, S2, T>(
     x[n - 1] = g[n - 1];
     x[n - 2] = g[n - 2];
     for i in (1..n - 1).rev() {
-        x[i - 1] = g[i - 1] - w[i - 1] * x[i + 1]
+        x[i - 1] = g[i - 1] - w[i - 1] * x[i + 1];
     }
 
     d.assign(&x);

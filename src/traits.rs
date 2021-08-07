@@ -1,25 +1,45 @@
 //! Collection of usefull traits for function spaces
 use ndarray::prelude::*;
 
-/// Defines size of basis
+/// Define which number format the
+/// arrays have before and after
+/// a transform (Type in phyical space
+/// and type in spectral space)
+#[derive(Clone)]
+pub enum TransformKind {
+    /// Real to real transform
+    RealToReal,
+    /// Complex to complex transform
+    ComplexToComplex,
+    /// Real to complex transform
+    RealToComplex,
+}
+
+impl TransformKind {
+    /// Return name of enum as str
+    #[must_use]
+    pub fn name(&self) -> &str {
+        match *self {
+            Self::RealToReal => "RealToReal",
+            Self::ComplexToComplex => "ComplexToComplex",
+            Self::RealToComplex => "RealToComplex",
+        }
+    }
+}
+
+/// Some basic  traits
 #[enum_dispatch]
-pub trait Size {
+pub trait BaseBasics<T> {
+    /// Coordinates in physical space
+    fn coords(&self) -> &Array1<T>;
     /// Size in physical space
     fn len_phys(&self) -> usize;
     /// Size in spectral space
     fn len_spec(&self) -> usize;
-}
-
-/// Mass matrix expresses the connection (dot product)
-/// of each basis of a funcion space.
-///
-/// Equals the identity matrix for orthonormal bases.
-#[enum_dispatch]
-pub trait Mass<T> {
     /// Return mass matrix
     fn mass(&self) -> Array2<T>;
-    /// Coordinates in physical space
-    fn coords(&self) -> &Array1<T>;
+    /// Return kind of transform
+    fn get_transform_kind(&self) -> &TransformKind;
 }
 
 /// Transform from physical to spectral space and vice versa.

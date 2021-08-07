@@ -5,10 +5,10 @@
 //!
 //! Fourier polynomials are usefull in problems with periodic.
 //!
-//! See [`c2c::Fourier`]
+//! Complex-to-complex: [`c2c::FourierC2c`]
+//! Real-to-complex: [`r2c::FourierR2c`]
+#![allow(clippy::module_name_repetitions)]
 mod c2c;
 mod r2c;
-use crate::FloatNum;
-pub use c2c::Fourier;
-use ndrustfft::Complex;
+pub use c2c::FourierC2c;
 pub use r2c::FourierR2c;

@@ -2,7 +2,7 @@
 //! Polynomials
 //! They are not used inside `rustpde`, but good to have
 //! for testing
-use super::FloatNum;
+use crate::types::FloatNum;
 use ndarray::{s, Array2};
 
 /// Derivative matrix in spectral space of classical Chebyshev

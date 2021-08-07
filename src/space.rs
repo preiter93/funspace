@@ -19,9 +19,15 @@
 //! space.forward_inplace(&mut inter, &mut vhat, 0);
 //! ```
 #![allow(clippy::module_name_repetitions, clippy::must_use_candidate)]
-use crate::Base;
-use crate::{Differentiate, FromOrtho, LaplacianInverse, Mass, Size, Transform, TransformPar};
-use crate::{FloatNum, Scalar};
+use crate::traits::BaseBasics;
+use crate::traits::Differentiate;
+use crate::traits::FromOrtho;
+use crate::traits::LaplacianInverse;
+use crate::traits::Transform;
+use crate::traits::TransformPar;
+use crate::types::FloatNum;
+use crate::types::Scalar;
+use crate::BaseKind;
 use ndarray::prelude::*;
 use ndarray::{IntoDimension, Ix};
 use num_complex::Complex;
@@ -38,7 +44,7 @@ pub type Space2 = SpaceBase<f64, 2>;
 /// initialize field with it.
 #[derive(Clone)]
 pub struct SpaceBase<T: FloatNum, const N: usize> {
-    pub bases: [Base<T>; N],
+    pub bases: [BaseKind<T>; N],
 }
 
 impl<T, const N: usize> SpaceBase<T, N>
@@ -49,7 +55,7 @@ where
 {
     /// Return new space
     #[must_use]
-    pub fn new(bases: &[Base<T>; N]) -> Self {
+    pub fn new(bases: &[BaseKind<T>; N]) -> Self {
         Self {
             bases: bases.clone(),
         }

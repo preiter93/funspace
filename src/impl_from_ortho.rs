@@ -1,12 +1,12 @@
 //! Implement FromOrtho trait.
-use crate::Base;
+use crate::BaseKind;
 use crate::FloatNum;
 use crate::FromOrtho;
 use ndarray::prelude::*;
 use num_complex::Complex;
 
 /// Implement FromOrtho for Float
-impl<T: FloatNum> FromOrtho<T> for Base<T> {
+impl<T: FloatNum> FromOrtho<T> for BaseKind<T> {
     fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
     where
         S: ndarray::Data<Elem = T>,
@@ -15,8 +15,8 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.to_ortho(input, axis),
             Self::CompositeChebyshev(ref b) => b.to_ortho(input, axis),
-            Self::Fourier(_) | Self::FourierR2c(_) => {
-                panic!("Expect complex array for Fourier, but got real!")
+            Self::FourierC2c(_) | Self::FourierR2c(_) => {
+                panic!("Expect complex array for Fourier, but got real!");
             }
         }
     }
@@ -34,8 +34,8 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.to_ortho_inplace(input, output, axis),
             Self::CompositeChebyshev(ref b) => b.to_ortho_inplace(input, output, axis),
-            Self::Fourier(_) | Self::FourierR2c(_) => {
-                panic!("Expect complex array for Fourier, but got real!")
+            Self::FourierC2c(_) | Self::FourierR2c(_) => {
+                panic!("Expect complex array for Fourier, but got real!");
             }
         }
     }
@@ -48,8 +48,8 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.from_ortho(input, axis),
             Self::CompositeChebyshev(ref b) => b.from_ortho(input, axis),
-            Self::Fourier(_) | Self::FourierR2c(_) => {
-                panic!("Expect complex array for Fourier, but got real!")
+            Self::FourierC2c(_) | Self::FourierR2c(_) => {
+                panic!("Expect complex array for Fourier, but got real!");
             }
         }
     }
@@ -67,15 +67,15 @@ impl<T: FloatNum> FromOrtho<T> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.from_ortho_inplace(input, output, axis),
             Self::CompositeChebyshev(ref b) => b.from_ortho_inplace(input, output, axis),
-            Self::Fourier(_) | Self::FourierR2c(_) => {
-                panic!("Expect complex array for Fourier, but got real!")
+            Self::FourierC2c(_) | Self::FourierR2c(_) => {
+                panic!("Expect complex array for Fourier, but got real!");
             }
         }
     }
 }
 
 /// Implement FromOrtho for Complex
-impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
+impl<T: FloatNum> FromOrtho<Complex<T>> for BaseKind<T> {
     fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<Complex<T>, D>
     where
         S: ndarray::Data<Elem = Complex<T>>,
@@ -84,7 +84,7 @@ impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.to_ortho(input, axis),
             Self::CompositeChebyshev(ref b) => b.to_ortho(input, axis),
-            Self::Fourier(ref b) => b.to_ortho(input, axis),
+            Self::FourierC2c(ref b) => b.to_ortho(input, axis),
             Self::FourierR2c(ref b) => b.to_ortho(input, axis),
         }
     }
@@ -102,7 +102,7 @@ impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.to_ortho_inplace(input, output, axis),
             Self::CompositeChebyshev(ref b) => b.to_ortho_inplace(input, output, axis),
-            Self::Fourier(ref b) => b.to_ortho_inplace(input, output, axis),
+            Self::FourierC2c(ref b) => b.to_ortho_inplace(input, output, axis),
             Self::FourierR2c(ref b) => b.to_ortho_inplace(input, output, axis),
         }
     }
@@ -115,7 +115,7 @@ impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.from_ortho(input, axis),
             Self::CompositeChebyshev(ref b) => b.from_ortho(input, axis),
-            Self::Fourier(ref b) => b.from_ortho(input, axis),
+            Self::FourierC2c(ref b) => b.from_ortho(input, axis),
             Self::FourierR2c(ref b) => b.from_ortho(input, axis),
         }
     }
@@ -133,7 +133,7 @@ impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
         match self {
             Self::Chebyshev(ref b) => b.from_ortho_inplace(input, output, axis),
             Self::CompositeChebyshev(ref b) => b.from_ortho_inplace(input, output, axis),
-            Self::Fourier(ref b) => b.from_ortho_inplace(input, output, axis),
+            Self::FourierC2c(ref b) => b.from_ortho_inplace(input, output, axis),
             Self::FourierR2c(ref b) => b.from_ortho_inplace(input, output, axis),
         }
     }

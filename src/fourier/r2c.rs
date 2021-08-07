@@ -6,16 +6,16 @@
 //! let fo = FourierR2c::<f64>::new(4);
 //! ```
 #![allow(clippy::module_name_repetitions)]
-use super::FloatNum;
-use super::Fourier;
-use crate::Differentiate;
-use crate::FromOrtho;
-use crate::LaplacianInverse;
-use crate::Mass;
-use crate::Scalar;
-use crate::Size;
-use crate::Transform;
-use crate::TransformPar;
+use super::FourierC2c;
+use crate::traits::BaseBasics;
+use crate::traits::Differentiate;
+use crate::traits::FromOrtho;
+use crate::traits::LaplacianInverse;
+use crate::traits::Transform;
+use crate::traits::TransformKind;
+use crate::traits::TransformPar;
+use crate::types::FloatNum;
+use crate::types::Scalar;
 use ndarray::prelude::*;
 use ndrustfft::FftHandler;
 use num_complex::Complex;
@@ -33,6 +33,8 @@ pub struct FourierR2c<A> {
     pub k: Array1<Complex<A>>,
     /// Handles discrete cosine transform
     pub fft_handler: FftHandler<A>,
+    /// Transform kind (real-to-complex)
+    transform_kind: TransformKind,
 }
 
 impl<A: FloatNum> FourierR2c<A> {
@@ -42,9 +44,10 @@ impl<A: FloatNum> FourierR2c<A> {
         Self {
             n,
             m: n / 2 + 1,
-            x: Fourier::nodes(n),
+            x: FourierC2c::nodes(n),
             k: Self::wavenumber(n),
             fft_handler: FftHandler::new(n),
+            transform_kind: TransformKind::RealToComplex,
         }
     }
 
@@ -85,26 +88,16 @@ impl<A: FloatNum> FourierR2c<A> {
         S: ndarray::Data<Elem = T2> + ndarray::DataMut,
         T2: Scalar + From<Complex<A>>,
     {
-        let deriv = A::from_f64(n_times as f64).unwrap();
-        let kpow = self.k.mapv(|x| x.powf(deriv));
-        for (d, k) in data.iter_mut().zip(kpow.iter()) {
-            *d = *d * T2::from(*k);
+        let k = self.k.mapv(T2::from);
+        for _ in 0..n_times {
+            for (d, ki) in data.iter_mut().zip(k.iter()) {
+                *d = *d * *ki;
+            }
         }
     }
 }
 
-impl<A: FloatNum> Mass<A> for FourierR2c<A> {
-    /// Return mass matrix (= eye)
-    fn mass(&self) -> Array2<A> {
-        Array2::<A>::eye(self.n)
-    }
-    /// Coordinates in physical space
-    fn coords(&self) -> &Array1<A> {
-        &self.x
-    }
-}
-
-impl<A: FloatNum> Size for FourierR2c<A> {
+impl<A: FloatNum> BaseBasics<A> for FourierR2c<A> {
     /// Size in physical space
     fn len_phys(&self) -> usize {
         self.n
@@ -112,6 +105,18 @@ impl<A: FloatNum> Size for FourierR2c<A> {
     /// Size in spectral space
     fn len_spec(&self) -> usize {
         self.m
+    }
+    /// Coordinates in physical space
+    fn coords(&self) -> &Array1<A> {
+        &self.x
+    }
+    /// Return mass matrix (= eye)
+    fn mass(&self) -> Array2<A> {
+        Array2::<A>::eye(self.n)
+    }
+    /// Return transform kind
+    fn get_transform_kind(&self) -> &TransformKind {
+        &self.transform_kind
     }
 }
 
@@ -223,9 +228,7 @@ impl<A: FloatNum> Transform<A, Complex<A>> for FourierR2c<A> {
         use ndrustfft::ndifft_r2c;
         check_array_axis(input, self.m, axis, Some("fourier backward"));
         check_array_axis(output, self.n, axis, Some("fourier backward"));
-        println!("{:?}", input);
         ndifft_r2c(input, output, &mut self.fft_handler, axis);
-        println!("{:?}", output);
     }
 }
 
