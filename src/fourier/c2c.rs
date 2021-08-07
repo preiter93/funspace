@@ -417,7 +417,7 @@ impl<A: FloatNum> LaplacianInverse<A> for FourierC2c<A> {
     fn laplace(&self) -> Array2<A> {
         let mut lap = Array2::<A>::zeros((self.m, self.m));
         for (l, k) in lap.diag_mut().iter_mut().zip(self.k.iter()) {
-            *l = k.im * k.im;
+            *l = -k.im * k.im;
         }
         lap
     }
