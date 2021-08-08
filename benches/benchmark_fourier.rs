@@ -33,5 +33,5 @@ pub fn bench_differentiate(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_differentiate);
+criterion_group!(benches, bench_transform, bench_differentiate);
 criterion_main!(benches);

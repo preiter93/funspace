@@ -213,7 +213,7 @@ pub use types::{FloatNum, Scalar};
 #[allow(clippy::large_enum_variant)]
 #[enum_dispatch(BaseBasics<T>, LaplacianInverse<T>)]
 #[derive(Clone)]
-pub enum BaseKind<T: FloatNum> {
+pub enum Base<T: FloatNum> {
     Chebyshev(Chebyshev<T>),
     CompositeChebyshev(CompositeChebyshev<T>),
     FourierC2c(FourierC2c<T>),
@@ -237,8 +237,8 @@ pub enum BaseKind<T: FloatNum> {
 /// let yhat: Array1<f64> = ch.forward(&mut y, 0);
 /// ```
 #[must_use]
-pub fn chebyshev<A: FloatNum>(n: usize) -> BaseKind<A> {
-    BaseKind::Chebyshev(Chebyshev::<A>::new(n))
+pub fn chebyshev<A: FloatNum>(n: usize) -> Base<A> {
+    Base::Chebyshev(Chebyshev::<A>::new(n))
 }
 
 /// Function space with Dirichlet boundary conditions
@@ -257,8 +257,8 @@ pub fn chebyshev<A: FloatNum>(n: usize) -> BaseKind<A> {
 /// let yhat: Array1<f64> = cd.forward(&mut y, 0);
 /// ```
 #[must_use]
-pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> BaseKind<A> {
-    BaseKind::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet(n))
+pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> Base<A> {
+    Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet(n))
 }
 
 /// Function space with Neumann boundary conditions
@@ -277,8 +277,8 @@ pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> BaseKind<A> {
 /// let yhat: Array1<f64> = cn.forward(&mut y, 0);
 /// ```
 #[must_use]
-pub fn cheb_neumann<A: FloatNum>(n: usize) -> BaseKind<A> {
-    BaseKind::CompositeChebyshev(CompositeChebyshev::<A>::neumann(n))
+pub fn cheb_neumann<A: FloatNum>(n: usize) -> Base<A> {
+    Base::CompositeChebyshev(CompositeChebyshev::<A>::neumann(n))
 }
 
 /// Functions space for inhomogeneous Dirichlet
@@ -291,8 +291,8 @@ pub fn cheb_neumann<A: FloatNum>(n: usize) -> BaseKind<A> {
 ///     \phi_1 = 0.5 T_0 + 0.5 T_1
 /// $$
 #[must_use]
-pub fn cheb_dirichlet_bc<A: FloatNum>(n: usize) -> BaseKind<A> {
-    BaseKind::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet_bc(n))
+pub fn cheb_dirichlet_bc<A: FloatNum>(n: usize) -> Base<A> {
+    Base::CompositeChebyshev(CompositeChebyshev::<A>::dirichlet_bc(n))
 }
 
 /// Functions space for inhomogeneous Neumann
@@ -305,8 +305,8 @@ pub fn cheb_dirichlet_bc<A: FloatNum>(n: usize) -> BaseKind<A> {
 ///     \phi_1 = 0.5T_0 + 1/8T_1
 /// $$
 #[must_use]
-pub fn cheb_neumann_bc<A: FloatNum>(n: usize) -> BaseKind<A> {
-    BaseKind::CompositeChebyshev(CompositeChebyshev::<A>::neumann_bc(n))
+pub fn cheb_neumann_bc<A: FloatNum>(n: usize) -> Base<A> {
+    Base::CompositeChebyshev(CompositeChebyshev::<A>::neumann_bc(n))
 }
 
 /// Function space for Fourier Polynomials
@@ -327,8 +327,8 @@ pub fn cheb_neumann_bc<A: FloatNum>(n: usize) -> BaseKind<A> {
 /// let yhat = fo.forward(&mut y, 0);
 /// ```
 #[must_use]
-pub fn fourier_c2c<A: FloatNum>(n: usize) -> BaseKind<A> {
-    BaseKind::FourierC2c(FourierC2c::<A>::new(n))
+pub fn fourier_c2c<A: FloatNum>(n: usize) -> Base<A> {
+    Base::FourierC2c(FourierC2c::<A>::new(n))
 }
 
 /// Function space for Fourier Polynomials
@@ -350,6 +350,6 @@ pub fn fourier_c2c<A: FloatNum>(n: usize) -> BaseKind<A> {
 /// let yhat: Array1<Complex<f64>> = fo.forward(&mut y, 0);
 /// ```
 #[must_use]
-pub fn fourier_r2c<A: FloatNum>(n: usize) -> BaseKind<A> {
-    BaseKind::FourierR2c(FourierR2c::<A>::new(n))
+pub fn fourier_r2c<A: FloatNum>(n: usize) -> Base<A> {
+    Base::FourierR2c(FourierR2c::<A>::new(n))
 }

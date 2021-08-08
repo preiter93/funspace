@@ -1,5 +1,5 @@
 //! Implement transform trait.
-use crate::BaseKind;
+use crate::Base;
 use crate::FloatNum;
 use crate::Transform;
 use crate::TransformPar;
@@ -7,7 +7,7 @@ use ndarray::prelude::*;
 use num_complex::Complex;
 
 /// Implement for Real-to-real
-impl<A: FloatNum> Transform<A, A> for BaseKind<A> {
+impl<A: FloatNum> Transform<A, A> for Base<A> {
     type Physical = A;
     type Spectral = A;
 
@@ -99,7 +99,7 @@ impl<A: FloatNum> Transform<A, A> for BaseKind<A> {
 }
 
 /// Implement for Real-to-real
-impl<A: FloatNum> TransformPar<A, A> for BaseKind<A> {
+impl<A: FloatNum> TransformPar<A, A> for Base<A> {
     type Physical = A;
     type Spectral = A;
 
@@ -191,7 +191,7 @@ impl<A: FloatNum> TransformPar<A, A> for BaseKind<A> {
 }
 
 /// Implement for Complex-to-complex
-impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for BaseKind<A> {
+impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for Base<A> {
     type Physical = Complex<A>;
     type Spectral = Complex<A>;
 
@@ -286,7 +286,7 @@ impl<A: FloatNum> Transform<Complex<A>, Complex<A>> for BaseKind<A> {
     }
 }
 /// Implement for Complex-to-complex
-impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for BaseKind<A> {
+impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for Base<A> {
     type Physical = Complex<A>;
     type Spectral = Complex<A>;
 
@@ -382,7 +382,7 @@ impl<A: FloatNum> TransformPar<Complex<A>, Complex<A>> for BaseKind<A> {
 }
 
 /// Implement for Real-to-complex
-impl<A: FloatNum> Transform<A, Complex<A>> for BaseKind<A> {
+impl<A: FloatNum> Transform<A, Complex<A>> for Base<A> {
     type Physical = A;
     type Spectral = Complex<A>;
 
@@ -477,7 +477,7 @@ impl<A: FloatNum> Transform<A, Complex<A>> for BaseKind<A> {
     }
 }
 /// Implement for Real-to-complex
-impl<A: FloatNum> TransformPar<A, Complex<A>> for BaseKind<A> {
+impl<A: FloatNum> TransformPar<A, Complex<A>> for Base<A> {
     type Physical = A;
     type Spectral = Complex<A>;
 

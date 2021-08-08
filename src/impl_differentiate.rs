@@ -1,12 +1,12 @@
 //! Implement Differentiate trait.
-use crate::BaseKind;
+use crate::Base;
 use crate::Differentiate;
 use crate::FloatNum;
 use ndarray::prelude::*;
 use num_complex::Complex;
 
 /// Implement Differentiate for Float
-impl<A: FloatNum> Differentiate<A> for BaseKind<A> {
+impl<A: FloatNum> Differentiate<A> for Base<A> {
     fn differentiate<S, D>(
         &self,
         data: &ArrayBase<S, D>,
@@ -42,7 +42,7 @@ impl<A: FloatNum> Differentiate<A> for BaseKind<A> {
 }
 
 /// Implement Differentiate for Complex
-impl<A: FloatNum> Differentiate<Complex<A>> for BaseKind<A> {
+impl<A: FloatNum> Differentiate<Complex<A>> for Base<A> {
     fn differentiate<S, D>(
         &self,
         data: &ArrayBase<S, D>,

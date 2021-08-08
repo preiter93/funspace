@@ -1,12 +1,12 @@
 //! Implement FromOrtho trait.
-use crate::BaseKind;
+use crate::Base;
 use crate::FloatNum;
 use crate::FromOrtho;
 use ndarray::prelude::*;
 use num_complex::Complex;
 
 /// Implement FromOrtho for Float
-impl<T: FloatNum> FromOrtho<T> for BaseKind<T> {
+impl<T: FloatNum> FromOrtho<T> for Base<T> {
     fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
     where
         S: ndarray::Data<Elem = T>,
@@ -75,7 +75,7 @@ impl<T: FloatNum> FromOrtho<T> for BaseKind<T> {
 }
 
 /// Implement FromOrtho for Complex
-impl<T: FloatNum> FromOrtho<Complex<T>> for BaseKind<T> {
+impl<T: FloatNum> FromOrtho<Complex<T>> for Base<T> {
     fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<Complex<T>, D>
     where
         S: ndarray::Data<Elem = Complex<T>>,

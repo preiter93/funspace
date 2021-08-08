@@ -27,7 +27,7 @@ use crate::traits::Transform;
 use crate::traits::TransformPar;
 use crate::types::FloatNum;
 use crate::types::Scalar;
-use crate::BaseKind;
+use crate::Base;
 use ndarray::prelude::*;
 use ndarray::{IntoDimension, Ix};
 use num_complex::Complex;
@@ -44,7 +44,7 @@ pub type Space2 = SpaceBase<f64, 2>;
 /// initialize field with it.
 #[derive(Clone)]
 pub struct SpaceBase<T: FloatNum, const N: usize> {
-    pub bases: [BaseKind<T>; N],
+    pub bases: [Base<T>; N],
 }
 
 impl<T, const N: usize> SpaceBase<T, N>
@@ -55,7 +55,7 @@ where
 {
     /// Return new space
     #[must_use]
-    pub fn new(bases: &[BaseKind<T>; N]) -> Self {
+    pub fn new(bases: &[Base<T>; N]) -> Self {
         Self {
             bases: bases.clone(),
         }

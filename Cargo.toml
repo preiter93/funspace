@@ -26,9 +26,9 @@ criterion = { version = "0.3", features = ["html_reports"] }
 name = "funspace"
 path = "src/lib.rs"
 
-#[[bench]]
-#name = "benchmark_chebyshev"
-#harness = false
+[[bench]]
+name = "benchmark_chebyshev"
+harness = false
 
 [[bench]]
 name = "benchmark_fourier"
