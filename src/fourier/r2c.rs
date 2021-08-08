@@ -112,7 +112,7 @@ impl<A: FloatNum> BaseBasics<A> for FourierR2c<A> {
     }
     /// Return mass matrix (= eye)
     fn mass(&self) -> Array2<A> {
-        Array2::<A>::eye(self.n)
+        Array2::<A>::eye(self.m)
     }
     /// Return transform kind
     fn get_transform_kind(&self) -> &TransformKind {
