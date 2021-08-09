@@ -189,6 +189,7 @@ impl<A: FloatNum> Stencil<A> for StencilChebyshev<A> {
 
     /// Multiply stencil with a 1d array (transforms to parent coefficents)
     /// input and output array do usually differ in size.
+    #[inline(always)]
     fn multiply_vec<S, T>(&self, composite_coeff: &ArrayBase<S, Ix1>) -> Array1<T>
     where
         S: ndarray::Data<Elem = T>,
@@ -204,6 +205,7 @@ impl<A: FloatNum> Stencil<A> for StencilChebyshev<A> {
     }
 
     /// See [`StencilChebyshev::multiply_vec`]
+    #[inline(always)]
     fn multiply_vec_inplace<S1, S2, T>(
         &self,
         composite_coeff: &ArrayBase<S1, Ix1>,
