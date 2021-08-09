@@ -167,13 +167,15 @@ where
     }
 }
 
-/// Transform from physical to spectral space and vice versa,
-/// over **all dimensions**.
-///
-/// The associated types *Physical* and *Spectral* refer
-/// to the scalar types in the respective space.
-/// For example, a fourier transforms from real-to-complex,
-/// while chebyshev from real-to-real.
+/**
+Transform from physical to spectral space and vice versa,
+over **all dimensions**.
+
+The associated types *Physical* and *Spectral* refer
+to the scalar types in the respective space.
+For example, a fourier transforms from real-to-complex,
+while chebyshev from real-to-real.
+*/
 pub trait Space<T1, T2, const N: usize> {
     // /// Scalar type in physical space (before transform)
     type Physical;
@@ -211,6 +213,44 @@ pub trait Space<T1, T2, const N: usize> {
     /// Transform from physical to spectral space along *axis*,
     /// starting with the outermost axis and ending with axis 0.
     fn backward_space_inplace<S1, S2>(
+        &mut self,
+        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
+    ) where
+        S1: Data<Elem = T2>,
+        S2: Data<Elem = T1> + DataMut;
+
+    // Transform physical -> spectral space along *all dimensions*,
+    /// starting with the outermost axis and ending with axis 0.
+    fn forward_space_par<S>(
+        &mut self,
+        input: &mut ArrayBase<S, Dim<[usize; N]>>,
+    ) -> Array<T2, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T1>;
+
+    /// Transform from spectral to physical space along *axis*,
+    /// starting with the outermost axis and ending with axis 0.
+    fn forward_space_inplace_par<S1, S2>(
+        &mut self,
+        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
+    ) where
+        S1: Data<Elem = T1>,
+        S2: Data<Elem = T2> + DataMut;
+
+    /// Transform spectral -> physical space along *all dimensions*,
+    /// starting with the outermost axis and ending with axis 0.
+    fn backward_space_par<S>(
+        &mut self,
+        input: &mut ArrayBase<S, Dim<[usize; N]>>,
+    ) -> Array<T1, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T2>;
+
+    /// Transform from physical to spectral space along *axis*,
+    /// starting with the outermost axis and ending with axis 0.
+    fn backward_space_inplace_par<S1, S2>(
         &mut self,
         input: &mut ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
@@ -316,6 +356,52 @@ macro_rules! impl_spacetrait {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 self.bases[0].backward_inplace(input, output, 0);
+            }
+
+            fn forward_space_par<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
+            where
+                S: ndarray::Data<Elem = Self::Physical>,
+            {
+                let mut output = self.ndarray_spectral();
+                self.forward_space_inplace_par(input, &mut output);
+                output
+            }
+
+            fn forward_space_inplace_par<S1, S2>(
+                &mut self,
+                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: Data<Elem = Self::Physical>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
+                self.bases[0].forward_inplace_par(input, output, 0);
+            }
+
+            fn backward_space_par<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Physical, Dim<[usize; 1]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let mut output = self.ndarray_physical();
+                self.backward_space_inplace_par(input, &mut output);
+                output
+            }
+
+            fn backward_space_inplace_par<S1, S2>(
+                &mut self,
+                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Physical> + DataMut,
+            {
+                self.bases[0].backward_inplace_par(input, output, 0);
             }
 
             fn to_ortho_space<S>(
@@ -431,6 +517,54 @@ macro_rules! impl_spacetrait {
             {
                 let mut buffer: Array2<Self::Spectral> = self.bases[0].backward(input, 0);
                 self.bases[0].backward_inplace(&mut buffer, output, 1);
+            }
+
+            fn forward_space_par<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 2]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            where
+                S: ndarray::Data<Elem = Self::Physical>,
+            {
+                let mut output = self.ndarray_spectral();
+                self.forward_space_inplace_par(input, &mut output);
+                output
+            }
+
+            fn forward_space_inplace_par<S1, S2>(
+                &mut self,
+                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = Self::Physical>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
+                let mut buffer: Array2<Self::Physical> = self.bases[1].forward_par(input, 1);
+                self.bases[0].forward_inplace_par(&mut buffer, output, 0);
+            }
+
+            fn backward_space_par<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 2]>>,
+            ) -> Array<Self::Physical, Dim<[usize; 2]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let mut output = self.ndarray_physical();
+                self.backward_space_inplace_par(input, &mut output);
+                output
+            }
+
+            fn backward_space_inplace_par<S1, S2>(
+                &mut self,
+                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Physical> + DataMut,
+            {
+                let mut buffer: Array2<Self::Spectral> = self.bases[0].backward_par(input, 0);
+                self.bases[0].backward_inplace_par(&mut buffer, output, 1);
             }
 
             fn to_ortho_space<S>(
