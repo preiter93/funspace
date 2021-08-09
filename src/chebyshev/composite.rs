@@ -138,6 +138,7 @@ macro_rules! impl_from_ortho_composite_chebyshev {
             /// let parent_coeff = cd.to_ortho(&composite_coeff, 0);
             /// approx_eq(&parent_coeff, &expected);
             /// ```
+            #[inline(always)]
             fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<$a, D>
             where
                 S: ndarray::Data<Elem = $a>,
@@ -150,6 +151,7 @@ macro_rules! impl_from_ortho_composite_chebyshev {
             }
 
             /// See [`CompositeChebyshev::to_ortho`]
+            #[inline(always)]
             fn to_ortho_inplace<S1, S2, D>(
                 &self,
                 input: &ArrayBase<S1, D>,
