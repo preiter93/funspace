@@ -515,8 +515,8 @@ macro_rules! impl_spacetrait {
                 S1: Data<Elem = Self::Spectral>,
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
-                let mut buffer: Array2<Self::Spectral> = self.bases[0].backward(input, 0);
-                self.bases[0].backward_inplace(&mut buffer, output, 1);
+                let mut buffer: Array2<Self::Physical> = self.bases[0].backward(input, 0);
+                self.bases[1].backward_inplace(&mut buffer, output, 1);
             }
 
             fn forward_space_par<S>(
@@ -563,8 +563,8 @@ macro_rules! impl_spacetrait {
                 S1: Data<Elem = Self::Spectral>,
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
-                let mut buffer: Array2<Self::Spectral> = self.bases[0].backward_par(input, 0);
-                self.bases[0].backward_inplace_par(&mut buffer, output, 1);
+                let mut buffer: Array2<Self::Physical> = self.bases[0].backward_par(input, 0);
+                self.bases[1].backward_inplace_par(&mut buffer, output, 1);
             }
 
             fn to_ortho_space<S>(
