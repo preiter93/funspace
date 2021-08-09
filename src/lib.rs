@@ -193,7 +193,7 @@ use chebyshev::Chebyshev;
 use chebyshev::CompositeChebyshev;
 use fourier::{FourierC2c, FourierR2c};
 use ndarray::prelude::*;
-pub use space::{Space1, Space2, SpaceBase};
+pub use space::{Space, Space1, Space2, SpaceBase};
 pub use types::{FloatNum, Scalar};
 /// Collection of all implemented basis functions.
 ///

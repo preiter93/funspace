@@ -29,7 +29,7 @@ use crate::types::FloatNum;
 use crate::types::Scalar;
 use crate::Base;
 use ndarray::prelude::*;
-use ndarray::{IntoDimension, Ix};
+use ndarray::{Data, DataMut, IntoDimension, Ix};
 use num_complex::Complex;
 use std::convert::TryInto;
 
@@ -166,6 +166,345 @@ where
             .unwrap()
     }
 }
+
+/// Transform from physical to spectral space and vice versa,
+/// over **all dimensions**.
+///
+/// The associated types *Physical* and *Spectral* refer
+/// to the scalar types in the respective space.
+/// For example, a fourier transforms from real-to-complex,
+/// while chebyshev from real-to-real.
+pub trait Space<T1, T2, const N: usize> {
+    // /// Scalar type in physical space (before transform)
+    type Physical;
+    // /// Scalar type in spectral space (after transfrom)
+    type Spectral;
+
+    /// Transform physical -> spectral space along *all dimensions*,
+    /// starting with the outermost axis and ending with axis 0.
+    fn forward_space<S>(
+        &mut self,
+        input: &mut ArrayBase<S, Dim<[usize; N]>>,
+    ) -> Array<T2, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T1>;
+
+    /// Transform from spectral to physical space along *axis*,
+    /// starting with the outermost axis and ending with axis 0.
+    fn forward_space_inplace<S1, S2>(
+        &mut self,
+        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
+    ) where
+        S1: Data<Elem = T1>,
+        S2: Data<Elem = T2> + DataMut;
+
+    /// Transform spectral -> physical space along *all dimensions*,
+    /// starting with the outermost axis and ending with axis 0.
+    fn backward_space<S>(
+        &mut self,
+        input: &mut ArrayBase<S, Dim<[usize; N]>>,
+    ) -> Array<T1, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T2>;
+
+    /// Transform from physical to spectral space along *axis*,
+    /// starting with the outermost axis and ending with axis 0.
+    fn backward_space_inplace<S1, S2>(
+        &mut self,
+        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
+    ) where
+        S1: Data<Elem = T2>,
+        S2: Data<Elem = T1> + DataMut;
+
+    /// Return coefficents in associated orthogonal space
+    fn to_ortho_space<S>(
+        &self,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
+    ) -> Array<T2, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T2>;
+
+    fn to_ortho_space_inplace<S1, S2>(
+        &self,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
+        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
+    ) where
+        S1: Data<Elem = T2>,
+        S2: Data<Elem = T2> + DataMut;
+
+    /// Return coefficents in associated composite space
+    fn from_ortho_space<S>(
+        &self,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
+    ) -> Array<T2, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T2>;
+
+    fn from_ortho_space_inplace<S1, S2>(
+        &self,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
+        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
+    ) where
+        S1: Data<Elem = T2>,
+        S2: Data<Elem = T2> + DataMut;
+
+    /// Take gradient. Optional: Rescale result by a constant.
+    fn gradient<S>(
+        &self,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
+        deriv: [usize; N],
+        scale: Option<[T1; N]>,
+    ) -> Array<T2, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T2>;
+}
+
+macro_rules! impl_spacetrait {
+    ($a: ty) => {
+        impl<A> Space<A, $a, 1> for SpaceBase<A, 1>
+        where
+            A: FloatNum,
+            // [Ix; N]: IntoDimension<Dim = Dim<[Ix; N]>>,
+            // Dim<[Ix; N]>: Dimension,
+        {
+            type Physical = A;
+            type Spectral = $a;
+
+            fn forward_space<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
+            where
+                S: ndarray::Data<Elem = Self::Physical>,
+            {
+                let mut output = self.ndarray_spectral();
+                self.forward_space_inplace(input, &mut output);
+                output
+            }
+
+            fn forward_space_inplace<S1, S2>(
+                &mut self,
+                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: Data<Elem = Self::Physical>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
+                self.bases[0].forward_inplace(input, output, 0);
+            }
+
+            fn backward_space<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Physical, Dim<[usize; 1]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let mut output = self.ndarray_physical();
+                self.backward_space_inplace(input, &mut output);
+                output
+            }
+
+            fn backward_space_inplace<S1, S2>(
+                &mut self,
+                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Physical> + DataMut,
+            {
+                self.bases[0].backward_inplace(input, output, 0);
+            }
+
+            fn to_ortho_space<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                self.bases[0].to_ortho(input, 0)
+            }
+
+            fn to_ortho_space_inplace<S1, S2>(
+                &self,
+                input: &ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
+                self.bases[0].to_ortho_inplace(input, output, 0)
+            }
+
+            fn from_ortho_space<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                self.bases[0].from_ortho(input, 0)
+            }
+
+            fn from_ortho_space_inplace<S1, S2>(
+                &self,
+                input: &ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
+                self.bases[0].from_ortho_inplace(input, output, 0)
+            }
+
+            fn gradient<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 1]>>,
+                deriv: [usize; 1],
+                scale: Option<[Self::Physical; 1]>,
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let mut output = self.bases[0].differentiate(input, deriv[0], 0);
+                if let Some(s) = scale {
+                    let scale_1: Self::Physical = s[0].powi(deriv[0] as i32);
+                    output = output / scale_1;
+                }
+                output
+            }
+        }
+
+        impl<A> Space<A, $a, 2> for SpaceBase<A, 2>
+        where
+            A: FloatNum,
+        {
+            type Physical = A;
+            type Spectral = $a;
+
+            fn forward_space<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 2]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            where
+                S: ndarray::Data<Elem = Self::Physical>,
+            {
+                let mut output = self.ndarray_spectral();
+                self.forward_space_inplace(input, &mut output);
+                output
+            }
+
+            fn forward_space_inplace<S1, S2>(
+                &mut self,
+                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = Self::Physical>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
+                let mut buffer: Array2<Self::Physical> = self.bases[1].forward(input, 1);
+                self.bases[0].forward_inplace(&mut buffer, output, 0);
+            }
+
+            fn backward_space<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 2]>>,
+            ) -> Array<Self::Physical, Dim<[usize; 2]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let mut output = self.ndarray_physical();
+                self.backward_space_inplace(input, &mut output);
+                output
+            }
+
+            fn backward_space_inplace<S1, S2>(
+                &mut self,
+                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Physical> + DataMut,
+            {
+                let mut buffer: Array2<Self::Spectral> = self.bases[0].backward(input, 0);
+                self.bases[0].backward_inplace(&mut buffer, output, 1);
+            }
+
+            fn to_ortho_space<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 2]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let buffer = self.bases[0].to_ortho(input, 0);
+                self.bases[1].to_ortho(&buffer, 1)
+            }
+
+            fn to_ortho_space_inplace<S1, S2>(
+                &self,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
+                let buffer = self.bases[0].to_ortho(input, 0);
+                self.bases[1].to_ortho_inplace(&buffer, output, 1);
+            }
+
+            fn from_ortho_space<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 2]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let buffer = self.bases[0].from_ortho(input, 0);
+                self.bases[1].from_ortho(&buffer, 1)
+            }
+
+            fn from_ortho_space_inplace<S1, S2>(
+                &self,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
+                let buffer = self.bases[0].from_ortho(input, 0);
+                self.bases[1].from_ortho_inplace(&buffer, output, 1);
+            }
+
+            fn gradient<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 2]>>,
+                deriv: [usize; 2],
+                scale: Option<[Self::Physical; 2]>,
+            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let buffer = self.bases[0].differentiate(input, deriv[0], 0);
+                let mut output = self.bases[1].differentiate(&buffer, deriv[1], 1);
+                if let Some(s) = scale {
+                    let scale_1: Self::Physical =
+                        s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32);
+                    output = output / scale_1;
+                }
+                output
+            }
+        }
+    };
+}
+
+// Real to real
+impl_spacetrait!(A);
+// Real to complex
+impl_spacetrait!(Complex<A>);
 
 macro_rules! impl_transform {
     ($a: ty) => {

@@ -26,12 +26,16 @@ criterion = { version = "0.3", features = ["html_reports"] }
 name = "funspace"
 path = "src/lib.rs"
 
-[[bench]]
-name = "benchmark_chebyshev"
-harness = false
+#[[bench]]
+#name = "benchmark_chebyshev"
+#harness = false
+
+#[[bench]]
+#name = "benchmark_fourier"
+#harness = false
 
 [[bench]]
-name = "benchmark_fourier"
+name = "benchmark_spacebase"
 harness = false
 
 # Enable katex in documentation
