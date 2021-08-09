@@ -169,9 +169,6 @@ macro_rules! impl_from_ortho_composite_chebyshev {
                     axis,
                     Some("composite to_ortho"),
                 );
-                for (inp, out) in input.lanes(Axis(axis)).zip(output.lanes_mut(Axis(axis))) {
-                    self.stencil.multiply_vec_inplace(&inp, &mut out);
-                }
                 Zip::from(input.lanes(Axis(axis)))
                      .and(output.lanes_mut(Axis(axis)))
                     .for_each(|inp, mut out| {
