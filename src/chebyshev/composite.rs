@@ -10,6 +10,7 @@ use crate::traits::TransformKind;
 use crate::traits::TransformPar;
 use crate::types::FloatNum;
 use ndarray::prelude::*;
+use ndarray::Zip;
 use num_complex::Complex;
 
 #[allow(clippy::module_name_repetitions)]
@@ -138,7 +139,6 @@ macro_rules! impl_from_ortho_composite_chebyshev {
             /// let parent_coeff = cd.to_ortho(&composite_coeff, 0);
             /// approx_eq(&parent_coeff, &expected);
             /// ```
-            #[inline(always)]
             fn to_ortho<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<$a, D>
             where
                 S: ndarray::Data<Elem = $a>,
@@ -151,7 +151,6 @@ macro_rules! impl_from_ortho_composite_chebyshev {
             }
 
             /// See [`CompositeChebyshev::to_ortho`]
-            #[inline(always)]
             fn to_ortho_inplace<S1, S2, D>(
                 &self,
                 input: &ArrayBase<S1, D>,
@@ -170,10 +169,13 @@ macro_rules! impl_from_ortho_composite_chebyshev {
                     axis,
                     Some("composite to_ortho"),
                 );
-                ndarray::Zip::from(input.lanes(Axis(axis)))
-                    .and(output.lanes_mut(Axis(axis)))
+                for (inp, out) in input.lanes(Axis(axis)).zip(output.lanes_mut(Axis(axis))) {
+                    self.stencil.multiply_vec_inplace(&inp, &mut out);
+                }
+                Zip::from(input.lanes(Axis(axis)))
+                     .and(output.lanes_mut(Axis(axis)))
                     .for_each(|inp, mut out| {
-                        self.stencil.multiply_vec_inplace(&inp, &mut out);
+                         self.stencil.multiply_vec_inplace(&inp, &mut out);
                     });
             }
 
@@ -229,7 +231,7 @@ macro_rules! impl_from_ortho_composite_chebyshev {
                     Some("composite from_ortho"),
                 );
                 check_array_axis(output, self.len_spec(), axis, Some("composite from_ortho"));
-                ndarray::Zip::from(input.lanes(Axis(axis)))
+                Zip::from(input.lanes(Axis(axis)))
                     .and(output.lanes_mut(Axis(axis)))
                     .for_each(|inp, mut out| {
                         self.stencil.solve_vec_inplace(&inp, &mut out);
