@@ -12,10 +12,16 @@ pub fn bench_sb_transform(c: &mut Criterion) {
         let cd = cheb_dirichlet::<f64>(*n);
         let mut space = Space2::new(&cd.clone(), &cd.clone());
         let mut arr = Array2::from_elem((*n, *n), 1.);
-        let name = format!("Size: {} x {}", *n, *n);
+        let name = format!("Size: {} x {} (Serial)", *n, *n);
         group.bench_function(&name, |b| {
             b.iter(|| {
                 let _: Array2<f64> = space.forward(&mut arr);
+            })
+        });
+        let name = format!("Size: {} x {} (Parallel)", *n, *n);
+        group.bench_function(&name, |b| {
+            b.iter(|| {
+                let _: Array2<f64> = space.forward_par(&mut arr);
             })
         });
     }
@@ -30,8 +36,10 @@ pub fn bench_sb_to_ortho(c: &mut Criterion) {
         let space = Space2::new(&cd.clone(), &cd.clone());
         let ns = cd.len_spec();
         let mut arr = Array2::from_elem((ns, ns), 1.);
-        let name = format!("Size: {} x {}", *n, *n);
+        let name = format!("Size: {} x {} (Serial)", *n, *n);
         group.bench_function(&name, |b| b.iter(|| space.to_ortho(&mut arr)));
+        let name = format!("Size: {} x {} (Parallel)", *n, *n);
+        group.bench_function(&name, |b| b.iter(|| space.to_ortho_par(&mut arr)));
     }
     group.finish();
 }
@@ -44,8 +52,10 @@ pub fn bench_sb_from_ortho(c: &mut Criterion) {
         let space = Space2::new(&cd.clone(), &cd.clone());
         let ns = cd.len_phys();
         let mut arr = Array2::from_elem((ns, ns), 1.);
-        let name = format!("Size: {} x {}", *n, *n);
+        let name = format!("Size: {} x {} (Serial)", *n, *n);
         group.bench_function(&name, |b| b.iter(|| space.from_ortho(&mut arr)));
+        let name = format!("Size: {} x {} (Parallel)", *n, *n);
+        group.bench_function(&name, |b| b.iter(|| space.from_ortho_par(&mut arr)));
     }
     group.finish();
 }
