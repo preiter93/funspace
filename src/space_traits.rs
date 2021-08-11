@@ -52,7 +52,7 @@ where
     /// Transformation from composite and to orthonormal space (inplace).
     fn to_ortho_inplace<S1, S2>(
         &self,
-        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
         S1: Data<Elem = Self::Spectral>,
@@ -69,7 +69,7 @@ where
     /// Transformation from orthonormal and to composite space (inplace).
     fn from_ortho_inplace<S1, S2>(
         &self,
-        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
         S1: Data<Elem = Self::Spectral>,
@@ -86,7 +86,7 @@ where
     /// Transformation from composite and to orthonormal space (inplace).
     fn to_ortho_inplace_par<S1, S2>(
         &self,
-        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
         S1: Data<Elem = Self::Spectral>,
@@ -103,7 +103,7 @@ where
     /// Transformation from orthonormal and to composite space (inplace).
     fn from_ortho_inplace_par<S1, S2>(
         &self,
-        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
         S1: Data<Elem = Self::Spectral>,

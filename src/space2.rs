@@ -145,7 +145,7 @@ macro_rules! impl_space2 {
 
             fn to_ortho_inplace<S1, S2>(
                 &self,
-                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
                 S1: Data<Elem = Self::Spectral>,
@@ -168,7 +168,7 @@ macro_rules! impl_space2 {
 
             fn from_ortho_inplace<S1, S2>(
                 &self,
-                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
                 S1: Data<Elem = Self::Spectral>,
@@ -191,7 +191,7 @@ macro_rules! impl_space2 {
 
             fn to_ortho_inplace_par<S1, S2>(
                 &self,
-                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
                 S1: Data<Elem = Self::Spectral>,
@@ -214,7 +214,7 @@ macro_rules! impl_space2 {
 
             fn from_ortho_inplace_par<S1, S2>(
                 &self,
-                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
                 S1: Data<Elem = Self::Spectral>,
