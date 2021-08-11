@@ -1,7 +1,7 @@
 //! # Composite chebyshev spaces
 use super::composite_stencil::{ChebyshevStencil, Stencil};
 use super::ortho::Chebyshev;
-use crate::traits::BaseBasics;
+use crate::traits::Basics;
 use crate::traits::Differentiate;
 use crate::traits::FromOrtho;
 use crate::traits::FromOrthoPar;
@@ -320,7 +320,7 @@ macro_rules! impl_from_ortho_composite_chebyshev {
 impl_from_ortho_composite_chebyshev!(A);
 impl_from_ortho_composite_chebyshev!(Complex<A>);
 
-impl<A: FloatNum> BaseBasics<A> for CompositeChebyshev<A> {
+impl<A: FloatNum> Basics<A> for CompositeChebyshev<A> {
     /// Size in physical space
     fn len_phys(&self) -> usize {
         self.n
@@ -343,7 +343,7 @@ impl<A: FloatNum> BaseBasics<A> for CompositeChebyshev<A> {
     }
 }
 
-impl<A: FloatNum> Transform<A, A> for CompositeChebyshev<A> {
+impl<A: FloatNum> Transform for CompositeChebyshev<A> {
     type Physical = A;
     type Spectral = A;
 
@@ -450,7 +450,7 @@ impl<A: FloatNum> Transform<A, A> for CompositeChebyshev<A> {
     }
 }
 
-impl<A: FloatNum> TransformPar<A, A> for CompositeChebyshev<A> {
+impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
     type Physical = A;
     type Spectral = A;
 

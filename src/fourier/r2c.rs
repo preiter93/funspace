@@ -7,7 +7,7 @@
 //! ```
 #![allow(clippy::module_name_repetitions)]
 use super::FourierC2c;
-use crate::traits::BaseBasics;
+use crate::traits::Basics;
 use crate::traits::Differentiate;
 use crate::traits::FromOrtho;
 use crate::traits::FromOrthoPar;
@@ -98,7 +98,7 @@ impl<A: FloatNum> FourierR2c<A> {
     }
 }
 
-impl<A: FloatNum> BaseBasics<A> for FourierR2c<A> {
+impl<A: FloatNum> Basics<A> for FourierR2c<A> {
     /// Size in physical space
     fn len_phys(&self) -> usize {
         self.n
@@ -122,7 +122,7 @@ impl<A: FloatNum> BaseBasics<A> for FourierR2c<A> {
 }
 
 /// Copied from c2c
-impl<A: FloatNum> Transform<A, Complex<A>> for FourierR2c<A> {
+impl<A: FloatNum> Transform for FourierR2c<A> {
     type Physical = A;
     type Spectral = Complex<A>;
 
@@ -233,7 +233,7 @@ impl<A: FloatNum> Transform<A, Complex<A>> for FourierR2c<A> {
     }
 }
 
-impl<A: FloatNum> TransformPar<A, Complex<A>> for FourierR2c<A> {
+impl<A: FloatNum> TransformPar for FourierR2c<A> {
     type Physical = A;
     type Spectral = Complex<A>;
 

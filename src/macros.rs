@@ -5,7 +5,7 @@
 /// Implement transform trait across Base enums
 macro_rules! impl_transform_trait_for_base {
     ($base: ident, $a: ty, $b: ty, $($var:ident),*) => {
-        impl<A: FloatNum> Transform<$a, $b> for $base<A> {
+        impl<A: FloatNum> Transform for $base<A> {
             type Physical = $a;
             type Spectral = $b;
 
@@ -68,7 +68,7 @@ macro_rules! impl_transform_trait_for_base {
             }
         }
 
-        impl<A: FloatNum> TransformPar<$a, $b> for $base<A> {
+        impl<A: FloatNum> TransformPar for $base<A> {
             type Physical = $a;
             type Spectral = $b;
 

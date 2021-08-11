@@ -45,7 +45,7 @@
 //! ### Example
 //! Apply differentiation
 //! ```
-//! use funspace::{Transform, Differentiate, BaseBasics, fourier_r2c};
+//! use funspace::{Transform, Differentiate, Basics, fourier_r2c};
 //! use ndarray::prelude::*;
 //! use ndarray::Array1;
 //! use num_complex::Complex;
@@ -94,7 +94,7 @@
 //! Transform composite space `cheb_dirichlet` to its orthogonal counterpart
 //! `chebyshev`
 //! ```
-//! use funspace::{Transform, FromOrtho, BaseBasics};
+//! use funspace::{Transform, FromOrtho, Basics};
 //! use funspace::{cheb_dirichlet, chebyshev};
 //! use std::f64::consts::PI;
 //! use ndarray::prelude::*;
@@ -177,10 +177,8 @@ extern crate enum_dispatch;
 mod macros;
 
 pub mod chebyshev;
-pub mod complex_to_complex;
+pub mod enums;
 pub mod fourier;
-pub mod real_to_complex;
-pub mod real_to_real;
 pub mod space1;
 pub mod space2;
 pub mod space3;
@@ -188,53 +186,24 @@ pub mod space_common;
 pub mod traits;
 pub mod types;
 pub mod utils;
-pub use crate::complex_to_complex::BaseC2c;
-pub use crate::real_to_complex::BaseR2c;
-pub use crate::real_to_real::BaseR2r;
-pub use crate::traits::BaseBasics;
+pub use crate::enums::{BaseAll, BaseC2c, BaseR2c, BaseR2r};
+pub use crate::traits::Basics;
 pub use crate::traits::Differentiate;
 pub use crate::traits::FromOrtho;
 pub use crate::traits::FromOrthoPar;
 pub use crate::traits::LaplacianInverse;
-pub use crate::traits::SuperBase;
+//pub use crate::traits::SuperBase;
 pub use crate::traits::Transform;
 pub use crate::traits::TransformKind;
 pub use crate::traits::TransformPar;
 use chebyshev::Chebyshev;
 use chebyshev::CompositeChebyshev;
 use fourier::{FourierC2c, FourierR2c};
-use ndarray::{Array1, Array2};
 pub use space1::{Space1, Space1Transform};
 pub use space2::{Space2, Space2Transform};
 pub use space3::{Space3, Space3Transform};
 pub use space_common::SpaceCommon;
 pub use types::{FloatNum, Scalar};
-
-#[enum_dispatch(BaseBasics<T>, LaplacianInverse<T>)]
-#[derive(Clone)]
-pub enum BaseAll<T: FloatNum> {
-    BaseR2r(BaseR2r<T>),
-    BaseR2c(BaseR2c<T>),
-    BaseC2c(BaseC2c<T>),
-}
-
-// impl<T: FloatNum> From<BaseR2r<T>> for BaseAll<T> {
-//     fn from(item: BaseR2r<T>) -> Self {
-//         BaseAll::BaseR2r(item.clone())
-//     }
-// }
-
-// impl<T: FloatNum> From<BaseR2c<T>> for BaseAll<T> {
-//     fn from(item: BaseR2c<T>) -> Self {
-//         BaseAll::BaseR2c(item.clone())
-//     }
-// }
-
-// impl<T: FloatNum> From<BaseC2c<T>> for BaseAll<T> {
-//     fn from(item: BaseC2c<T>) -> Self {
-//         BaseAll::BaseC2c(item.clone())
-//     }
-// }
 
 /// Function space for Chebyshev Polynomials
 ///
