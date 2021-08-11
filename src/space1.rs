@@ -3,7 +3,7 @@
 //! # Example
 //! Transform to chebyshev - dirichlet space
 //! ```
-//! use funspace::{cheb_dirichlet, Space1, Space1Transform, SpaceCommon};
+//! use funspace::{cheb_dirichlet, Space1, BaseSpace};
 //! use ndarray::prelude::*;
 //! let mut space = Space1::new(&cheb_dirichlet::<f64>(5));
 //! let mut v: Array1<f64> = space.ndarray_physical();
@@ -16,7 +16,7 @@
 //! println!("{:?}", v);
 //! ```
 #![allow(clippy::module_name_repetitions)]
-use crate::space_common::SpaceCommon;
+use crate::space_traits::BaseSpace;
 use crate::traits::Basics;
 use crate::traits::Differentiate;
 use crate::traits::FromOrtho;
@@ -36,137 +36,28 @@ pub struct Space1<B> {
     pub base0: B,
 }
 
-pub trait Space1Transform<A, B>: SpaceCommon<A, 1, Output = Self::Spectral>
+impl<B0> Space1<B0>
 where
-    A: FloatNum,
-    Complex<A>: ScalarOperand,
-    B: Transform<Physical = Self::Physical, Spectral = Self::Spectral>,
+    B0: Clone,
 {
-    /// Scalar type in physical space (before transform)
-    type Physical;
-    /// Scalar type in spectral space (after transfrom)
-    type Spectral;
-
     /// Create a new space
-    fn new(base: &B) -> Self;
-
-    /// Return array where size and type matches physical field
-    fn ndarray_physical(&self) -> Array1<Self::Physical>;
-
-    /// Return array where size and type matches spectral field
-    fn ndarray_spectral(&self) -> Array1<Self::Spectral>;
-
-    /// Transform physical -> spectral space
-    fn forward(&mut self, input: &mut Array1<Self::Physical>) -> Array1<Self::Spectral>;
-
-    /// Transform physical -> spectral space (inplace)
-    fn forward_inplace(
-        &mut self,
-        input: &mut Array1<Self::Physical>,
-        output: &mut Array1<Self::Spectral>,
-    );
-
-    /// Transform spectral -> physical space
-    fn backward(&mut self, input: &mut Array1<Self::Spectral>) -> Array1<Self::Physical>;
-
-    /// Transform spectral -> physical space (inplace)
-    fn backward_inplace(
-        &mut self,
-        input: &mut Array1<Self::Spectral>,
-        output: &mut Array1<Self::Physical>,
-    );
-
-    /// Transform physical -> spectral space
-    fn forward_par(&mut self, input: &mut Array1<Self::Physical>) -> Array1<Self::Spectral>;
-
-    /// Transform physical -> spectral space (inplace)
-    fn forward_inplace_par(
-        &mut self,
-        input: &mut Array1<Self::Physical>,
-        output: &mut Array1<Self::Spectral>,
-    );
-
-    /// Transform spectral -> physical space
-    fn backward_par(&mut self, input: &mut Array1<Self::Spectral>) -> Array1<Self::Physical>;
-
-    /// Transform spectral -> physical space (inplace)
-    fn backward_inplace_par(
-        &mut self,
-        input: &mut Array1<Self::Spectral>,
-        output: &mut Array1<Self::Physical>,
-    );
+    pub fn new(base0: &B0) -> Self {
+        Self {
+            base0: base0.clone(),
+        }
+    }
 }
 
-macro_rules! impl_spacecommon_space1 {
-    ($base: ident, $s: ty) => {
-        impl<A> SpaceCommon<A, 1> for Space1<$base<A>>
+macro_rules! impl_space1 {
+    ($base: ident, $p: ty, $s: ty) => {
+        impl<A> BaseSpace<A, 1> for Space1<$base<A>>
         where
             A: FloatNum,
             Complex<A>: ScalarOperand,
         {
-            type Output = $s;
+            type Physical = $p;
 
-            fn to_ortho(&self, input: &Array1<Self::Output>) -> Array1<Self::Output> {
-                self.base0.to_ortho(input, 0)
-            }
-
-            fn to_ortho_inplace(
-                &self,
-                input: &Array1<Self::Output>,
-                output: &mut Array1<Self::Output>,
-            ) {
-                self.base0.to_ortho_inplace(input, output, 0)
-            }
-
-            fn from_ortho(&self, input: &Array1<Self::Output>) -> Array1<Self::Output> {
-                self.base0.from_ortho(input, 0)
-            }
-
-            fn from_ortho_inplace(
-                &self,
-                input: &Array1<Self::Output>,
-                output: &mut Array1<Self::Output>,
-            ) {
-                self.base0.from_ortho_inplace(input, output, 0)
-            }
-
-            fn to_ortho_par(&self, input: &Array1<Self::Output>) -> Array1<Self::Output> {
-                self.base0.to_ortho_par(input, 0)
-            }
-
-            fn to_ortho_inplace_par(
-                &self,
-                input: &Array1<Self::Output>,
-                output: &mut Array1<Self::Output>,
-            ) {
-                self.base0.to_ortho_inplace_par(input, output, 0)
-            }
-
-            fn from_ortho_par(&self, input: &Array1<Self::Output>) -> Array1<Self::Output> {
-                self.base0.from_ortho_par(input, 0)
-            }
-
-            fn from_ortho_inplace_par(
-                &self,
-                input: &Array1<Self::Output>,
-                output: &mut Array1<Self::Output>,
-            ) {
-                self.base0.from_ortho_inplace_par(input, output, 0)
-            }
-
-            fn gradient(
-                &self,
-                input: &Array1<Self::Output>,
-                deriv: [usize; 1],
-                scale: Option<[A; 1]>,
-            ) -> Array1<Self::Output> {
-                let mut output = self.base0.differentiate(input, deriv[0], 0);
-                if let Some(s) = scale {
-                    let sc: Self::Output = s[0].powi(deriv[0] as i32).into();
-                    output = output / sc;
-                }
-                output
-            }
+            type Spectral = $s;
 
             fn shape_physical(&self) -> [usize; 1] {
                 [self.base0.len_phys()]
@@ -174,6 +65,14 @@ macro_rules! impl_spacecommon_space1 {
 
             fn shape_spectral(&self) -> [usize; 1] {
                 [self.base0.len_spec()]
+            }
+
+            fn ndarray_physical(&self) -> Array1<Self::Physical> {
+                Array1::zeros([self.base0.len_phys()])
+            }
+
+            fn ndarray_spectral(&self) -> Array1<Self::Spectral> {
+                Array1::zeros([self.base0.len_spec()])
             }
 
             fn laplace(&self, _axis: usize) -> Array2<A> {
@@ -203,94 +102,155 @@ macro_rules! impl_spacecommon_space1 {
             fn base_all(&self) -> [BaseAll<A>; 1] {
                 [BaseAll::<A>::from(self.base0.clone())]
             }
-        }
-    };
-}
-impl_spacecommon_space1!(BaseR2r, A);
-impl_spacecommon_space1!(BaseR2c, Complex<A>);
-impl_spacecommon_space1!(BaseC2c, Complex<A>);
 
-macro_rules! impl_space1transform {
-    ($base: ident, $r: ty, $s: ty) => {
-        impl<A> Space1Transform<A, $base<A>> for Space1<$base<A>>
-        where
-            A: FloatNum,
-            Complex<A>: ScalarOperand,
-        {
-            type Physical = $r;
+            fn to_ortho(&self, input: &Array1<Self::Spectral>) -> Array1<Self::Spectral> {
+                self.base0.to_ortho(input, 0)
+            }
 
-            type Spectral = $s;
+            fn to_ortho_inplace(
+                &self,
+                input: &Array1<Self::Spectral>,
+                output: &mut Array1<Self::Spectral>,
+            ) {
+                self.base0.to_ortho_inplace(input, output, 0)
+            }
 
-            fn new(base: &$base<A>) -> Self {
-                Self {
-                    base0: base.clone(),
+            fn from_ortho(&self, input: &Array1<Self::Spectral>) -> Array1<Self::Spectral> {
+                self.base0.from_ortho(input, 0)
+            }
+
+            fn from_ortho_inplace(
+                &self,
+                input: &Array1<Self::Spectral>,
+                output: &mut Array1<Self::Spectral>,
+            ) {
+                self.base0.from_ortho_inplace(input, output, 0)
+            }
+
+            fn to_ortho_par(&self, input: &Array1<Self::Spectral>) -> Array1<Self::Spectral> {
+                self.base0.to_ortho_par(input, 0)
+            }
+
+            fn to_ortho_inplace_par(
+                &self,
+                input: &Array1<Self::Spectral>,
+                output: &mut Array1<Self::Spectral>,
+            ) {
+                self.base0.to_ortho_inplace_par(input, output, 0)
+            }
+
+            fn from_ortho_par(&self, input: &Array1<Self::Spectral>) -> Array1<Self::Spectral> {
+                self.base0.from_ortho_par(input, 0)
+            }
+
+            fn from_ortho_inplace_par(
+                &self,
+                input: &Array1<Self::Spectral>,
+                output: &mut Array1<Self::Spectral>,
+            ) {
+                self.base0.from_ortho_inplace_par(input, output, 0)
+            }
+
+            fn gradient(
+                &self,
+                input: &Array1<Self::Spectral>,
+                deriv: [usize; 1],
+                scale: Option<[A; 1]>,
+            ) -> Array1<Self::Spectral> {
+                let mut output = self.base0.differentiate(input, deriv[0], 0);
+                if let Some(s) = scale {
+                    let sc: Self::Spectral = s[0].powi(deriv[0] as i32).into();
+                    output = output / sc;
                 }
+                output
             }
 
-            fn ndarray_physical(&self) -> Array1<Self::Physical> {
-                Array1::zeros([self.base0.len_phys()])
-            }
-
-            fn ndarray_spectral(&self) -> Array1<Self::Spectral> {
-                Array1::zeros([self.base0.len_spec()])
-            }
-
-            fn forward(&mut self, input: &mut Array1<Self::Physical>) -> Array1<Self::Spectral> {
+            fn forward<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
+            where
+                S: ndarray::Data<Elem = Self::Physical>,
+            {
                 self.base0.forward(input, 0)
             }
 
-            fn forward_inplace(
+            fn forward_inplace<S1, S2>(
                 &mut self,
-                input: &mut Array1<Self::Physical>,
-                output: &mut Array1<Self::Spectral>,
-            ) {
+                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: ndarray::Data<Elem = Self::Physical>,
+                S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+            {
                 self.base0.forward_inplace(input, output, 0)
             }
 
-            fn backward(&mut self, input: &mut Array1<Self::Spectral>) -> Array1<Self::Physical> {
+            fn backward<S>(
+                &mut self,
+                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Physical, Dim<[usize; 1]>>
+            where
+                S: ndarray::Data<Elem = Self::Spectral>,
+            {
                 self.base0.backward(input, 0)
             }
 
-            fn backward_inplace(
+            fn backward_inplace<S1, S2>(
                 &mut self,
-                input: &mut Array1<Self::Spectral>,
-                output: &mut Array1<Self::Physical>,
-            ) {
+                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: ndarray::Data<Elem = Self::Spectral>,
+                S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+            {
                 self.base0.backward_inplace(input, output, 0)
             }
 
-            fn forward_par(
+            fn forward_par<S>(
                 &mut self,
-                input: &mut Array1<Self::Physical>,
-            ) -> Array1<Self::Spectral> {
+                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
+            where
+                S: ndarray::Data<Elem = Self::Physical>,
+            {
                 self.base0.forward_par(input, 0)
             }
 
-            fn forward_inplace_par(
+            fn forward_inplace_par<S1, S2>(
                 &mut self,
-                input: &mut Array1<Self::Physical>,
-                output: &mut Array1<Self::Spectral>,
-            ) {
+                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: ndarray::Data<Elem = Self::Physical>,
+                S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+            {
                 self.base0.forward_inplace_par(input, output, 0)
             }
 
-            fn backward_par(
+            fn backward_par<S>(
                 &mut self,
-                input: &mut Array1<Self::Spectral>,
-            ) -> Array1<Self::Physical> {
+                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+            ) -> Array<Self::Physical, Dim<[usize; 1]>>
+            where
+                S: ndarray::Data<Elem = Self::Spectral>,
+            {
                 self.base0.backward_par(input, 0)
             }
 
-            fn backward_inplace_par(
+            fn backward_inplace_par<S1, S2>(
                 &mut self,
-                input: &mut Array1<Self::Spectral>,
-                output: &mut Array1<Self::Physical>,
-            ) {
+                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
+            ) where
+                S1: ndarray::Data<Elem = Self::Spectral>,
+                S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+            {
                 self.base0.backward_inplace_par(input, output, 0)
             }
         }
     };
 }
-impl_space1transform!(BaseR2r, A, A);
-impl_space1transform!(BaseR2c, A, Complex<A>);
-impl_space1transform!(BaseC2c, Complex<A>, Complex<A>);
+impl_space1!(BaseR2r, A, A);
+impl_space1!(BaseR2c, A, Complex<A>);
+impl_space1!(BaseC2c, Complex<A>, Complex<A>);

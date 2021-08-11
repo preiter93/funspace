@@ -149,7 +149,7 @@
 //! ### Example
 //! Apply transform from physical to spectral in a two-dimensional space
 //! ```
-//! use funspace::{fourier_r2c, cheb_dirichlet, Space2, Space2Transform, SpaceCommon};
+//! use funspace::{fourier_r2c, cheb_dirichlet, Space2, BaseSpace};
 //! use ndarray::prelude::*;
 //! use std::f64::consts::PI;
 //! use num_complex::Complex;
@@ -182,7 +182,7 @@ pub mod fourier;
 pub mod space1;
 pub mod space2;
 pub mod space3;
-pub mod space_common;
+pub mod space_traits;
 pub mod traits;
 pub mod types;
 pub mod utils;
@@ -199,10 +199,10 @@ pub use crate::traits::TransformPar;
 use chebyshev::Chebyshev;
 use chebyshev::CompositeChebyshev;
 use fourier::{FourierC2c, FourierR2c};
-pub use space1::{Space1, Space1Transform};
-pub use space2::{Space2, Space2Transform};
-pub use space3::{Space3, Space3Transform};
-pub use space_common::SpaceCommon;
+pub use space1::Space1;
+pub use space2::Space2;
+pub use space3::Space3;
+pub use space_traits::BaseSpace;
 pub use types::{FloatNum, Scalar};
 
 /// Function space for Chebyshev Polynomials
