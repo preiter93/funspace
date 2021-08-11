@@ -22,7 +22,7 @@ A transform describes a change from the physical space to the function
 space. For example, a fourier transform describes a transform from
 values of a function on a regular grid to coefficents of sine/cosine
 polynomials. This is analogous to other function spaces. The transforms
-are implemented by the [`Transfrom`] trait.
+are implemented by the [`Transform`] trait.
 
 #### Example
 Apply forward transform of 1d array in `cheb_dirichlet` space
@@ -42,12 +42,12 @@ fourier space becomes multiplication with the wavenumbe vector.
 Differentiation in Chebyshev space can be done easily by a recurrence
 relation.
 Each base implements a differentiation method, which must be applied on
-an array of coefficents. This is defined by the [`Differentiation`] trait.
+an array of coefficents. This is defined by the [`Differentiate`] trait.
 
 #### Example
 Apply differentiation
 ```rust
-use funspace::{Transform, Differentiate, BaseBasics, fourier_r2c};
+use funspace::{Transform, Differentiate, Basics, fourier_r2c};
 use ndarray::prelude::*;
 use ndarray::Array1;
 use num_complex::Complex;
@@ -96,7 +96,7 @@ not maintain the same shape (but dimensionality is conserved).
 Transform composite space `cheb_dirichlet` to its orthogonal counterpart
 `chebyshev`
 ```rust
-use funspace::{Transform, FromOrtho, BaseBasics};
+use funspace::{Transform, FromOrtho, Basics};
 use funspace::{cheb_dirichlet, chebyshev};
 use std::f64::consts::PI;
 use ndarray::prelude::*;
@@ -137,7 +137,7 @@ println!("cheb_dirichlet: {:?}", cd_vhat_ortho);
 ```
 
 ### Multidimensional Spaces
-A collection of bases makes up a [`SpaceBase`], which defines operations
+A collection of bases makes up a Space, which defines operations
 along a specfic dimension (= axis). Care must be taken when transforming
 a field from the physical space to the spectral space on how the transforms
 are chained in a multidimensional space. For example, `cheb_dirichlet` is a
@@ -146,29 +146,30 @@ So, for a given real valued physical field, the chebyshev transform must be appl
 before the fourier transform in the forward transform, and in opposite order in
 the backward transform.
 
+**Note**: Currently `funspace` supports 1- 2- and 3 - dimensional spaces.
+
 #### Example
 Apply transform from physical to spectral in a two-dimensional space
 ```rust
-use funspace::{fourier_r2c, cheb_dirichlet, Space2, Transform, BaseBasics};
+use funspace::{fourier_r2c, cheb_dirichlet, Space2, BaseSpace};
 use ndarray::prelude::*;
-use num_complex::Complex;
 use std::f64::consts::PI;
+use num_complex::Complex;
 // Define the space and allocate arrays
-let mut space = Space2::new(&[fourier_r2c(5), cheb_dirichlet(5)]);
+let mut space = Space2::new(&fourier_r2c(5), &cheb_dirichlet(5));
 let mut v: Array2<f64> = space.ndarray_physical();
-let mut vhat: Array2<Complex<f64>> = space.ndarray_spectral();
 // Set some field values
-let x = space.bases[0].coords();
-let y = space.bases[1].coords();
+let x = space.coords_axis(0);
+let y = space.coords_axis(1);
 for (i,xi) in x.iter().enumerate() {
     for (j,yi) in y.iter().enumerate() {
         v[[i,j]] = xi.sin() * (PI/2.*yi).cos();
     }
 }
-// Transform chebyshev
-let mut buffer: Array2<f64> = space.forward(&mut v, 1);
-// Transform fourier
-space.forward_inplace(&mut buffer, &mut vhat, 0);
+// Transform forward (vhat is complex)
+let mut vhat = space.forward(&mut v);
+// Transform backward (v is real)
+let v = space.backward(&mut vhat);
 ```
 
 License: MIT

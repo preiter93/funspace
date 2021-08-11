@@ -28,7 +28,7 @@ use crate::traits::Transform;
 use crate::traits::TransformPar;
 use crate::BaseAll;
 use crate::{BaseC2c, BaseR2c, BaseR2r, FloatNum};
-use ndarray::{prelude::*, ScalarOperand};
+use ndarray::{prelude::*, Data, DataMut, ScalarOperand};
 use num_complex::Complex;
 
 /// Create three-dimensional space
@@ -160,76 +160,115 @@ macro_rules! impl_space3 {
                 ]
             }
 
-            fn to_ortho(&self, input: &Array3<Self::Spectral>) -> Array3<Self::Spectral> {
+            fn to_ortho<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 3]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 3]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
                 let buffer1 = self.base0.to_ortho(input, 0);
                 let buffer2 = self.base1.to_ortho(&buffer1, 1);
                 self.base2.to_ortho(&buffer2, 2)
             }
 
-            fn to_ortho_inplace(
+            fn to_ortho_inplace<S1, S2>(
                 &self,
-                input: &Array3<Self::Spectral>,
-                output: &mut Array3<Self::Spectral>,
-            ) {
+                input: &mut ArrayBase<S1, Dim<[usize; 3]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
                 let buffer1 = self.base0.to_ortho(input, 0);
                 let buffer2 = self.base1.to_ortho(&buffer1, 1);
                 self.base2.to_ortho_inplace(&buffer2, output, 2);
             }
 
-            fn from_ortho(&self, input: &Array3<Self::Spectral>) -> Array3<Self::Spectral> {
+            fn from_ortho<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 3]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 3]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
                 let buffer1 = self.base0.from_ortho(input, 0);
                 let buffer2 = self.base1.from_ortho(&buffer1, 1);
                 self.base2.from_ortho(&buffer2, 2)
             }
 
-            fn from_ortho_inplace(
+            fn from_ortho_inplace<S1, S2>(
                 &self,
-                input: &Array3<Self::Spectral>,
-                output: &mut Array3<Self::Spectral>,
-            ) {
+                input: &mut ArrayBase<S1, Dim<[usize; 3]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
                 let buffer1 = self.base0.from_ortho(input, 0);
                 let buffer2 = self.base1.from_ortho(&buffer1, 1);
                 self.base2.from_ortho_inplace(&buffer2, output, 2);
             }
 
-            fn to_ortho_par(&self, input: &Array3<Self::Spectral>) -> Array3<Self::Spectral> {
+            fn to_ortho_par<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 3]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 3]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
                 let buffer1 = self.base0.to_ortho_par(input, 0);
                 let buffer2 = self.base1.to_ortho_par(&buffer1, 1);
                 self.base2.to_ortho_par(&buffer2, 2)
             }
 
-            fn to_ortho_inplace_par(
+            fn to_ortho_inplace_par<S1, S2>(
                 &self,
-                input: &Array3<Self::Spectral>,
-                output: &mut Array3<Self::Spectral>,
-            ) {
+                input: &mut ArrayBase<S1, Dim<[usize; 3]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
                 let buffer1 = self.base0.to_ortho_par(input, 0);
                 let buffer2 = self.base1.to_ortho_par(&buffer1, 1);
                 self.base2.to_ortho_inplace_par(&buffer2, output, 2);
             }
 
-            fn from_ortho_par(&self, input: &Array3<Self::Spectral>) -> Array3<Self::Spectral> {
+            fn from_ortho_par<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 3]>>,
+            ) -> Array<Self::Spectral, Dim<[usize; 3]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
                 let buffer1 = self.base0.from_ortho_par(input, 0);
                 let buffer2 = self.base1.from_ortho_par(&buffer1, 1);
                 self.base2.from_ortho_par(&buffer2, 2)
             }
 
-            fn from_ortho_inplace_par(
+            fn from_ortho_inplace_par<S1, S2>(
                 &self,
-                input: &Array3<Self::Spectral>,
-                output: &mut Array3<Self::Spectral>,
-            ) {
+                input: &mut ArrayBase<S1, Dim<[usize; 3]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
+            ) where
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
+            {
                 let buffer1 = self.base0.from_ortho_par(input, 0);
                 let buffer2 = self.base1.from_ortho_par(&buffer1, 1);
                 self.base2.from_ortho_inplace_par(&buffer2, output, 2);
             }
 
-            fn gradient(
+            fn gradient<S>(
                 &self,
-                input: &Array3<Self::Spectral>,
+                input: &ArrayBase<S, Dim<[usize; 3]>>,
                 deriv: [usize; 3],
                 scale: Option<[A; 3]>,
-            ) -> Array3<Self::Spectral> {
+            ) -> Array<Self::Spectral, Dim<[usize; 3]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
                 let buffer1 = self.base0.differentiate(input, deriv[0], 0);
                 let buffer2 = self.base1.differentiate(&buffer1, deriv[1], 1);
                 let mut output = self.base1.differentiate(&buffer2, deriv[2], 2);
@@ -248,7 +287,7 @@ macro_rules! impl_space3 {
                 input: &mut ArrayBase<S, Dim<[usize; 3]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 3]>>
             where
-                S: ndarray::Data<Elem = Self::Physical>,
+                S: Data<Elem = Self::Physical>,
             {
                 let mut buffer1 = self.base2.forward(input, 2);
                 let mut buffer2 = self.base1.forward(&mut buffer1, 1);
@@ -260,8 +299,8 @@ macro_rules! impl_space3 {
                 input: &mut ArrayBase<S1, Dim<[usize; 3]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
             ) where
-                S1: ndarray::Data<Elem = Self::Physical>,
-                S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+                S1: Data<Elem = Self::Physical>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let mut buffer1 = self.base2.forward(input, 2);
                 let mut buffer2 = self.base1.forward(&mut buffer1, 1);
@@ -273,7 +312,7 @@ macro_rules! impl_space3 {
                 input: &mut ArrayBase<S, Dim<[usize; 3]>>,
             ) -> Array<Self::Physical, Dim<[usize; 3]>>
             where
-                S: ndarray::Data<Elem = Self::Spectral>,
+                S: Data<Elem = Self::Spectral>,
             {
                 let mut buffer1 = self.base0.backward(input, 0);
                 let mut buffer2 = self.base1.backward(&mut buffer1, 1);
@@ -285,8 +324,8 @@ macro_rules! impl_space3 {
                 input: &mut ArrayBase<S1, Dim<[usize; 3]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
             ) where
-                S1: ndarray::Data<Elem = Self::Spectral>,
-                S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let mut buffer1 = self.base0.backward(input, 0);
                 let mut buffer2 = self.base1.backward(&mut buffer1, 1);
@@ -298,7 +337,7 @@ macro_rules! impl_space3 {
                 input: &mut ArrayBase<S, Dim<[usize; 3]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 3]>>
             where
-                S: ndarray::Data<Elem = Self::Physical>,
+                S: Data<Elem = Self::Physical>,
             {
                 let mut buffer1 = self.base2.forward_par(input, 2);
                 let mut buffer2 = self.base1.forward_par(&mut buffer1, 1);
@@ -310,8 +349,8 @@ macro_rules! impl_space3 {
                 input: &mut ArrayBase<S1, Dim<[usize; 3]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
             ) where
-                S1: ndarray::Data<Elem = Self::Physical>,
-                S2: ndarray::Data<Elem = Self::Spectral> + ndarray::DataMut,
+                S1: Data<Elem = Self::Physical>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let mut buffer1 = self.base2.forward_par(input, 2);
                 let mut buffer2 = self.base1.forward_par(&mut buffer1, 1);
@@ -323,7 +362,7 @@ macro_rules! impl_space3 {
                 input: &mut ArrayBase<S, Dim<[usize; 3]>>,
             ) -> Array<Self::Physical, Dim<[usize; 3]>>
             where
-                S: ndarray::Data<Elem = Self::Spectral>,
+                S: Data<Elem = Self::Spectral>,
             {
                 let mut buffer1 = self.base0.backward_par(input, 0);
                 let mut buffer2 = self.base1.backward_par(&mut buffer1, 1);
@@ -335,8 +374,8 @@ macro_rules! impl_space3 {
                 input: &mut ArrayBase<S1, Dim<[usize; 3]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
             ) where
-                S1: ndarray::Data<Elem = Self::Spectral>,
-                S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let mut buffer1 = self.base0.backward_par(input, 0);
                 let mut buffer2 = self.base1.backward_par(&mut buffer1, 1);
