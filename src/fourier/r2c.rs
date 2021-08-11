@@ -10,6 +10,7 @@ use super::FourierC2c;
 use crate::traits::BaseBasics;
 use crate::traits::Differentiate;
 use crate::traits::FromOrtho;
+use crate::traits::FromOrthoPar;
 use crate::traits::LaplacianInverse;
 use crate::traits::Transform;
 use crate::traits::TransformKind;
@@ -17,7 +18,7 @@ use crate::traits::TransformPar;
 use crate::types::FloatNum;
 use crate::types::Scalar;
 use ndarray::prelude::*;
-use ndrustfft::FftHandler;
+use ndrustfft::R2cFftHandler;
 use num_complex::Complex;
 
 /// # Container for fourier space (Real-to-complex)
@@ -32,7 +33,7 @@ pub struct FourierR2c<A> {
     /// Complex wavenumber vector
     pub k: Array1<Complex<A>>,
     /// Handles discrete cosine transform
-    pub fft_handler: FftHandler<A>,
+    pub fft_handler: R2cFftHandler<A>,
     /// Transform kind (real-to-complex)
     transform_kind: TransformKind,
 }
@@ -46,7 +47,7 @@ impl<A: FloatNum> FourierR2c<A> {
             m: n / 2 + 1,
             x: FourierC2c::nodes(n),
             k: Self::wavenumber(n),
-            fft_handler: FftHandler::new(n),
+            fft_handler: R2cFftHandler::new(n),
             transform_kind: TransformKind::RealToComplex,
         }
     }
@@ -435,6 +436,54 @@ impl<A: FloatNum> FromOrtho<Complex<A>> for FourierR2c<A> {
 
     /// Return itself
     fn from_ortho_inplace<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        _axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Complex<A>>,
+        S2: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
+        D: Dimension,
+    {
+        output.assign(input);
+    }
+}
+
+impl<A: FloatNum> FromOrthoPar<Complex<A>> for FourierR2c<A> {
+    /// Return itself
+    fn to_ortho_par<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<Complex<A>, D>
+    where
+        S: ndarray::Data<Elem = Complex<A>>,
+        D: Dimension,
+    {
+        input.to_owned()
+    }
+
+    /// Return itself
+    fn to_ortho_inplace_par<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        _axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Complex<A>>,
+        S2: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
+        D: Dimension,
+    {
+        output.assign(input);
+    }
+
+    /// Return itself
+    fn from_ortho_par<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<Complex<A>, D>
+    where
+        S: ndarray::Data<Elem = Complex<A>>,
+        D: Dimension,
+    {
+        input.to_owned()
+    }
+
+    /// Return itself
+    fn from_ortho_inplace_par<S1, S2, D>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,

@@ -11,6 +11,7 @@
 use crate::traits::BaseBasics;
 use crate::traits::Differentiate;
 use crate::traits::FromOrtho;
+use crate::traits::FromOrthoPar;
 use crate::traits::LaplacianInverse;
 use crate::traits::Transform;
 use crate::traits::TransformKind;
@@ -488,6 +489,54 @@ impl<A: FloatNum> FromOrtho<Complex<A>> for FourierC2c<A> {
 
     /// Return itself
     fn from_ortho_inplace<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        _axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Complex<A>>,
+        S2: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
+        D: Dimension,
+    {
+        output.assign(input);
+    }
+}
+
+impl<A: FloatNum> FromOrthoPar<Complex<A>> for FourierC2c<A> {
+    /// Return itself
+    fn to_ortho_par<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<Complex<A>, D>
+    where
+        S: ndarray::Data<Elem = Complex<A>>,
+        D: Dimension,
+    {
+        input.to_owned()
+    }
+
+    /// Return itself
+    fn to_ortho_inplace_par<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        _axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = Complex<A>>,
+        S2: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
+        D: Dimension,
+    {
+        output.assign(input);
+    }
+
+    /// Return itself
+    fn from_ortho_par<S, D>(&self, input: &ArrayBase<S, D>, _axis: usize) -> Array<Complex<A>, D>
+    where
+        S: ndarray::Data<Elem = Complex<A>>,
+        D: Dimension,
+    {
+        input.to_owned()
+    }
+
+    /// Return itself
+    fn from_ortho_inplace_par<S1, S2, D>(
         &self,
         input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,

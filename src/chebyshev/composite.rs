@@ -4,6 +4,7 @@ use super::ortho::Chebyshev;
 use crate::traits::BaseBasics;
 use crate::traits::Differentiate;
 use crate::traits::FromOrtho;
+use crate::traits::FromOrthoPar;
 use crate::traits::LaplacianInverse;
 use crate::traits::Transform;
 use crate::traits::TransformKind;
@@ -170,9 +171,9 @@ macro_rules! impl_from_ortho_composite_chebyshev {
                     Some("composite to_ortho"),
                 );
                 Zip::from(input.lanes(Axis(axis)))
-                     .and(output.lanes_mut(Axis(axis)))
+                    .and(output.lanes_mut(Axis(axis)))
                     .for_each(|inp, mut out| {
-                         self.stencil.multiply_vec_inplace(&inp, &mut out);
+                        self.stencil.multiply_vec_inplace(&inp, &mut out);
                     });
             }
 
@@ -231,6 +232,84 @@ macro_rules! impl_from_ortho_composite_chebyshev {
                 Zip::from(input.lanes(Axis(axis)))
                     .and(output.lanes_mut(Axis(axis)))
                     .for_each(|inp, mut out| {
+                        self.stencil.solve_vec_inplace(&inp, &mut out);
+                    });
+            }
+        }
+
+        impl<A: FloatNum> FromOrthoPar<$a> for CompositeChebyshev<A> {
+            /// See [`CompositeChebyshev::to_ortho`]
+            fn to_ortho_par<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                use crate::utils::array_resized_axis;
+                let mut output = array_resized_axis(input, self.ortho.len_spec(), axis);
+                self.to_ortho_inplace_par(input, &mut output, axis);
+                output
+            }
+
+            /// See [`CompositeChebyshev::to_ortho`]
+            fn to_ortho_inplace_par<S1, S2, D>(
+                &self,
+                input: &ArrayBase<S1, D>,
+                output: &mut ArrayBase<S2, D>,
+                axis: usize,
+            ) where
+                S1: ndarray::Data<Elem = $a>,
+                S2: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                use crate::utils::check_array_axis;
+                check_array_axis(input, self.len_spec(), axis, Some("composite to_ortho"));
+                check_array_axis(
+                    output,
+                    self.ortho.len_spec(),
+                    axis,
+                    Some("composite to_ortho"),
+                );
+                Zip::from(input.lanes(Axis(axis)))
+                    .and(output.lanes_mut(Axis(axis)))
+                    .par_for_each(|inp, mut out| {
+                        self.stencil.multiply_vec_inplace(&inp, &mut out);
+                    });
+            }
+
+            /// See [`CompositeChebyshev::from_ortho`]
+            fn from_ortho_par<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                use crate::utils::array_resized_axis;
+                let mut output = array_resized_axis(input, self.len_spec(), axis);
+                self.from_ortho_inplace_par(input, &mut output, axis);
+                output
+            }
+
+            /// See [`CompositeChebyshev::from_ortho`]
+            fn from_ortho_inplace_par<S1, S2, D>(
+                &self,
+                input: &ArrayBase<S1, D>,
+                output: &mut ArrayBase<S2, D>,
+                axis: usize,
+            ) where
+                S1: ndarray::Data<Elem = $a>,
+                S2: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                use crate::utils::check_array_axis;
+                check_array_axis(
+                    input,
+                    self.ortho.len_spec(),
+                    axis,
+                    Some("composite from_ortho"),
+                );
+                check_array_axis(output, self.len_spec(), axis, Some("composite from_ortho"));
+                Zip::from(input.lanes(Axis(axis)))
+                    .and(output.lanes_mut(Axis(axis)))
+                    .par_for_each(|inp, mut out| {
                         self.stencil.solve_vec_inplace(&inp, &mut out);
                     });
             }

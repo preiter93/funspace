@@ -10,29 +10,12 @@ pub fn bench_sb_transform(c: &mut Criterion) {
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
         let cd = cheb_dirichlet::<f64>(*n);
-        let mut space = Space2::new(&[cd.clone(), cd.clone()]);
+        let mut space = Space2::new(&cd.clone(), &cd.clone());
         let mut arr = Array2::from_elem((*n, *n), 1.);
         let name = format!("Size: {} x {}", *n, *n);
         group.bench_function(&name, |b| {
             b.iter(|| {
-                let _: Array2<f64> = space.forward(&mut arr, 0);
-            })
-        });
-    }
-    group.finish();
-}
-
-pub fn bench_sb_transform_full(c: &mut Criterion) {
-    let mut group = c.benchmark_group("SpaceBaseTransformFullChebDirichlet");
-    group.significance_level(0.1).sample_size(10);
-    for n in SIZES.iter() {
-        let cd = cheb_dirichlet::<f64>(*n);
-        let mut space = Space2::new(&[cd.clone(), cd.clone()]);
-        let mut arr = Array2::from_elem((*n, *n), 1.);
-        let name = format!("Size: {} x {}", *n, *n);
-        group.bench_function(&name, |b| {
-            b.iter(|| {
-                let _: Array2<f64> = space.forward_space(&mut arr);
+                let _: Array2<f64> = space.forward(&mut arr);
             })
         });
     }
@@ -44,25 +27,11 @@ pub fn bench_sb_to_ortho(c: &mut Criterion) {
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
         let cd = cheb_dirichlet::<f64>(*n);
-        let space = Space2::new(&[cd.clone(), cd.clone()]);
+        let space = Space2::new(&cd.clone(), &cd.clone());
         let ns = cd.len_spec();
         let mut arr = Array2::from_elem((ns, ns), 1.);
         let name = format!("Size: {} x {}", *n, *n);
-        group.bench_function(&name, |b| b.iter(|| space.to_ortho(&mut arr, 0)));
-    }
-    group.finish();
-}
-
-pub fn bench_sb_to_ortho_full(c: &mut Criterion) {
-    let mut group = c.benchmark_group("SpaceBaseToOrthoFullChebDirichlet");
-    group.significance_level(0.1).sample_size(10);
-    for n in SIZES.iter() {
-        let cd = cheb_dirichlet::<f64>(*n);
-        let space = Space2::new(&[cd.clone(), cd.clone()]);
-        let ns = cd.len_spec();
-        let mut arr = Array2::from_elem((ns, ns), 1.);
-        let name = format!("Size: {} x {}", *n, *n);
-        group.bench_function(&name, |b| b.iter(|| space.to_ortho_space(&mut arr)));
+        group.bench_function(&name, |b| b.iter(|| space.to_ortho(&mut arr)));
     }
     group.finish();
 }
@@ -72,25 +41,11 @@ pub fn bench_sb_from_ortho(c: &mut Criterion) {
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
         let cd = cheb_dirichlet::<f64>(*n);
-        let space = Space2::new(&[cd.clone(), cd.clone()]);
+        let space = Space2::new(&cd.clone(), &cd.clone());
         let ns = cd.len_phys();
         let mut arr = Array2::from_elem((ns, ns), 1.);
         let name = format!("Size: {} x {}", *n, *n);
-        group.bench_function(&name, |b| b.iter(|| space.from_ortho(&mut arr, 0)));
-    }
-    group.finish();
-}
-
-pub fn bench_sb_from_ortho_full(c: &mut Criterion) {
-    let mut group = c.benchmark_group("SpaceBaseFromOrthoFullChebDirichlet");
-    group.significance_level(0.1).sample_size(10);
-    for n in SIZES.iter() {
-        let cd = cheb_dirichlet::<f64>(*n);
-        let space = Space2::new(&[cd.clone(), cd.clone()]);
-        let ns = cd.len_phys();
-        let mut arr = Array2::from_elem((ns, ns), 1.);
-        let name = format!("Size: {} x {}", *n, *n);
-        group.bench_function(&name, |b| b.iter(|| space.from_ortho_space(&mut arr)));
+        group.bench_function(&name, |b| b.iter(|| space.from_ortho(&mut arr)));
     }
     group.finish();
 }
@@ -100,11 +55,11 @@ pub fn bench_sb_differentiate(c: &mut Criterion) {
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
         let cd = cheb_dirichlet::<f64>(*n);
-        let space = Space2::new(&[cd.clone(), cd.clone()]);
+        let space = Space2::new(&cd.clone(), &cd.clone());
         let ns = cd.len_spec();
         let mut arr = Array2::from_elem((ns, ns), 1.);
         let name = format!("Size: {} x {}", *n, *n);
-        group.bench_function(&name, |b| b.iter(|| space.differentiate(&mut arr, 2, 0)));
+        group.bench_function(&name, |b| b.iter(|| space.gradient(&mut arr, [2, 0], None)));
     }
     group.finish();
 }
@@ -112,11 +67,8 @@ pub fn bench_sb_differentiate(c: &mut Criterion) {
 criterion_group!(
     benches,
     bench_sb_transform,
-    bench_sb_transform_full,
     bench_sb_to_ortho,
-    bench_sb_to_ortho_full,
     bench_sb_from_ortho,
-    bench_sb_from_ortho_full,
     // bench_sb_differentiate
 );
 criterion_main!(benches);

@@ -3,7 +3,7 @@
 //! FloatNum: Floating Point number
 //! Scalar: Generic type for linalg operations
 use ndarray::ScalarOperand;
-use num_traits::{Float, FromPrimitive, Signed};
+use num_traits::{Float, FloatConst, FromPrimitive, Signed};
 use num_traits::{One, Zero};
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
@@ -21,6 +21,7 @@ pub trait FloatNum:
     + Debug
     + ScalarOperand
     + std::ops::MulAssign
+    + FloatConst
 {
 }
 impl FloatNum for f32 {}

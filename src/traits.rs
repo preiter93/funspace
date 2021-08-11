@@ -1,30 +1,34 @@
 //! Collection of usefull traits for function spaces
+use crate::complex_to_complex::BaseC2c;
+use crate::real_to_complex::BaseR2c;
+use crate::real_to_real::BaseR2r;
+use crate::Chebyshev;
+use crate::CompositeChebyshev;
+use crate::FloatNum;
+use crate::FourierC2c;
+use crate::FourierR2c;
 use ndarray::prelude::*;
 
-/// Define which number format the
-/// arrays have before and after
-/// a transform (Type in phyical space
-/// and type in spectral space)
-#[derive(Clone)]
-pub enum TransformKind {
-    /// Real to real transform
-    RealToReal,
-    /// Complex to complex transform
-    ComplexToComplex,
-    /// Real to complex transform
-    RealToComplex,
+pub trait SuperBase<F, R, S>:
+    BaseBasics<F>
+    + Transform<R, S>
+    + TransformPar<R, S>
+    + FromOrtho<S>
+    + FromOrthoPar<S>
+    + Differentiate<S>
+    + LaplacianInverse<F>
+{
 }
 
-impl TransformKind {
-    /// Return name of enum as str
-    #[must_use]
-    pub fn name(&self) -> &str {
-        match *self {
-            Self::RealToReal => "RealToReal",
-            Self::ComplexToComplex => "ComplexToComplex",
-            Self::RealToComplex => "RealToComplex",
-        }
-    }
+impl<T, F, R, S> SuperBase<F, R, S> for T where
+    T: BaseBasics<F>
+        + Transform<R, S>
+        + TransformPar<R, S>
+        + FromOrtho<S>
+        + FromOrthoPar<S>
+        + Differentiate<S>
+        + LaplacianInverse<F>
+{
 }
 
 /// Some basic  traits
@@ -344,4 +348,69 @@ pub trait FromOrtho<T> {
         S1: ndarray::Data<Elem = T>,
         S2: ndarray::Data<Elem = T> + ndarray::DataMut,
         D: Dimension;
+}
+
+/// Define transformation from and to orthonormal space.
+/// (Parallel version which uses ndarrays `par_for_each` iterator)
+#[enum_dispatch]
+pub trait FromOrthoPar<T> {
+    /// Parallel version of `to_ortho`
+    fn to_ortho_par<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    where
+        S: ndarray::Data<Elem = T>,
+        D: Dimension;
+
+    /// Parallel version of `to_ortho_inplace`
+    fn to_ortho_inplace_par<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        D: Dimension;
+
+    /// Parallel version of `from_ortho`
+    fn from_ortho_par<S, D>(&self, input: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    where
+        S: ndarray::Data<Elem = T>,
+        D: Dimension;
+
+    /// Parallel version of `from_ortho_inplace`
+    fn from_ortho_inplace_par<S1, S2, D>(
+        &self,
+        input: &ArrayBase<S1, D>,
+        output: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: ndarray::Data<Elem = T>,
+        S2: ndarray::Data<Elem = T> + ndarray::DataMut,
+        D: Dimension;
+}
+
+/// Define which number format the
+/// arrays have before and after
+/// a transform (Type in phyical space
+/// and type in spectral space)
+#[derive(Clone)]
+pub enum TransformKind {
+    /// Real to real transform
+    RealToReal,
+    /// Complex to complex transform
+    ComplexToComplex,
+    /// Real to complex transform
+    RealToComplex,
+}
+
+impl TransformKind {
+    /// Return name of enum as str
+    #[must_use]
+    pub fn name(&self) -> &str {
+        match *self {
+            Self::RealToReal => "RealToReal",
+            Self::ComplexToComplex => "ComplexToComplex",
+            Self::RealToComplex => "RealToComplex",
+        }
+    }
 }
