@@ -17,7 +17,6 @@ num-traits = "0.2.12"
 num-complex = "0.4"
 ndrustfft = "0.2"
 enum_dispatch = "0.3.7"
-#ndrustfft = { git = "https://github.com/preiter93/ndrustfft", branch = "main" }
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
