@@ -237,7 +237,7 @@ macro_rules! impl_space2 {
                 let mut output = self.base1.differentiate(&buffer, deriv[1], 1);
                 if let Some(s) = scale {
                     let sc: Self::Spectral =
-                        (s[0].powi(deriv[0] as i32) + s[1].powi(deriv[1] as i32)).into();
+                        (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
                     output = output / sc;
                 }
                 output

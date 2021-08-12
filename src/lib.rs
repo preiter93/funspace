@@ -192,7 +192,6 @@ pub use crate::traits::Differentiate;
 pub use crate::traits::FromOrtho;
 pub use crate::traits::FromOrthoPar;
 pub use crate::traits::LaplacianInverse;
-//pub use crate::traits::SuperBase;
 pub use crate::traits::Transform;
 pub use crate::traits::TransformKind;
 pub use crate::traits::TransformPar;
