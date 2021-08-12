@@ -1,4 +1,7 @@
-use funspace::*;
+use funspace::{
+    cheb_dirichlet, fourier_r2c, BaseAll, BaseC2c, BaseR2c, BaseR2r, BaseSpace, Basics, FloatNum,
+    FromOrthoPar, LaplacianInverse, Space2, Transform, TransformPar,
+};
 use ndarray::{prelude::*, Data};
 use ndarray::{Ix, ScalarOperand};
 use num_complex::Complex;
@@ -20,6 +23,11 @@ pub struct FieldBase<A, T1, T2, S, const N: usize> {
     // /// Collection of numerical solvers (Poisson, Hholtz, ...)
     // pub solvers: HashMap<String, SolverField<T, N>>,
 }
+
+/// One dimensional Field (f64 in physical space and T2 in spectral space)
+pub type Field1<T2, S> = FieldBase<f64, f64, T2, S, 1>;
+/// Two dimensional Field  (f64 in physical space and T2 in spectral space)
+pub type Field2<T2, S> = FieldBase<f64, f64, T2, S, 2>;
 
 impl<A, T1, T2, S, const N: usize> FieldBase<A, T1, T2, S, N>
 where
@@ -58,7 +66,7 @@ where
     where
         S1: Data<Elem = T2>,
     {
-        self.space.from_ortho_inplace_par(input, &mut self.vhat)
+        self.space.from_ortho_inplace_par(input, &mut self.vhat);
     }
 
     /// Gradient
@@ -148,4 +156,14 @@ where
 
         (mat_a, mat_b, precond, is_diag)
     }
+}
+
+fn main() {
+    let space = Space2::new(&fourier_r2c::<f64>(10), &cheb_dirichlet::<f64>(10));
+    let mut field = Field2::new(&space);
+    for v in field.v.iter_mut() {
+        *v = 1.;
+    }
+    field.forward();
+    field.backward();
 }

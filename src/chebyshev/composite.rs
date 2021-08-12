@@ -476,7 +476,7 @@ impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
         D: Dimension,
     {
         let parent_coeff = self.ortho.forward_par(input, axis);
-        self.from_ortho(&parent_coeff, axis)
+        self.from_ortho_par(&parent_coeff, axis)
     }
 
     /// See [`CompositeChebyshev::forward_par`]
@@ -502,7 +502,7 @@ impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
         D: Dimension,
     {
         let parent_coeff = self.ortho.forward_par(input, axis);
-        self.from_ortho_inplace(&parent_coeff, output, axis);
+        self.from_ortho_inplace_par(&parent_coeff, output, axis);
     }
 
     /// # Example
@@ -526,7 +526,7 @@ impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
         S: ndarray::Data<Elem = Self::Spectral>,
         D: Dimension,
     {
-        let mut parent_coeff = self.to_ortho(input, axis);
+        let mut parent_coeff = self.to_ortho_par(input, axis);
         self.ortho.backward_par(&mut parent_coeff, axis)
     }
 
@@ -552,7 +552,7 @@ impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
         D: Dimension,
     {
-        let mut parent_coeff = self.to_ortho(input, axis);
+        let mut parent_coeff = self.to_ortho_par(input, axis);
         self.ortho
             .backward_inplace_par(&mut parent_coeff, output, axis);
     }
