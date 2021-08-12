@@ -37,8 +37,8 @@
 //! One key advantage representing a function with coefficents in
 //! the function space is its ease of differentiation. Differentiation in
 //! fourier space becomes multiplication with the wavenumbe vector.
-//! Differentiation in Chebyshev space can be done easily by a recurrence
-//! relation.
+//! Differentiation in Chebyshev space is done by a recurrence
+//! relation and almost as fast as in Fourier space.
 //! Each base implements a differentiation method, which must be applied on
 //! an array of coefficents. This is defined by the [`Differentiate`] trait.
 //!
@@ -74,25 +74,29 @@
 //! ## Composite Bases
 //! Bases like those of fourier polynomials or chebyshev polynomials are
 //! considered orthonormal bases, i.e. the dot product of each individual
-//! polynomial with any other of its set vanishes.
-//! But other function spaces can be constructed by a linear combination
-//! the orthonormal basis functions. This is often used
-//! to construct bases which satisfy particular boundary conditions
+//! polynomial with any other of its set vanishes and the dot product with
+//! itself is unity. In these cases, the mass matrix is equal to the 
+//! identity matrix.
+//! However, other function spaces can be constructed by a linearly combiningn
+//! the orthonormal basis functions. By doing so, one can construct
+//! bases which satisfy particular boundary conditions
 //! like dirichlet (zero at the ends) or neumann (zero derivative at the ends).
-//! This is usefull when solving partial differential equations. When expressed
+//! This is usefull for solving partial differential equations. When expressed
 //! in those composite function space, the boundary condition is automatically
 //! satisfied. This is known as the *Galerkin* Method.
 //!
 //! To switch from its composite form to the orthonormal form, each base implements
 //! a [`FromOrtho`] trait, which defines the transform `to_ortho` and `from_ortho`.
 //! If the base is already orthogonal, the input will be returned, otherwise it
-//! is returned. Note that the dimensionality of the composite space is often
+//! is transformed from the composite space to the orthonormal space. 
+//! Note that the size of the composite space is usually
 //! less than its orthogonal counterpart.  Therefore the output array must
-//! not maintain the same shape (but dimensionality is conserved).
+//! not maintain the same shape (but its dimensionality is conserved).
 //!
 //! ### Example
 //! Transform composite space `cheb_dirichlet` to its orthogonal counterpart
-//! `chebyshev`
+//! `chebyshev`. Note that `cheb_dirichlet` has 6 spectral coefficients, 
+//! while the `chebyshev` bases has 8.
 //! ```
 //! use funspace::{Transform, FromOrtho, Basics};
 //! use funspace::{cheb_dirichlet, chebyshev};
@@ -135,11 +139,12 @@
 //! ```
 //!
 //! ## Multidimensional Spaces
-//! A collection of bases makes up a Space, which defines operations
-//! along a specfic dimension (= axis). Care must be taken when transforming
+//! A collection of bases makes up a Space, on which one can again defines operations
+//! along a specfic dimension (= axis). But special care must be taken in order to transform
 //! a field from the physical space to the spectral space on how the transforms
-//! are chained in a multidimensional space. For example, `cheb_dirichlet` is a
-//! real-to-real transform, while `fourier_r2c` defines a real-to-complex transform.
+//! are chained in a multidimensional space. Not all combinations are possible. 
+//! For example, `cheb_dirichlet` is a real-to-real transform,
+//! while `fourier_r2c` defines a real-to-complex transform.
 //! So, for a given real valued physical field, the chebyshev transform must be applied
 //! before the fourier transform in the forward transform, and in opposite order in
 //! the backward transform.
