@@ -150,7 +150,7 @@ impl<A: FloatNum> Differentiate<Complex<A>> for FourierC2c<A> {
         S: ndarray::Data<Elem = Complex<A>>,
         D: Dimension,
     {
-        let mut output: Array<Complex<A>, D> = Array::zeros(data.raw_dim());
+        let mut output = data.to_owned();
         self.differentiate_inplace(&mut output, n_times, axis);
         output
     }
@@ -180,7 +180,7 @@ impl<A: FloatNum> DifferentiatePar<Complex<A>> for FourierC2c<A> {
         S: ndarray::Data<Elem = Complex<A>>,
         D: Dimension,
     {
-        let mut output: Array<Complex<A>, D> = Array::zeros(data.raw_dim());
+        let mut output = data.to_owned();
         self.differentiate_inplace_par(&mut output, n_times, axis);
         output
     }

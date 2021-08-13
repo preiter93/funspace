@@ -450,7 +450,7 @@ macro_rules! impl_differentiate_chebyshev {
                 S: ndarray::Data<Elem = $a>,
                 D: Dimension,
             {
-                let mut output: Array<$a, D> = Array::zeros(data.raw_dim());
+                let mut output = data.to_owned();
                 self.differentiate_inplace(&mut output, n_times, axis);
                 output
             }
@@ -483,7 +483,7 @@ macro_rules! impl_differentiate_chebyshev {
                 S: ndarray::Data<Elem = $a>,
                 D: Dimension,
             {
-                let mut output: Array<$a, D> = Array::zeros(data.raw_dim());
+                let mut output = data.to_owned();
                 self.differentiate_inplace_par(&mut output, n_times, axis);
                 output
             }

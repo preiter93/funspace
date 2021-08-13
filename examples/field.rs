@@ -1,6 +1,6 @@
 use funspace::{
     cheb_dirichlet, fourier_r2c, BaseAll, BaseC2c, BaseR2c, BaseR2r, BaseSpace, Basics, FloatNum,
-    FromOrthoPar, LaplacianInverse, Space2, Transform, TransformPar,
+    LaplacianInverse, Space2,
 };
 use ndarray::{prelude::*, Data};
 use ndarray::{Ix, ScalarOperand};
@@ -72,7 +72,7 @@ where
     /// Gradient
     // #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
     pub fn gradient(&self, deriv: [usize; N], scale: Option<[A; N]>) -> Array<T2, Dim<[usize; N]>> {
-        self.space.gradient(&self.vhat, deriv, scale)
+        self.space.gradient_par(&self.vhat, deriv, scale)
     }
 
     /// Generate grid deltas from coordinates
