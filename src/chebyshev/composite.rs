@@ -3,6 +3,7 @@ use super::composite_stencil::{ChebyshevStencil, Stencil};
 use super::ortho::Chebyshev;
 use crate::traits::Basics;
 use crate::traits::Differentiate;
+use crate::traits::DifferentiatePar;
 use crate::traits::FromOrtho;
 use crate::traits::FromOrthoPar;
 use crate::traits::LaplacianInverse;
@@ -589,6 +590,39 @@ macro_rules! impl_differentiate_composite_chebyshev {
 
             #[allow(unused_variables)]
             fn differentiate_inplace<S, D>(
+                &self,
+                data: &mut ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) where
+                S: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                panic!(
+                    "Method differentiate_inplace not impl for composite basis (array size would change)."
+                );
+            }
+        }
+
+        impl<A: FloatNum> DifferentiatePar<$a> for CompositeChebyshev<A> {
+            /// Differentiation in spectral space
+            fn differentiate_par<S, D>(
+                &self,
+                data: &ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                let mut parent_coeff = self.to_ortho_par(data, axis);
+                self.ortho.differentiate_inplace_par(&mut parent_coeff, n_times, axis);
+                parent_coeff
+            }
+
+            #[allow(unused_variables)]
+            fn differentiate_inplace_par<S, D>(
                 &self,
                 data: &mut ArrayBase<S, D>,
                 n_times: usize,

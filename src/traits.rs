@@ -263,6 +263,30 @@ pub trait Differentiate<T> {
         D: Dimension;
 }
 
+/// Perform differentiation in spectral space (Parallel)
+pub trait DifferentiatePar<T> {
+    /// Return differentiated array
+    fn differentiate_par<S, D>(
+        &self,
+        data: &ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) -> Array<T, D>
+    where
+        S: ndarray::Data<Elem = T>,
+        D: Dimension;
+
+    /// Differentiate on input array
+    fn differentiate_inplace_par<S, D>(
+        &self,
+        data: &mut ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) where
+        S: ndarray::Data<Elem = T> + ndarray::DataMut,
+        D: Dimension;
+}
+
 /// Define (Pseudo-) Inverse of Laplacian
 ///
 /// These operators are usefull when solving

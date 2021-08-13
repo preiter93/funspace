@@ -10,6 +10,7 @@ use crate::chebyshev::CompositeChebyshev;
 use crate::fourier::FourierC2c;
 use crate::fourier::FourierR2c;
 use crate::traits::Differentiate;
+use crate::traits::DifferentiatePar;
 use crate::traits::FromOrtho;
 use crate::traits::FromOrthoPar;
 use crate::traits::Transform;

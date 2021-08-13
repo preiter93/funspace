@@ -3,7 +3,7 @@ use criterion::{criterion_group, criterion_main};
 use funspace::*;
 use ndarray::Array2;
 
-const SIZES: [usize; 3] = [128, 264, 512];
+const SIZES: [usize; 4] = [128, 264, 512, 1024];
 
 pub fn bench_sb_transform(c: &mut Criterion) {
     let mut group = c.benchmark_group("SpaceBaseTransformChebDirichlet");
@@ -68,17 +68,21 @@ pub fn bench_sb_differentiate(c: &mut Criterion) {
         let space = Space2::new(&cd.clone(), &cd.clone());
         let ns = cd.len_spec();
         let mut arr = Array2::from_elem((ns, ns), 1.);
-        let name = format!("Size: {} x {}", *n, *n);
+        let name = format!("Size: {} x {} (Serial)", *n, *n);
         group.bench_function(&name, |b| b.iter(|| space.gradient(&mut arr, [2, 0], None)));
+        let name = format!("Size: {} x {} (Parallel)", *n, *n);
+        group.bench_function(&name, |b| {
+            b.iter(|| space.gradient_par(&mut arr, [2, 0], None))
+        });
     }
     group.finish();
 }
 
 criterion_group!(
     benches,
-    bench_sb_transform,
-    bench_sb_to_ortho,
-    bench_sb_from_ortho,
-    // bench_sb_differentiate
+    // bench_sb_transform,
+    // bench_sb_to_ortho,
+    // bench_sb_from_ortho,
+    bench_sb_differentiate
 );
 criterion_main!(benches);

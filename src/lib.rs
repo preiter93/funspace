@@ -75,7 +75,7 @@
 //! Bases like those of fourier polynomials or chebyshev polynomials are
 //! considered orthonormal bases, i.e. the dot product of each individual
 //! polynomial with any other of its set vanishes and the dot product with
-//! itself is unity. In these cases, the mass matrix is equal to the 
+//! itself is unity. In these cases, the mass matrix is equal to the
 //! identity matrix.
 //! However, other function spaces can be constructed by a linearly combiningn
 //! the orthonormal basis functions. By doing so, one can construct
@@ -88,14 +88,14 @@
 //! To switch from its composite form to the orthonormal form, each base implements
 //! a [`FromOrtho`] trait, which defines the transform `to_ortho` and `from_ortho`.
 //! If the base is already orthogonal, the input will be returned, otherwise it
-//! is transformed from the composite space to the orthonormal space. 
+//! is transformed from the composite space to the orthonormal space.
 //! Note that the size of the composite space is usually
 //! less than its orthogonal counterpart.  Therefore the output array must
 //! not maintain the same shape (but its dimensionality is conserved).
 //!
 //! ### Example
 //! Transform composite space `cheb_dirichlet` to its orthogonal counterpart
-//! `chebyshev`. Note that `cheb_dirichlet` has 6 spectral coefficients, 
+//! `chebyshev`. Note that `cheb_dirichlet` has 6 spectral coefficients,
 //! while the `chebyshev` bases has 8.
 //! ```
 //! use funspace::{Transform, FromOrtho, Basics};
@@ -142,7 +142,7 @@
 //! A collection of bases makes up a Space, on which one can again defines operations
 //! along a specfic dimension (= axis). But special care must be taken in order to transform
 //! a field from the physical space to the spectral space on how the transforms
-//! are chained in a multidimensional space. Not all combinations are possible. 
+//! are chained in a multidimensional space. Not all combinations are possible.
 //! For example, `cheb_dirichlet` is a real-to-real transform,
 //! while `fourier_r2c` defines a real-to-complex transform.
 //! So, for a given real valued physical field, the chebyshev transform must be applied
@@ -194,6 +194,7 @@ pub mod utils;
 pub use crate::enums::{BaseAll, BaseC2c, BaseR2c, BaseR2r};
 pub use crate::traits::Basics;
 pub use crate::traits::Differentiate;
+pub use crate::traits::DifferentiatePar;
 pub use crate::traits::FromOrtho;
 pub use crate::traits::FromOrthoPar;
 pub use crate::traits::LaplacianInverse;

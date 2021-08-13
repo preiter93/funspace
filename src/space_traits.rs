@@ -183,6 +183,22 @@ where
     where
         S: Data<Elem = Self::Spectral>;
 
+    /// Take gradient. Optional: Rescale result by a constant. (Parallel)
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - *ndarray* with num type of spectral space
+    /// * `deriv` - [usize; N], derivative along each axis
+    /// * `scale` - [float; N], scaling factor along each axis (default [1.;n])
+    fn gradient_par<S>(
+        &self,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
+        deriv: [usize; N],
+        scale: Option<[A; N]>,
+    ) -> Array<Self::Spectral, Dim<[usize; N]>>
+    where
+        S: Data<Elem = Self::Spectral>;
+
     /// Return bases as array of enums
     fn base_all(&self) -> [BaseAll<A>; N];
 

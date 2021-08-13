@@ -21,6 +21,7 @@
 #![allow(clippy::module_name_repetitions, clippy::must_use_candidate)]
 use crate::traits::BaseBasics;
 use crate::traits::Differentiate;
+use crate::traits::DifferentiatePar;
 use crate::traits::FromOrtho;
 use crate::traits::LaplacianInverse;
 use crate::traits::Transform;
@@ -794,6 +795,33 @@ macro_rules! impl_differentiate {
                 D: Dimension,
             {
                 self.bases[axis].differentiate_inplace(data, n_times, axis)
+            }
+        }
+
+        impl<A: FloatNum, const N: usize> DifferentiatePar<$a> for SpaceBase<A, N> {
+            fn differentiate_par<S, D>(
+                &self,
+                data: &ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                self.bases[axis].differentiate_par(data, n_times, axis)
+            }
+
+            fn differentiate_inplace_par<S, D>(
+                &self,
+                data: &mut ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) where
+                S: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                self.bases[axis].differentiate_inplace_par(data, n_times, axis)
             }
         }
     };

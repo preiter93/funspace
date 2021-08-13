@@ -19,6 +19,7 @@
 use crate::space_traits::BaseSpace;
 use crate::traits::Basics;
 use crate::traits::Differentiate;
+use crate::traits::DifferentiatePar;
 use crate::traits::FromOrtho;
 use crate::traits::FromOrthoPar;
 use crate::traits::LaplacianInverse;
@@ -235,6 +236,25 @@ macro_rules! impl_space2 {
             {
                 let buffer = self.base0.differentiate(input, deriv[0], 0);
                 let mut output = self.base1.differentiate(&buffer, deriv[1], 1);
+                if let Some(s) = scale {
+                    let sc: Self::Spectral =
+                        (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
+                    output = output / sc;
+                }
+                output
+            }
+
+            fn gradient_par<S>(
+                &self,
+                input: &ArrayBase<S, Dim<[usize; 2]>>,
+                deriv: [usize; 2],
+                scale: Option<[A; 2]>,
+            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            where
+                S: Data<Elem = Self::Spectral>,
+            {
+                let buffer = self.base0.differentiate_par(input, deriv[0], 0);
+                let mut output = self.base1.differentiate_par(&buffer, deriv[1], 1);
                 if let Some(s) = scale {
                     let sc: Self::Spectral =
                         (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();

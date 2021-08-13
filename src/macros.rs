@@ -166,6 +166,37 @@ macro_rules! impl_differentiate_trait_for_base {
                 }
             }
         }
+
+        impl<A: FloatNum> DifferentiatePar<$a> for $base<A> {
+            fn differentiate_par<S, D>(
+                &self,
+                data: &ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) -> Array<$a, D>
+            where
+                S: ndarray::Data<Elem = $a>,
+                D: Dimension,
+            {
+                match self {
+                    $(Self::$var(ref b) => b.differentiate_par(data, n_times, axis),)*
+                }
+            }
+
+            fn differentiate_inplace_par<S, D>(
+                &self,
+                data: &mut ArrayBase<S, D>,
+                n_times: usize,
+                axis: usize,
+            ) where
+                S: ndarray::Data<Elem = $a> + ndarray::DataMut,
+                D: Dimension,
+            {
+                match self {
+                    $(Self::$var(ref b) => b.differentiate_inplace_par(data, n_times, axis),)*
+                }
+            }
+        }
     };
 }
 

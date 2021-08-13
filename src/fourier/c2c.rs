@@ -10,6 +10,7 @@
 #![allow(clippy::module_name_repetitions)]
 use crate::traits::Basics;
 use crate::traits::Differentiate;
+use crate::traits::DifferentiatePar;
 use crate::traits::FromOrtho;
 use crate::traits::FromOrthoPar;
 use crate::traits::LaplacianInverse;
@@ -149,7 +150,7 @@ impl<A: FloatNum> Differentiate<Complex<A>> for FourierC2c<A> {
         S: ndarray::Data<Elem = Complex<A>>,
         D: Dimension,
     {
-        let mut output = data.to_owned();
+        let mut output: Array<Complex<A>, D> = Array::zeros(data.raw_dim());
         self.differentiate_inplace(&mut output, n_times, axis);
         output
     }
@@ -162,6 +163,40 @@ impl<A: FloatNum> Differentiate<Complex<A>> for FourierC2c<A> {
         use crate::utils::check_array_axis;
         check_array_axis(data, self.m, axis, Some("fourier differentiate"));
         ndarray::Zip::from(data.lanes_mut(Axis(axis))).for_each(|mut lane| {
+            self.differentiate_lane(&mut lane, n_times);
+        });
+    }
+}
+
+/// Perform differentiation in spectral space
+impl<A: FloatNum> DifferentiatePar<Complex<A>> for FourierC2c<A> {
+    fn differentiate_par<S, D>(
+        &self,
+        data: &ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) -> Array<Complex<A>, D>
+    where
+        S: ndarray::Data<Elem = Complex<A>>,
+        D: Dimension,
+    {
+        let mut output: Array<Complex<A>, D> = Array::zeros(data.raw_dim());
+        self.differentiate_inplace_par(&mut output, n_times, axis);
+        output
+    }
+
+    fn differentiate_inplace_par<S, D>(
+        &self,
+        data: &mut ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) where
+        S: ndarray::Data<Elem = Complex<A>> + ndarray::DataMut,
+        D: Dimension,
+    {
+        use crate::utils::check_array_axis;
+        check_array_axis(data, self.m, axis, Some("fourier differentiate"));
+        ndarray::Zip::from(data.lanes_mut(Axis(axis))).par_for_each(|mut lane| {
             self.differentiate_lane(&mut lane, n_times);
         });
     }
