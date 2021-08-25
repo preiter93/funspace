@@ -17,6 +17,12 @@ pub fn bench_transform(c: &mut Criterion) {
                 let _: Array2<f64> = ch.forward(&mut arr, 0);
             })
         });
+        let name = format!("Size: {} x {} (Par)", *n, *n);
+        group.bench_function(&name, |b| {
+            b.iter(|| {
+                let _: Array2<f64> = ch.forward_par(&mut arr, 0);
+            })
+        });
     }
     group.finish();
 }

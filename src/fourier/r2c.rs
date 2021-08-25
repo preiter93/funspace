@@ -267,7 +267,7 @@ impl<A: FloatNum> TransformPar for FourierR2c<A> {
     {
         use crate::utils::array_resized_axis;
         let mut output = array_resized_axis(input, self.m, axis);
-        self.forward_inplace(input, &mut output, axis);
+        self.forward_inplace_par(input, &mut output, axis);
         output
     }
 
@@ -318,7 +318,7 @@ impl<A: FloatNum> TransformPar for FourierR2c<A> {
     {
         use crate::utils::array_resized_axis;
         let mut output = array_resized_axis(input, self.n, axis);
-        self.backward_inplace(input, &mut output, axis);
+        self.backward_inplace_par(input, &mut output, axis);
         output
     }
 

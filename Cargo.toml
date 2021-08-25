@@ -1,6 +1,6 @@
 [package]
 name = "funspace"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["preiter"]
 edition = "2018"
 description = "N-dimensional function spaces and transforms"
@@ -25,17 +25,17 @@ criterion = { version = "0.3", features = ["html_reports"] }
 name = "funspace"
 path = "src/lib.rs"
 
-#[[bench]]
-#name = "benchmark_chebyshev"
-#harness = false
-
-#[[bench]]
-#name = "benchmark_fourier"
-#harness = false
+[[bench]]
+name = "benchmark_chebyshev"
+harness = false
 
 [[bench]]
-name = "benchmark_spacebase"
+name = "benchmark_fourier"
 harness = false
+
+# [[bench]]
+# name = "benchmark_spacebase"
+# harness = false
 
 # Enable katex in documentation
 # RUSTDOCFLAGS="--html-in-header docs-header.html" cargo doc --no-deps --open

@@ -80,9 +80,9 @@ pub fn bench_sb_differentiate(c: &mut Criterion) {
 
 criterion_group!(
     benches,
-    // bench_sb_transform,
-    // bench_sb_to_ortho,
-    // bench_sb_from_ortho,
+    bench_sb_transform,
+    bench_sb_to_ortho,
+    bench_sb_from_ortho,
     bench_sb_differentiate
 );
 criterion_main!(benches);
