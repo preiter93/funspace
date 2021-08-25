@@ -1,7 +1,7 @@
 use criterion::Criterion;
 use criterion::{criterion_group, criterion_main};
 use funspace::*;
-use ndarray::Array1;
+use ndarray::{Array1, Array2};
 use num_complex::Complex;
 const SIZES: [usize; 4] = [128, 264, 512, 1024];
 
@@ -10,17 +10,17 @@ pub fn bench_transform(c: &mut Criterion) {
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
         let mut fo = fourier_r2c::<f64>(*n);
-        let mut arr = Array1::from_elem(*n, 1.);
-        let name = format!("Size: {}", *n);
+        let mut arr = Array2::from_elem((*n, *n), 1.);
+        let name = format!("Size: {} x {}", *n, *n);
         group.bench_function(&name, |b| {
             b.iter(|| {
-                let _: Array1<Complex<f64>> = fo.forward(&mut arr, 0);
+                let _: Array2<Complex<f64>> = fo.forward(&mut arr, 0);
             })
         });
-        let name = format!("Size: {} (Par)", *n);
+        let name = format!("Size: {} x {} (Par)", *n, *n);
         group.bench_function(&name, |b| {
             b.iter(|| {
-                let _: Array1<Complex<f64>> = fo.forward_par(&mut arr, 0);
+                let _: Array2<Complex<f64>> = fo.forward_par(&mut arr, 0);
             })
         });
     }
