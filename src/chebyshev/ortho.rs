@@ -215,15 +215,11 @@ impl<A: FloatNum> Transform for Chebyshev<A> {
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = Chebyshev::new(4);
-    /// let mut input = array![1., 2., 3., 4.];
-    /// let output = cheby.forward(&mut input, 0);
+    /// let input = array![1., 2., 3., 4.];
+    /// let output = cheby.forward(&input, 0);
     /// approx_eq(&output, &array![2.5, 1.33333333, 0. , 0.16666667]);
     /// ```
-    fn forward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Spectral, D>
+    fn forward<S, D>(&mut self, input: &ArrayBase<S, D>, axis: usize) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
         D: Dimension,
@@ -238,7 +234,7 @@ impl<A: FloatNum> Transform for Chebyshev<A> {
     #[allow(clippy::used_underscore_binding)]
     fn forward_inplace<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -269,15 +265,11 @@ impl<A: FloatNum> Transform for Chebyshev<A> {
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = Chebyshev::new(4);
-    /// let mut input = array![1., 2., 3., 4.];
-    /// let output = cheby.backward(&mut input, 0);
+    /// let input = array![1., 2., 3., 4.];
+    /// let output = cheby.backward(&input, 0);
     /// approx_eq(&output, &array![-2. ,  2.5, -3.5, 10.]);
     /// ```
-    fn backward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Physical, D>
+    fn backward<S, D>(&mut self, input: &ArrayBase<S, D>, axis: usize) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
         D: Dimension,
@@ -295,7 +287,7 @@ impl<A: FloatNum> Transform for Chebyshev<A> {
     #[allow(clippy::used_underscore_binding)]
     fn backward_inplace<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -316,7 +308,7 @@ impl<A: FloatNum> Transform for Chebyshev<A> {
             v[self.n - 1] *= _2;
         }
         // Cosine transform (DCT)
-        nddct1(&mut buffer, output, &mut self.dct_handler, axis);
+        nddct1(&buffer, output, &mut self.dct_handler, axis);
     }
 }
 
@@ -324,21 +316,10 @@ impl<A: FloatNum> TransformPar for Chebyshev<A> {
     type Physical = A;
     type Spectral = A;
 
-    /// # Example
-    /// Forward transform along first axis
-    /// ```
-    /// use funspace::TransformPar;
-    /// use funspace::chebyshev::Chebyshev;
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = Chebyshev::new(4);
-    /// let mut input = array![1., 2., 3., 4.];
-    /// let output = cheby.forward_par(&mut input, 0);
-    /// approx_eq(&output, &array![2.5, 1.33333333, 0. , 0.16666667]);
-    /// ```
+    /// Forward transform along first axis. See [`Chebyshev::forward`]
     fn forward_par<S, D>(
         &mut self,
-        input: &mut ArrayBase<S, D>,
+        input: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Spectral, D>
     where
@@ -355,7 +336,7 @@ impl<A: FloatNum> TransformPar for Chebyshev<A> {
     #[allow(clippy::used_underscore_binding)]
     fn forward_inplace_par<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -378,21 +359,10 @@ impl<A: FloatNum> TransformPar for Chebyshev<A> {
         }
     }
 
-    /// # Example
-    /// Backward transform along first axis
-    /// ```
-    /// use funspace::TransformPar;
-    /// use funspace::chebyshev::Chebyshev;
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = Chebyshev::new(4);
-    /// let mut input = array![1., 2., 3., 4.];
-    /// let output = cheby.backward_par(&mut input, 0);
-    /// approx_eq(&output, &array![-2. ,  2.5, -3.5, 10.]);
-    /// ```
+    /// See [`Chebyshev::backward`]
     fn backward_par<S, D>(
         &mut self,
-        input: &mut ArrayBase<S, D>,
+        input: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Physical, D>
     where
@@ -412,7 +382,7 @@ impl<A: FloatNum> TransformPar for Chebyshev<A> {
     #[allow(clippy::used_underscore_binding)]
     fn backward_inplace_par<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -433,7 +403,7 @@ impl<A: FloatNum> TransformPar for Chebyshev<A> {
             v[self.n - 1] *= _2;
         }
         // Cosine transform (DCT)
-        nddct1_par(&mut buffer, output, &mut self.dct_handler, axis);
+        nddct1_par(&buffer, output, &mut self.dct_handler, axis);
     }
 }
 

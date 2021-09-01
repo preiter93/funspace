@@ -8,11 +8,11 @@
 //! let mut space = Space1::new(&cheb_dirichlet::<f64>(5));
 //! let mut v: Array1<f64> = space.ndarray_physical();
 //! v += 1.;
-//! let mut vhat = space.forward(&mut v);
+//! let vhat = space.forward(&mut v);
 //! println!("{:?}", vhat);
 //! // Not how the cheb dirichlet base imposes dirichlet conditions on
 //! // the array: the first and last point are now zero,
-//! let v = space.backward(&mut vhat);
+//! let v = space.backward(&vhat);
 //! println!("{:?}", v);
 //! ```
 #![allow(clippy::module_name_repetitions)]
@@ -224,7 +224,7 @@ macro_rules! impl_space1 {
 
             fn forward<S>(
                 &mut self,
-                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+                input: &ArrayBase<S, Dim<[usize; 1]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 1]>>
             where
                 S: Data<Elem = Self::Physical>,
@@ -234,7 +234,7 @@ macro_rules! impl_space1 {
 
             fn forward_inplace<S1, S2>(
                 &mut self,
-                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                input: &ArrayBase<S1, Dim<[usize; 1]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
             ) where
                 S1: Data<Elem = Self::Physical>,
@@ -245,7 +245,7 @@ macro_rules! impl_space1 {
 
             fn backward<S>(
                 &mut self,
-                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+                input: &ArrayBase<S, Dim<[usize; 1]>>,
             ) -> Array<Self::Physical, Dim<[usize; 1]>>
             where
                 S: Data<Elem = Self::Spectral>,
@@ -255,7 +255,7 @@ macro_rules! impl_space1 {
 
             fn backward_inplace<S1, S2>(
                 &mut self,
-                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                input: &ArrayBase<S1, Dim<[usize; 1]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
             ) where
                 S1: Data<Elem = Self::Spectral>,
@@ -266,7 +266,7 @@ macro_rules! impl_space1 {
 
             fn forward_par<S>(
                 &mut self,
-                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+                input: &ArrayBase<S, Dim<[usize; 1]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 1]>>
             where
                 S: Data<Elem = Self::Physical>,
@@ -276,7 +276,7 @@ macro_rules! impl_space1 {
 
             fn forward_inplace_par<S1, S2>(
                 &mut self,
-                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                input: &ArrayBase<S1, Dim<[usize; 1]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
             ) where
                 S1: Data<Elem = Self::Physical>,
@@ -287,7 +287,7 @@ macro_rules! impl_space1 {
 
             fn backward_par<S>(
                 &mut self,
-                input: &mut ArrayBase<S, Dim<[usize; 1]>>,
+                input: &ArrayBase<S, Dim<[usize; 1]>>,
             ) -> Array<Self::Physical, Dim<[usize; 1]>>
             where
                 S: Data<Elem = Self::Spectral>,
@@ -297,7 +297,7 @@ macro_rules! impl_space1 {
 
             fn backward_inplace_par<S1, S2>(
                 &mut self,
-                input: &mut ArrayBase<S1, Dim<[usize; 1]>>,
+                input: &ArrayBase<S1, Dim<[usize; 1]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
             ) where
                 S1: Data<Elem = Self::Spectral>,

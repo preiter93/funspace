@@ -31,8 +31,8 @@ use funspace::{Transform, cheb_dirichlet};
 use ndarray::prelude::*;
 use ndarray::Array1;
 let mut cd = cheb_dirichlet::<f64>(5);
-let mut input = array![1., 2., 3., 4., 5.];
-let output: Array1<f64> = cd.forward(&mut input, 0);
+let input = array![1., 2., 3., 4., 5.];
+let output: Array1<f64> = cd.forward(&input, 0);
 ```
 
 ### Differentiation
@@ -55,14 +55,14 @@ use num_complex::Complex;
 let mut fo = fourier_r2c(8);
 // Get coordinates in physical space
 let x = fo.coords().clone();
-let mut v = x.mapv(|xi: f64| (2. * xi).sin());
+let v = x.mapv(|xi: f64| (2. * xi).sin());
 // Transform to physical space
-let vhat: Array1<Complex<f64>> = fo.forward(&mut v, 0);
+let vhat: Array1<Complex<f64>> = fo.forward(&v, 0);
 
 // Apply differentiation twice along first axis
-let mut dvhat = fo.differentiate(&vhat, 2, 0);
+let dvhat = fo.differentiate(&vhat, 2, 0);
 // Transform back to spectral space
-let dv: Array1<f64> = fo.backward(&mut dvhat, 0);
+let dv: Array1<f64> = fo.backward(&dvhat, 0);
 // Compare with correct derivative
 for (exp, ist) in x
     .mapv(|xi: f64| -4. * (2. * xi).sin())
@@ -111,10 +111,10 @@ let mut ch = chebyshev(8);
 let mut cd = cheb_dirichlet(8);
 // Get coordinates in physical space
 let x = ch.coords().clone();
-let mut v = x.mapv(|xi: f64| (PI / 2. * xi).cos());
+let v = x.mapv(|xi: f64| (PI / 2. * xi).cos());
 // Transform to physical space
-let ch_vhat: Array1<f64> = ch.forward(&mut v, 0);
-let cd_vhat: Array1<f64> = cd.forward(&mut v, 0);
+let ch_vhat: Array1<f64> = ch.forward(&v, 0);
+let cd_vhat: Array1<f64> = cd.forward(&v, 0);
 // Send array to orthogonal space (cheb_dirichlet
 // to chebyshev in this case)
 let cd_vhat_ortho = cd.to_ortho(&cd_vhat, 0);
@@ -132,8 +132,8 @@ for (exp, ist) in ch_vhat.iter().zip(cd_vhat_ortho.iter()) {
 // from a pure chebyshev transform (which does not)
 // enfore the boundary conditions.
 let mut v = x.mapv(|xi: f64| (PI / 2. * xi).sin());
-let ch_vhat: Array1<f64> = ch.forward(&mut v, 0);
-let cd_vhat: Array1<f64> = cd.forward(&mut v, 0);
+let ch_vhat: Array1<f64> = ch.forward(&v, 0);
+let cd_vhat: Array1<f64> = cd.forward(&v, 0);
 let cd_vhat_ortho = cd.to_ortho(&cd_vhat, 0);
 // They will deviate
 println!("chebyshev     : {:?}", ch_vhat);
@@ -172,9 +172,9 @@ for (i,xi) in x.iter().enumerate() {
     }
 }
 // Transform forward (vhat is complex)
-let mut vhat = space.forward(&mut v);
+let mut vhat = space.forward(&v);
 // Transform backward (v is real)
-let v = space.backward(&mut vhat);
+let v = space.backward(&vhat);
 ```
 
 License: MIT

@@ -11,7 +11,7 @@ macro_rules! impl_transform_trait_for_base {
 
             fn forward<S, D>(
                 &mut self,
-                input: &mut ArrayBase<S, D>,
+                input: &ArrayBase<S, D>,
                 axis: usize,
             ) -> Array<Self::Spectral, D>
             where
@@ -25,7 +25,7 @@ macro_rules! impl_transform_trait_for_base {
 
             fn forward_inplace<S1, S2, D>(
                 &mut self,
-                input: &mut ArrayBase<S1, D>,
+                input: &ArrayBase<S1, D>,
                 output: &mut ArrayBase<S2, D>,
                 axis: usize,
             ) where
@@ -40,7 +40,7 @@ macro_rules! impl_transform_trait_for_base {
 
             fn backward<S, D>(
                 &mut self,
-                input: &mut ArrayBase<S, D>,
+                input: &ArrayBase<S, D>,
                 axis: usize,
             ) -> Array<Self::Physical, D>
             where
@@ -54,7 +54,7 @@ macro_rules! impl_transform_trait_for_base {
 
             fn backward_inplace<S1, S2, D>(
                 &mut self,
-                input: &mut ArrayBase<S1, D>,
+                input: &ArrayBase<S1, D>,
                 output: &mut ArrayBase<S2, D>,
                 axis: usize,
             ) where
@@ -74,7 +74,7 @@ macro_rules! impl_transform_trait_for_base {
 
             fn forward_par<S, D>(
                 &mut self,
-                input: &mut ArrayBase<S, D>,
+                input: &ArrayBase<S, D>,
                 axis: usize,
             ) -> Array<Self::Spectral, D>
             where
@@ -88,7 +88,7 @@ macro_rules! impl_transform_trait_for_base {
 
             fn forward_inplace_par<S1, S2, D>(
                 &mut self,
-                input: &mut ArrayBase<S1, D>,
+                input: &ArrayBase<S1, D>,
                 output: &mut ArrayBase<S2, D>,
                 axis: usize,
             ) where
@@ -103,7 +103,7 @@ macro_rules! impl_transform_trait_for_base {
 
             fn backward_par<S, D>(
                 &mut self,
-                input: &mut ArrayBase<S, D>,
+                input: &ArrayBase<S, D>,
                 axis: usize,
             ) -> Array<Self::Physical, D>
             where
@@ -117,7 +117,7 @@ macro_rules! impl_transform_trait_for_base {
 
             fn backward_inplace_par<S1, S2, D>(
                 &mut self,
-                input: &mut ArrayBase<S1, D>,
+                input: &ArrayBase<S1, D>,
                 output: &mut ArrayBase<S2, D>,
                 axis: usize,
             ) where

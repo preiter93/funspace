@@ -210,7 +210,7 @@ where
     /// * `output` - *ndarray* with num type of spectral space
     fn forward<S>(
         &mut self,
-        input: &mut ArrayBase<S, Dim<[usize; N]>>,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
     ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
         S: ndarray::Data<Elem = Self::Physical>;
@@ -223,7 +223,7 @@ where
     /// * `output` - *ndarray* with num type of spectral space
     fn forward_inplace<S1, S2>(
         &mut self,
-        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
         S1: Data<Elem = Self::Physical>,
@@ -237,7 +237,7 @@ where
     /// * `output` - *ndarray* with num type of physical space
     fn backward<S>(
         &mut self,
-        input: &mut ArrayBase<S, Dim<[usize; N]>>,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
     ) -> Array<Self::Physical, Dim<[usize; N]>>
     where
         S: Data<Elem = Self::Spectral>;
@@ -250,7 +250,7 @@ where
     /// * `output` - *ndarray* with num type of physical space
     fn backward_inplace<S1, S2>(
         &mut self,
-        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
         S1: Data<Elem = Self::Spectral>,
@@ -264,7 +264,7 @@ where
     /// * `output` - *ndarray* with num type of spectral space
     fn forward_par<S>(
         &mut self,
-        input: &mut ArrayBase<S, Dim<[usize; N]>>,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
     ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
         S: Data<Elem = Self::Physical>;
@@ -277,7 +277,7 @@ where
     /// * `output` - *ndarray* with num type of spectral space
     fn forward_inplace_par<S1, S2>(
         &mut self,
-        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
         S1: Data<Elem = Self::Physical>,
@@ -291,7 +291,7 @@ where
     /// * `output` - *ndarray* with num type of physical space
     fn backward_par<S>(
         &mut self,
-        input: &mut ArrayBase<S, Dim<[usize; N]>>,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
     ) -> Array<Self::Physical, Dim<[usize; N]>>
     where
         S: Data<Elem = Self::Spectral>;
@@ -304,7 +304,7 @@ where
     /// * `output` - *ndarray* with num type of physical space
     fn backward_inplace_par<S1, S2>(
         &mut self,
-        input: &mut ArrayBase<S1, Dim<[usize; N]>>,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
         S1: Data<Elem = Self::Spectral>,

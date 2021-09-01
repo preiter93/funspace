@@ -136,20 +136,16 @@ impl<A: FloatNum> Transform for FourierR2c<A> {
     /// use num_complex::Complex;
     /// use ndarray::prelude::*;
     /// let mut fo = FourierR2c::new(4);
-    /// let mut input = array![1., 2., 3., 4.];
+    /// let input = array![1., 2., 3., 4.];
     /// let expected = array![
     ///     Complex::new(10., 0.),
     ///     Complex::new(-2., 2.),
     ///     Complex::new(-2., 0.)
     /// ];
-    /// let output = fo.forward(&mut input, 0);
+    /// let output = fo.forward(&input, 0);
     /// approx_eq_complex(&output, &expected);
     /// ```
-    fn forward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Spectral, D>
+    fn forward<S, D>(&mut self, input: &ArrayBase<S, D>, axis: usize) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
         D: Dimension,
@@ -163,7 +159,7 @@ impl<A: FloatNum> Transform for FourierR2c<A> {
     /// See [`FourierR2c::forward`]
     fn forward_inplace<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -187,20 +183,16 @@ impl<A: FloatNum> Transform for FourierR2c<A> {
     /// use num_complex::Complex;
     /// use ndarray::prelude::*;
     /// let mut fo = FourierR2c::new(4);
-    /// let mut input = array![
+    /// let input = array![
     ///     Complex::new(10., 0.),
     ///     Complex::new(-2., 2.),
     ///     Complex::new(-2., 0.)
     /// ];
     /// let expected = array![1., 2., 3., 4.];
-    /// let output = fo.backward(&mut input, 0);
+    /// let output = fo.backward(&input, 0);
     /// approx_eq(&output, &expected);
     /// ```
-    fn backward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Physical, D>
+    fn backward<S, D>(&mut self, input: &ArrayBase<S, D>, axis: usize) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
         D: Dimension,
@@ -218,7 +210,7 @@ impl<A: FloatNum> Transform for FourierR2c<A> {
     #[allow(clippy::used_underscore_binding)]
     fn backward_inplace<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -238,27 +230,10 @@ impl<A: FloatNum> TransformPar for FourierR2c<A> {
     type Physical = A;
     type Spectral = Complex<A>;
 
-    /// # Example
-    /// Forward transform along first axis
-    /// ```
-    /// use funspace::fourier::FourierR2c;
-    /// use funspace::TransformPar;
-    /// use funspace::utils::approx_eq_complex;
-    /// use num_complex::Complex;
-    /// use ndarray::prelude::*;
-    /// let mut fo = FourierR2c::new(4);
-    /// let mut input = array![1., 2., 3., 4.];
-    /// let expected = array![
-    ///     Complex::new(10., 0.),
-    ///     Complex::new(-2., 2.),
-    ///     Complex::new(-2., 0.)
-    /// ];
-    /// let output = fo.forward_par(&mut input, 0);
-    /// approx_eq_complex(&output, &expected);
-    /// ```
+    /// Parallel version. See [`FourierR2c::forward`]
     fn forward_par<S, D>(
         &mut self,
-        input: &mut ArrayBase<S, D>,
+        input: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Spectral, D>
     where
@@ -271,10 +246,10 @@ impl<A: FloatNum> TransformPar for FourierR2c<A> {
         output
     }
 
-    /// See [`FourierR2c::forward_par`]
+    /// Parallel version. See [`FourierR2c::forward_inplace`]
     fn forward_inplace_par<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -289,27 +264,10 @@ impl<A: FloatNum> TransformPar for FourierR2c<A> {
         ndfft_r2c_par(input, output, &mut self.fft_handler, axis);
     }
 
-    /// # Example
-    /// Backward transform along first axis
-    /// ```
-    /// use funspace::fourier::FourierR2c;
-    /// use funspace::TransformPar;
-    /// use funspace::utils::approx_eq;
-    /// use num_complex::Complex;
-    /// use ndarray::prelude::*;
-    /// let mut fo = FourierR2c::new(4);
-    /// let mut input = array![
-    ///     Complex::new(10., 0.),
-    ///     Complex::new(-2., 2.),
-    ///     Complex::new(-2., 0.)
-    /// ];
-    /// let expected = array![1., 2., 3., 4.];
-    /// let output = fo.backward_par(&mut input, 0);
-    /// approx_eq(&output, &expected);
-    /// ```
+    /// Parallel version. See [`FourierR2c::backward`]
     fn backward_par<S, D>(
         &mut self,
-        input: &mut ArrayBase<S, D>,
+        input: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Physical, D>
     where
@@ -322,14 +280,14 @@ impl<A: FloatNum> TransformPar for FourierR2c<A> {
         output
     }
 
-    /// See [`FourierR2c::backward_par`]
+    /// Parallel version. See [`FourierR2c::backward_inplace`]
     ///
     /// # Panics
     /// Panics when input type cannot be cast from f64.
     #[allow(clippy::used_underscore_binding)]
     fn backward_inplace_par<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where

@@ -356,15 +356,11 @@ impl<A: FloatNum> Transform for CompositeChebyshev<A> {
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = CompositeChebyshev::dirichlet(5);
-    /// let mut input = array![1., 2., 3., 4., 5.];
-    /// let output = cheby.forward(&mut input, 0);
+    /// let input = array![1., 2., 3., 4., 5.];
+    /// let output = cheby.forward(&input, 0);
     /// approx_eq(&output, &array![2., 0.70710678, 1.]);
     /// ```
-    fn forward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Spectral, D>
+    fn forward<S, D>(&mut self, input: &ArrayBase<S, D>, axis: usize) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
         D: Dimension,
@@ -380,14 +376,14 @@ impl<A: FloatNum> Transform for CompositeChebyshev<A> {
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = CompositeChebyshev::dirichlet(5);
-    /// let mut input = array![1., 2., 3., 4., 5.];
+    /// let input = array![1., 2., 3., 4., 5.];
     /// let mut output = Array1::<f64>::zeros(3);
-    /// cheby.forward_inplace(&mut input, &mut output, 0);
+    /// cheby.forward_inplace(&input, &mut output, 0);
     /// approx_eq(&output, &array![2., 0.70710678, 1.]);
     /// ```
     fn forward_inplace<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -407,21 +403,17 @@ impl<A: FloatNum> Transform for CompositeChebyshev<A> {
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = CompositeChebyshev::dirichlet(5);
-    /// let mut input = array![1., 2., 3.];
-    /// let output = cheby.backward(&mut input, 0);
+    /// let input = array![1., 2., 3.];
+    /// let output = cheby.backward(&input, 0);
     /// approx_eq(&output, &array![0.,1.1716, -4., 6.8284, 0. ]);
     /// ```
-    fn backward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Physical, D>
+    fn backward<S, D>(&mut self, input: &ArrayBase<S, D>, axis: usize) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
         D: Dimension,
     {
-        let mut parent_coeff = self.to_ortho(input, axis);
-        self.ortho.backward(&mut parent_coeff, axis)
+        let parent_coeff = self.to_ortho(input, axis);
+        self.ortho.backward(&parent_coeff, axis)
     }
 
     /// See [`CompositeChebyshev::backward`]
@@ -431,14 +423,14 @@ impl<A: FloatNum> Transform for CompositeChebyshev<A> {
     /// use funspace::utils::approx_eq;
     /// use ndarray::prelude::*;
     /// let mut cheby = CompositeChebyshev::dirichlet(5);
-    /// let mut input = array![1., 2., 3.];
-    /// let  mut output = Array1::<f64>::zeros(5);
-    /// cheby.backward_inplace(&mut input, &mut output, 0);
+    /// let input = array![1., 2., 3.];
+    /// let mut output = Array1::<f64>::zeros(5);
+    /// cheby.backward_inplace(&input, &mut output, 0);
     /// approx_eq(&output, &array![0.,1.1716, -4., 6.8284, 0. ]);
     /// ```
     fn backward_inplace<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -446,8 +438,8 @@ impl<A: FloatNum> Transform for CompositeChebyshev<A> {
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
         D: Dimension,
     {
-        let mut parent_coeff = self.to_ortho(input, axis);
-        self.ortho.backward_inplace(&mut parent_coeff, output, axis);
+        let parent_coeff = self.to_ortho(input, axis);
+        self.ortho.backward_inplace(&parent_coeff, output, axis);
     }
 }
 
@@ -455,21 +447,10 @@ impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
     type Physical = A;
     type Spectral = A;
 
-    /// # Example
-    /// Forward transform along first axis
-    /// ```
-    /// use funspace::TransformPar;
-    /// use funspace::chebyshev::CompositeChebyshev;
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = CompositeChebyshev::dirichlet(5);
-    /// let mut input = array![1., 2., 3., 4., 5.];
-    /// let output = cheby.forward_par(&mut input, 0);
-    /// approx_eq(&output, &array![2., 0.70710678, 1.]);
-    /// ```
+    /// Parallel version. See [`CompositeChebyshev::forward`]
     fn forward_par<S, D>(
         &mut self,
-        input: &mut ArrayBase<S, D>,
+        input: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Spectral, D>
     where
@@ -480,21 +461,10 @@ impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
         self.from_ortho_par(&parent_coeff, axis)
     }
 
-    /// See [`CompositeChebyshev::forward_par`]
-    /// ```
-    /// use funspace::TransformPar;
-    /// use funspace::chebyshev::CompositeChebyshev;
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = CompositeChebyshev::dirichlet(5);
-    /// let mut input = array![1., 2., 3., 4., 5.];
-    /// let mut output = Array1::<f64>::zeros(3);
-    /// cheby.forward_inplace_par(&mut input, &mut output, 0);
-    /// approx_eq(&output, &array![2., 0.70710678, 1.]);
-    /// ```
+    /// Parallel version. See [`CompositeChebyshev::forward_inplace`]
     fn forward_inplace_par<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -506,46 +476,24 @@ impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
         self.from_ortho_inplace_par(&parent_coeff, output, axis);
     }
 
-    /// # Example
-    /// Backward transform along first axis
-    /// ```
-    /// use funspace::TransformPar;
-    /// use funspace::chebyshev::CompositeChebyshev;
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = CompositeChebyshev::dirichlet(5);
-    /// let mut input = array![1., 2., 3.];
-    /// let output = cheby.backward_par(&mut input, 0);
-    /// approx_eq(&output, &array![0.,1.1716, -4., 6.8284, 0. ]);
-    /// ```
+    /// Parallel version. See [`CompositeChebyshev::backward`]
     fn backward_par<S, D>(
         &mut self,
-        input: &mut ArrayBase<S, D>,
+        input: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
         D: Dimension,
     {
-        let mut parent_coeff = self.to_ortho_par(input, axis);
-        self.ortho.backward_par(&mut parent_coeff, axis)
+        let parent_coeff = self.to_ortho_par(input, axis);
+        self.ortho.backward_par(&parent_coeff, axis)
     }
 
-    /// See [`CompositeChebyshev::backward_par`]
-    /// ```
-    /// use funspace::TransformPar;
-    /// use funspace::chebyshev::CompositeChebyshev;
-    /// use funspace::utils::approx_eq;
-    /// use ndarray::prelude::*;
-    /// let mut cheby = CompositeChebyshev::dirichlet(5);
-    /// let mut input = array![1., 2., 3.];
-    /// let  mut output = Array1::<f64>::zeros(5);
-    /// cheby.backward_inplace_par(&mut input, &mut output, 0);
-    /// approx_eq(&output, &array![0.,1.1716, -4., 6.8284, 0. ]);
-    /// ```
+    /// Parallel version. See [`CompositeChebyshev::backward_inplace`]
     fn backward_inplace_par<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -553,9 +501,8 @@ impl<A: FloatNum> TransformPar for CompositeChebyshev<A> {
         S2: ndarray::Data<Elem = Self::Physical> + ndarray::DataMut,
         D: Dimension,
     {
-        let mut parent_coeff = self.to_ortho_par(input, axis);
-        self.ortho
-            .backward_inplace_par(&mut parent_coeff, output, axis);
+        let parent_coeff = self.to_ortho_par(input, axis);
+        self.ortho.backward_inplace_par(&parent_coeff, output, axis);
     }
 }
 

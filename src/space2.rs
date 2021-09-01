@@ -8,11 +8,11 @@
 //! let mut space = Space2::new(&fourier_r2c::<f64>(5), &cheb_dirichlet::<f64>(5));
 //! let mut v: Array2<f64> = space.ndarray_physical();
 //! v += 1.;
-//! let mut vhat = space.forward(&mut v);
+//! let vhat = space.forward(&v);
 //! println!("{:?}", vhat);
 //! // Not how the cheb dirichlet base imposes dirichlet conditions on
 //! // the array: the first and last point are now zero,
-//! let v = space.backward(&mut vhat);
+//! let v = space.backward(&vhat);
 //! println!("{:?}", v);
 //! ```
 #![allow(clippy::module_name_repetitions)]
@@ -265,94 +265,94 @@ macro_rules! impl_space2 {
 
             fn forward<S>(
                 &mut self,
-                input: &mut ArrayBase<S, Dim<[usize; 2]>>,
+                input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 2]>>
             where
                 S: Data<Elem = Self::Physical>,
             {
-                let mut buffer = self.base1.forward(input, 1);
-                self.base0.forward(&mut buffer, 0)
+                let buffer = self.base1.forward(input, 1);
+                self.base0.forward(&buffer, 0)
             }
 
             fn forward_inplace<S1, S2>(
                 &mut self,
-                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
                 S1: Data<Elem = Self::Physical>,
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
-                let mut buffer = self.base1.forward(input, 1);
-                self.base0.forward_inplace(&mut buffer, output, 0);
+                let buffer = self.base1.forward(input, 1);
+                self.base0.forward_inplace(&buffer, output, 0);
             }
 
             fn backward<S>(
                 &mut self,
-                input: &mut ArrayBase<S, Dim<[usize; 2]>>,
+                input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Physical, Dim<[usize; 2]>>
             where
                 S: Data<Elem = Self::Spectral>,
             {
-                let mut buffer = self.base0.backward(input, 0);
-                self.base1.backward(&mut buffer, 1)
+                let buffer = self.base0.backward(input, 0);
+                self.base1.backward(&buffer, 1)
             }
 
             fn backward_inplace<S1, S2>(
                 &mut self,
-                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
                 S1: Data<Elem = Self::Spectral>,
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
-                let mut buffer = self.base0.backward(input, 0);
-                self.base1.backward_inplace(&mut buffer, output, 1);
+                let buffer = self.base0.backward(input, 0);
+                self.base1.backward_inplace(&buffer, output, 1);
             }
 
             fn forward_par<S>(
                 &mut self,
-                input: &mut ArrayBase<S, Dim<[usize; 2]>>,
+                input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 2]>>
             where
                 S: Data<Elem = Self::Physical>,
             {
-                let mut buffer = self.base1.forward_par(input, 1);
-                self.base0.forward_par(&mut buffer, 0)
+                let buffer = self.base1.forward_par(input, 1);
+                self.base0.forward_par(&buffer, 0)
             }
 
             fn forward_inplace_par<S1, S2>(
                 &mut self,
-                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
                 S1: Data<Elem = Self::Physical>,
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
-                let mut buffer = self.base1.forward_par(input, 1);
-                self.base0.forward_inplace_par(&mut buffer, output, 0);
+                let buffer = self.base1.forward_par(input, 1);
+                self.base0.forward_inplace_par(&buffer, output, 0);
             }
 
             fn backward_par<S>(
                 &mut self,
-                input: &mut ArrayBase<S, Dim<[usize; 2]>>,
+                input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Physical, Dim<[usize; 2]>>
             where
                 S: Data<Elem = Self::Spectral>,
             {
-                let mut buffer = self.base0.backward_par(input, 0);
-                self.base1.backward_par(&mut buffer, 1)
+                let buffer = self.base0.backward_par(input, 0);
+                self.base1.backward_par(&buffer, 1)
             }
 
             fn backward_inplace_par<S1, S2>(
                 &mut self,
-                input: &mut ArrayBase<S1, Dim<[usize; 2]>>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
                 S1: Data<Elem = Self::Spectral>,
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
-                let mut buffer = self.base0.backward_par(input, 0);
-                self.base1.backward_inplace_par(&mut buffer, output, 1);
+                let buffer = self.base0.backward_par(input, 0);
+                self.base1.backward_inplace_par(&buffer, output, 1);
             }
         }
     };

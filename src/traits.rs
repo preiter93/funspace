@@ -7,28 +7,6 @@ use crate::FourierC2c;
 use crate::FourierR2c;
 use ndarray::prelude::*;
 
-// pub trait SuperBase<F, R, S>:
-//     BaseBasics<F>
-//     + Transform<R, S>
-//     + TransformPar<R, S>
-//     + FromOrtho<S>
-//     + FromOrthoPar<S>
-//     + Differentiate<S>
-//     + LaplacianInverse<F>
-// {
-// }
-
-// impl<T, F, R, S> SuperBase<F, R, S> for T where
-//     T: BaseBasics<F>
-//         + Transform<R, S>
-//         + TransformPar<R, S>
-//         + FromOrtho<S>
-//         + FromOrthoPar<S>
-//         + Differentiate<S>
-//         + LaplacianInverse<F>
-// {
-// }
-
 /// Some basic  traits
 #[enum_dispatch]
 pub trait Basics<T> {
@@ -77,11 +55,7 @@ pub trait Transform {
     /// let output = cheby.forward(&mut input, 0);
     /// approx_eq(&output, &array![2.5, 1.33333333, 0. , 0.16666667]);
     /// ```
-    fn forward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Spectral, D>
+    fn forward<S, D>(&mut self, input: &ArrayBase<S, D>, axis: usize) -> Array<Self::Spectral, D>
     where
         S: ndarray::Data<Elem = Self::Physical>,
         D: Dimension;
@@ -92,7 +66,7 @@ pub trait Transform {
     /// be supplied instead of being created.
     fn forward_inplace<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -119,11 +93,7 @@ pub trait Transform {
     /// let output = cheby.backward(&mut input, 0);
     /// approx_eq(&output, &array![-2. ,  2.5, -3.5, 10.]);
     /// ```
-    fn backward<S, D>(
-        &mut self,
-        input: &mut ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Physical, D>
+    fn backward<S, D>(&mut self, input: &ArrayBase<S, D>, axis: usize) -> Array<Self::Physical, D>
     where
         S: ndarray::Data<Elem = Self::Spectral>,
         D: Dimension;
@@ -134,7 +104,7 @@ pub trait Transform {
     /// be supplied instead of being created.
     fn backward_inplace<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -179,7 +149,7 @@ pub trait TransformPar {
     /// ```
     fn forward_par<S, D>(
         &mut self,
-        input: &mut ArrayBase<S, D>,
+        input: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Spectral, D>
     where
@@ -192,7 +162,7 @@ pub trait TransformPar {
     /// be supplied instead of being created.
     fn forward_inplace_par<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
@@ -221,7 +191,7 @@ pub trait TransformPar {
     /// ```
     fn backward_par<S, D>(
         &mut self,
-        input: &mut ArrayBase<S, D>,
+        input: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Physical, D>
     where
@@ -234,7 +204,7 @@ pub trait TransformPar {
     /// be supplied instead of being created.
     fn backward_inplace_par<S1, S2, D>(
         &mut self,
-        input: &mut ArrayBase<S1, D>,
+        input: &ArrayBase<S1, D>,
         output: &mut ArrayBase<S2, D>,
         axis: usize,
     ) where
