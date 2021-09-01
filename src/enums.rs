@@ -19,6 +19,7 @@ use crate::types::FloatNum;
 use ndarray::prelude::*;
 use num_complex::Complex;
 
+#[allow(clippy::pub_enum_variant_names)]
 #[enum_dispatch(Basics<T>, LaplacianInverse<T>)]
 #[derive(Clone)]
 /// Enum of enums which binds all bases
