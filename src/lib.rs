@@ -176,17 +176,22 @@
 //! ```
 //!
 //! ## MPI Support (Feature)
-//! `Funspace` comes with an mpi support. Currently this is restricted
+//! `Funspace` comes with limited mpi support. Currently this is restricted
 //! to 2D spaces. Under the hood it uses the rust mpi libary
 //! *https://github.com/rsmpi/rsmpi* which requires an existing MPI implementation
 //! and `libclang`.
 //!
-//! Activate the feature in your ``Çargo.toml`
+//! Activate the feature in your ``Cargo.toml`
 //!
 //! `funspace = {version = "0.2", features = ["mpi"]}`
 //!
 //! ### Examples
-//! `èxamples/space_mpi.rs`
+//! `examples/space_mpi.rs`
+//!
+//! Install `cargo mpirun`, for example, and run
+//! ```
+//! cargo mpirun --np 2 --example space_mpi --features="mpi"
+//! ```
 #![allow(clippy::just_underscores_and_digits)]
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::cast_precision_loss)]
