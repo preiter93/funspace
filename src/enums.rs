@@ -20,7 +20,7 @@ use ndarray::prelude::*;
 use num_complex::Complex;
 
 #[allow(clippy::pub_enum_variant_names)]
-#[enum_dispatch(Basics<T>, LaplacianInverse<T>)]
+#[enum_dispatch(BaseSize, Basics<T>, LaplacianInverse<T>)]
 #[derive(Clone)]
 /// Enum of enums which binds all bases
 pub enum BaseAll<T: FloatNum> {
@@ -33,7 +33,7 @@ pub enum BaseAll<T: FloatNum> {
 }
 
 #[allow(clippy::large_enum_variant)]
-#[enum_dispatch(Basics<T>, LaplacianInverse<T>)]
+#[enum_dispatch(BaseSize, Basics<T>, LaplacianInverse<T>)]
 #[derive(Clone)]
 /// All bases who transform: real-to-real
 pub enum BaseR2r<T: FloatNum> {
@@ -43,7 +43,7 @@ pub enum BaseR2r<T: FloatNum> {
     CompositeChebyshev(CompositeChebyshev<T>),
 }
 
-#[enum_dispatch(Basics<T>, LaplacianInverse<T>)]
+#[enum_dispatch(BaseSize, Basics<T>, LaplacianInverse<T>)]
 #[derive(Clone)]
 /// All bases who transform: real-to-complex
 pub enum BaseR2c<T: FloatNum> {
@@ -51,7 +51,7 @@ pub enum BaseR2c<T: FloatNum> {
     FourierR2c(FourierR2c<T>),
 }
 
-#[enum_dispatch(Basics<T>, LaplacianInverse<T>)]
+#[enum_dispatch(BaseSize, Basics<T>, LaplacianInverse<T>)]
 #[derive(Clone)]
 /// All bases who transform: complex-to-complex
 pub enum BaseC2c<T: FloatNum> {

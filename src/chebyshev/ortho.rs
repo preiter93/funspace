@@ -1,4 +1,5 @@
 //! # Orthogonal chebyshev space
+use crate::traits::BaseSize;
 use crate::traits::Basics;
 use crate::traits::Differentiate;
 use crate::traits::DifferentiatePar;
@@ -180,7 +181,7 @@ impl<A: FloatNum> Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum> Basics<A> for Chebyshev<A> {
+impl<A: FloatNum> BaseSize for Chebyshev<A> {
     /// Size in physical space
     fn len_phys(&self) -> usize {
         self.n
@@ -189,6 +190,9 @@ impl<A: FloatNum> Basics<A> for Chebyshev<A> {
     fn len_spec(&self) -> usize {
         self.m
     }
+}
+
+impl<A: FloatNum> Basics<A> for Chebyshev<A> {
     /// Coordinates in physical space
     fn coords(&self) -> &Array1<A> {
         &self.x

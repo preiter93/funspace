@@ -19,6 +19,7 @@
 //! ```
 #![allow(clippy::module_name_repetitions)]
 use crate::space_traits::BaseSpace;
+use crate::traits::BaseSize;
 use crate::traits::Basics;
 use crate::traits::Differentiate;
 use crate::traits::DifferentiatePar;

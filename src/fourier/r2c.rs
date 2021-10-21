@@ -7,6 +7,7 @@
 //! ```
 #![allow(clippy::module_name_repetitions)]
 use super::FourierC2c;
+use crate::traits::BaseSize;
 use crate::traits::Basics;
 use crate::traits::Differentiate;
 use crate::traits::DifferentiatePar;
@@ -99,7 +100,7 @@ impl<A: FloatNum> FourierR2c<A> {
     }
 }
 
-impl<A: FloatNum> Basics<A> for FourierR2c<A> {
+impl<A: FloatNum> BaseSize for FourierR2c<A> {
     /// Size in physical space
     fn len_phys(&self) -> usize {
         self.n
@@ -108,6 +109,9 @@ impl<A: FloatNum> Basics<A> for FourierR2c<A> {
     fn len_spec(&self) -> usize {
         self.m
     }
+}
+
+impl<A: FloatNum> Basics<A> for FourierR2c<A> {
     /// Coordinates in physical space
     fn coords(&self) -> &Array1<A> {
         &self.x

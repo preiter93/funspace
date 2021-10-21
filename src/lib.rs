@@ -174,6 +174,19 @@
 //! // Transform backward (v is real)
 //! let v = space.backward(&vhat);
 //! ```
+//!
+//! ## MPI Support (Feature)
+//! `Funspace` comes with an mpi support. Currently this is restricted
+//! to 2D spaces. Under the hood it uses the rust mpi libary
+//! *https://github.com/rsmpi/rsmpi* which requires an existing MPI implementation
+//! and `libclang`.
+//!
+//! Activate the feature in your ``Çargo.toml`
+//!
+//! `funspace = {version = "0.2", features = ["mpi"]}`
+//!
+//! ### Examples
+//! `èxamples/space_mpi.rs`
 #![allow(clippy::just_underscores_and_digits)]
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::cast_precision_loss)]
@@ -192,6 +205,7 @@ pub mod traits;
 pub mod types;
 pub mod utils;
 pub use crate::enums::{BaseAll, BaseC2c, BaseR2c, BaseR2r};
+pub use crate::traits::BaseSize;
 pub use crate::traits::Basics;
 pub use crate::traits::Differentiate;
 pub use crate::traits::DifferentiatePar;
@@ -210,6 +224,8 @@ pub use space3::Space3;
 pub use space_traits::BaseSpace;
 pub use types::{FloatNum, Scalar};
 
+#[cfg(feature = "mpi")]
+pub mod mpi;
 /// Function space for Chebyshev Polynomials
 ///
 /// $$

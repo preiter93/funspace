@@ -9,17 +9,21 @@ use ndarray::prelude::*;
 
 /// Some basic  traits
 #[enum_dispatch]
-pub trait Basics<T> {
+pub trait Basics<T>: BaseSize {
     /// Coordinates in physical space
     fn coords(&self) -> &Array1<T>;
-    /// Size in physical space
-    fn len_phys(&self) -> usize;
-    /// Size in spectral space
-    fn len_spec(&self) -> usize;
     /// Return mass matrix
     fn mass(&self) -> Array2<T>;
     /// Return kind of transform
     fn get_transform_kind(&self) -> &TransformKind;
+}
+
+#[enum_dispatch]
+pub trait BaseSize {
+    /// Size in physical space
+    fn len_phys(&self) -> usize;
+    /// Size in spectral space
+    fn len_spec(&self) -> usize;
 }
 
 /// Transform from physical to spectral space and vice versa.
