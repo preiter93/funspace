@@ -21,13 +21,7 @@ where
     fn get_nprocs(&self) -> usize;
 
     /// Return decomposition which matches a given global arrays shape.
-    fn get_decomp_from_global(&self, shape: &[usize]) -> &Decomp2d;
-
-    /// Return decomposition which matches a given x-pencil arrays shape.
-    fn get_decomp_from_x_pencil(&self, shape: &[usize]) -> &Decomp2d;
-
-    /// Return decomposition which matches a given x-pencil arrays shape.
-    fn get_decomp_from_y_pencil(&self, shape: &[usize]) -> &Decomp2d;
+    fn get_decomp_from_global_shape(&self, shape: &[usize]) -> &Decomp2d;
 
     /// Shape of physical space (x pencil distribution)
     fn shape_physical_x_pen(&self) -> [usize; N];

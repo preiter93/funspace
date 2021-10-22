@@ -404,37 +404,27 @@ macro_rules! impl_space2_mpi {
             }
 
             /// Return decomposition which matches a given global arrays shape.
-            fn get_decomp_from_global(&self, shape: &[usize]) -> &Decomp2d {
-                self.decomp_handler.get_decomp_from_global(shape)
-            }
-
-            /// Return decomposition which matches a given x-pencil arrays shape.
-            fn get_decomp_from_x_pencil(&self, shape: &[usize]) -> &Decomp2d {
-                self.decomp_handler.get_decomp_from_x_pencil(shape)
-            }
-
-            /// Return decomposition which matches a given x-pencil arrays shape.
-            fn get_decomp_from_y_pencil(&self, shape: &[usize]) -> &Decomp2d {
-                self.decomp_handler.get_decomp_from_y_pencil(shape)
+            fn get_decomp_from_global_shape(&self, shape: &[usize]) -> &Decomp2d {
+                self.decomp_handler.get_decomp_from_global_shape(shape)
             }
 
             fn shape_physical_x_pen(&self) -> [usize; 2] {
-                let dcp = self.get_decomp_from_global(&self.shape_physical());
+                let dcp = self.get_decomp_from_global_shape(&self.shape_physical());
                 dcp.x_pencil.sz
             }
 
             fn shape_physical_y_pen(&self) -> [usize; 2] {
-                let dcp = self.get_decomp_from_global(&self.shape_physical());
+                let dcp = self.get_decomp_from_global_shape(&self.shape_physical());
                 dcp.y_pencil.sz
             }
 
             fn shape_spectral_x_pen(&self) -> [usize; 2] {
-                let dcp = self.get_decomp_from_global(&self.shape_spectral());
+                let dcp = self.get_decomp_from_global_shape(&self.shape_spectral());
                 dcp.x_pencil.sz
             }
 
             fn shape_spectral_y_pen(&self) -> [usize; 2] {
-                let dcp = self.get_decomp_from_global(&self.shape_spectral());
+                let dcp = self.get_decomp_from_global_shape(&self.shape_spectral());
                 dcp.y_pencil.sz
             }
 
@@ -467,13 +457,15 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 0
                 let buffer = self.base0.to_ortho(input, 0);
-                let dcp = self.get_decomp_from_x_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
                 // axis 1
                 let buffer = self.base1.to_ortho(&buffer_ypen, 1);
-                let dcp = self.get_decomp_from_y_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_phys()]);
                 let mut buffer_xpen = Array2::zeros(dcp.x_pencil.sz);
 
                 // transform back to x pencil
@@ -491,13 +483,15 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 0
                 let buffer = self.base0.to_ortho(input, 0);
-                let dcp = self.get_decomp_from_x_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
                 // axis 1
                 let buffer = self.base1.to_ortho(&buffer_ypen, 1);
-                let dcp = self.get_decomp_from_y_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_phys()]);
 
                 // transform back to x pencil
                 dcp.transpose_y_to_x(&buffer, output);
@@ -512,13 +506,15 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 0
                 let buffer = self.base0.from_ortho(input, 0);
-                let dcp = self.get_decomp_from_x_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_spec(), self.base1.len_phys()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
                 // axis 1
                 let buffer = self.base1.from_ortho(&buffer_ypen, 1);
-                let dcp = self.get_decomp_from_y_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_spec(), self.base1.len_spec()]);
                 let mut buffer_xpen = Array2::zeros(dcp.x_pencil.sz);
 
                 // transform back to x pencil
@@ -536,13 +532,15 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 0
                 let buffer = self.base0.from_ortho(input, 0);
-                let dcp = self.get_decomp_from_x_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_spec(), self.base1.len_phys()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
                 // axis 1
                 let buffer = self.base1.from_ortho(&buffer_ypen, 1);
-                let dcp = self.get_decomp_from_y_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_spec(), self.base1.len_spec()]);
 
                 // transform back to x pencil
                 dcp.transpose_y_to_x(&buffer, output);
@@ -559,13 +557,15 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 0
                 let buffer = self.base0.differentiate(input, deriv[0], 0);
-                let dcp = self.get_decomp_from_x_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
                 // axis 1
                 let buffer = self.base1.differentiate(&buffer_ypen, deriv[1], 1);
-                let dcp = self.get_decomp_from_x_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_phys()]);
                 let mut output = Array2::zeros(dcp.x_pencil.sz);
 
                 // transform back to x pencil
@@ -589,7 +589,8 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 1
                 let buffer = self.base1.forward(input, 1);
-                let dcp = self.get_decomp_from_y_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
                 let mut buffer_xpen = Array2::zeros(dcp.x_pencil.sz);
                 // axis 0
                 dcp.transpose_y_to_x(&buffer, &mut buffer_xpen);
@@ -606,7 +607,8 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 1
                 let buffer = self.base1.forward(input, 1);
-                let dcp = self.get_decomp_from_y_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
                 let mut buffer_xpen = Array2::zeros(dcp.x_pencil.sz);
                 // axis 0
                 dcp.transpose_y_to_x(&buffer, &mut buffer_xpen);
@@ -622,7 +624,8 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 0
                 let buffer = self.base0.backward(input, 0);
-                let dcp = self.get_decomp_from_x_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 // axis 1
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
@@ -639,7 +642,8 @@ macro_rules! impl_space2_mpi {
             {
                 // axis 0
                 let buffer = self.base0.backward(input, 0);
-                let dcp = self.get_decomp_from_x_pencil(buffer.shape());
+                let dcp = self
+                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 // axis 1
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
@@ -655,7 +659,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let shape = self.shape_physical();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.gather_x(pencil_data, global_data);
             }
 
@@ -668,7 +672,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let shape = self.shape_physical();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.gather_y(pencil_data, global_data);
             }
 
@@ -681,7 +685,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let shape = self.shape_spectral();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.gather_x(pencil_data, global_data);
             }
 
@@ -694,7 +698,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let shape = self.shape_spectral();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.gather_y(pencil_data, global_data);
             }
 
@@ -707,7 +711,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let shape = self.shape_physical();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.all_gather_x(pencil_data, global_data);
             }
 
@@ -720,7 +724,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let shape = self.shape_physical();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.all_gather_y(pencil_data, global_data);
             }
 
@@ -733,7 +737,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let shape = self.shape_spectral();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.all_gather_x(pencil_data, global_data);
             }
 
@@ -746,7 +750,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let shape = self.shape_spectral();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.all_gather_y(pencil_data, global_data);
             }
 
@@ -759,7 +763,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let shape = self.shape_physical();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.scatter_x(global_data, pencil_data);
             }
 
@@ -772,7 +776,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let shape = self.shape_physical();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.scatter_y(global_data, pencil_data);
             }
 
@@ -785,7 +789,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let shape = self.shape_spectral();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.scatter_x(global_data, pencil_data);
             }
 
@@ -798,7 +802,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let shape = self.shape_spectral();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.scatter_y(global_data, pencil_data);
             }
 
@@ -811,7 +815,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let shape = self.shape_physical();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.transpose_x_to_y(x_pencil, y_pencil);
             }
 
@@ -824,7 +828,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Physical> + DataMut,
             {
                 let shape = self.shape_physical();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.transpose_y_to_x(y_pencil, x_pencil);
             }
 
@@ -837,7 +841,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let shape = self.shape_spectral();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.transpose_x_to_y(x_pencil, y_pencil);
             }
 
@@ -850,7 +854,7 @@ macro_rules! impl_space2_mpi {
                 S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 let shape = self.shape_spectral();
-                let dcp = self.get_decomp_from_global(&shape);
+                let dcp = self.get_decomp_from_global_shape(&shape);
                 dcp.transpose_y_to_x(y_pencil, x_pencil);
             }
         }
