@@ -458,14 +458,14 @@ macro_rules! impl_space2_mpi {
                 // axis 0
                 let buffer = self.base0.to_ortho(input, 0);
                 let dcp = self
-                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
+                    .get_decomp_from_global_shape(&[self.base0.len_orth(), self.base1.len_spec()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
                 // axis 1
                 let buffer = self.base1.to_ortho(&buffer_ypen, 1);
                 let dcp = self
-                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_phys()]);
+                    .get_decomp_from_global_shape(&[self.base0.len_orth(), self.base1.len_orth()]);
                 let mut buffer_xpen = Array2::zeros(dcp.x_pencil.sz);
 
                 // transform back to x pencil
@@ -484,14 +484,14 @@ macro_rules! impl_space2_mpi {
                 // axis 0
                 let buffer = self.base0.to_ortho(input, 0);
                 let dcp = self
-                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
+                    .get_decomp_from_global_shape(&[self.base0.len_orth(), self.base1.len_spec()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
                 // axis 1
                 let buffer = self.base1.to_ortho(&buffer_ypen, 1);
                 let dcp = self
-                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_phys()]);
+                    .get_decomp_from_global_shape(&[self.base0.len_orth(), self.base1.len_orth()]);
 
                 // transform back to x pencil
                 dcp.transpose_y_to_x(&buffer, output);
@@ -507,7 +507,7 @@ macro_rules! impl_space2_mpi {
                 // axis 0
                 let buffer = self.base0.from_ortho(input, 0);
                 let dcp = self
-                    .get_decomp_from_global_shape(&[self.base0.len_spec(), self.base1.len_phys()]);
+                    .get_decomp_from_global_shape(&[self.base0.len_spec(), self.base1.len_orth()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
@@ -533,7 +533,7 @@ macro_rules! impl_space2_mpi {
                 // axis 0
                 let buffer = self.base0.from_ortho(input, 0);
                 let dcp = self
-                    .get_decomp_from_global_shape(&[self.base0.len_spec(), self.base1.len_phys()]);
+                    .get_decomp_from_global_shape(&[self.base0.len_spec(), self.base1.len_orth()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
@@ -558,14 +558,14 @@ macro_rules! impl_space2_mpi {
                 // axis 0
                 let buffer = self.base0.differentiate(input, deriv[0], 0);
                 let dcp = self
-                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_spec()]);
+                    .get_decomp_from_global_shape(&[self.base0.len_orth(), self.base1.len_spec()]);
                 let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                 dcp.transpose_x_to_y(&buffer, &mut buffer_ypen);
 
                 // axis 1
                 let buffer = self.base1.differentiate(&buffer_ypen, deriv[1], 1);
                 let dcp = self
-                    .get_decomp_from_global_shape(&[self.base0.len_phys(), self.base1.len_phys()]);
+                    .get_decomp_from_global_shape(&[self.base0.len_orth(), self.base1.len_orth()]);
                 let mut output = Array2::zeros(dcp.x_pencil.sz);
 
                 // transform back to x pencil

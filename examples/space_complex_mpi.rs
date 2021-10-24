@@ -1,22 +1,20 @@
 //! # Use
-//! cargo mpirun --np 2 --example space_mpi --features="mpi"
+//! cargo mpirun --np 2 --example space_complex_mpi --features="mpi"
 use funspace::cheb_dirichlet;
+use funspace::fourier_r2c;
 use funspace::mpi::initialize;
 use funspace::mpi::BaseSpaceMpi;
 use funspace::mpi::Space2;
 use funspace::BaseSpace;
 
 fn main() {
-    let (nx, ny) = (16, 10);
+    let (nx, ny) = (32, 10);
     let universe = initialize().unwrap();
     let mut space = Space2::new(
-        &cheb_dirichlet::<f64>(nx),
+        &fourier_r2c::<f64>(nx),
         &cheb_dirichlet::<f64>(ny),
         &universe,
     );
-    // let dcp = DecompHandler::new(&universe);
-    // let data = space.ndarray_spectral_x_pen();
-    // let _ = space.to_ortho_mpi(&data);
 
     let mut global = space.ndarray_physical();
     for (i, v) in global.iter_mut().enumerate() {

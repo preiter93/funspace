@@ -331,6 +331,10 @@ impl<A: FloatNum> BaseSize for CompositeChebyshev<A> {
     fn len_spec(&self) -> usize {
         self.m
     }
+    /// Size of orthogonal space
+    fn len_orth(&self) -> usize {
+        self.n
+    }
 }
 
 impl<A: FloatNum> Basics<A> for CompositeChebyshev<A> {

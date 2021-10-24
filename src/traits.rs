@@ -24,6 +24,8 @@ pub trait BaseSize {
     fn len_phys(&self) -> usize;
     /// Size in spectral space
     fn len_spec(&self) -> usize;
+    /// Size of orthogonal space
+    fn len_orth(&self) -> usize;
 }
 
 /// Transform from physical to spectral space and vice versa.

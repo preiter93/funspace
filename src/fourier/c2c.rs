@@ -125,6 +125,10 @@ impl<A: FloatNum> BaseSize for FourierC2c<A> {
     fn len_spec(&self) -> usize {
         self.m
     }
+    /// Size of orthogonal space
+    fn len_orth(&self) -> usize {
+        self.m
+    }
 }
 
 impl<A: FloatNum> Basics<A> for FourierC2c<A> {
