@@ -17,14 +17,9 @@ num-traits = "0.2.12"
 num-complex = "0.4"
 ndrustfft = "0.2"
 enum_dispatch = "0.3.7"
-rsmpi-decomp = {path = "rsmpi-decomp", version = "0.1", optional = true}
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
-
-[features]
-mpi = ["rsmpi-decomp"]
-mpi-derive = ["rsmpi-decomp/derive"]
 
 [lib]
 name = "funspace"
@@ -37,11 +32,6 @@ harness = false
 [[bench]]
 name = "benchmark_fourier"
 harness = false
-
-[[example]]
-name = "space_mpi"
-path = "examples/space_mpi.rs"
-required-features = ["mpi"]
 
 # [[bench]]
 # name = "benchmark_spacebase"

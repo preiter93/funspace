@@ -175,23 +175,13 @@
 //! let v = space.backward(&vhat);
 //! ```
 //!
-//! ## MPI Support (Feature)
-//! `Funspace` comes with limited mpi support. Currently this is restricted
-//! to 2D spaces. Under the hood it uses the rust mpi libary
-//! *https://github.com/rsmpi/rsmpi* which requires an existing MPI implementation
-//! and `libclang`.
+//! ## MPI Support
+//! An mpi version of funspace can be found on
+//! `https://github.com/preiter93/funspace-mpi`
 //!
-//! Activate the feature in your ``Cargo.toml`
-//!
-//! `funspace = {version = "0.2", features = ["mpi"]}`
-//!
-//! ### Examples
-//! `examples/space_mpi.rs`
-//!
-//! Install `cargo mpirun`, for example, and run
-//! ```
-//! cargo mpirun --np 2 --example space_mpi --features="mpi"
-//! ```
+//! The mpi enabled version  will be merged
+//! into this crate as soon as `rustmpi` releases
+//! an updated version on crates.io
 #![allow(clippy::just_underscores_and_digits)]
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::cast_precision_loss)]
@@ -229,8 +219,6 @@ pub use space3::Space3;
 pub use space_traits::BaseSpace;
 pub use types::{FloatNum, Scalar};
 
-#[cfg(feature = "mpi")]
-pub mod mpi;
 /// Function space for Chebyshev Polynomials
 ///
 /// $$
