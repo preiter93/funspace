@@ -62,6 +62,7 @@ impl<A: FloatNum> Chebyshev<A> {
         }
         let correct_dct_forward =
             correct_dct.mapv(|x| x * A::from_f64(1. / (n - 1) as f64).unwrap());
+        // Divide by factor 2 because dct (in our case) is defined as 2*f(x)cos(..)
         let correct_dct_backward = correct_dct.mapv(|x| x / A::from_f64(2.0).unwrap());
         Self {
             n,
