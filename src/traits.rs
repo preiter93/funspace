@@ -279,9 +279,9 @@ pub trait LaplacianInverse<T> {
     fn laplace_inv_eye(&self) -> Array2<T>;
 }
 
-/// Define transformation from and to orthonormal space.
+/// Define transformation from and to orthogonal space.
 ///
-/// If the space is already the orthonormal (parent)
+/// If the space is already the orthogonal (parent)
 /// space, it copies and returns the input.
 #[enum_dispatch]
 pub trait FromOrtho<T> {
@@ -364,7 +364,7 @@ pub trait FromOrtho<T> {
         D: Dimension;
 }
 
-/// Define transformation from and to orthonormal space.
+/// Define transformation from and to orthogonal space.
 /// (Parallel version which uses ndarrays `par_for_each` iterator)
 #[enum_dispatch]
 pub trait FromOrthoPar<T> {

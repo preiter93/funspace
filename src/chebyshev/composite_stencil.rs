@@ -1,4 +1,4 @@
-//! Transformation stencils from orthonormal chebyshev space to composite space
+//! Transformation stencils from orthogonal chebyshev space to composite space
 //! $$
 //! p = S c
 //! $$

@@ -75,22 +75,22 @@ for (exp, ist) in x
 
 ### Composite Bases
 Bases like those of fourier polynomials or chebyshev polynomials are
-considered orthonormal bases, i.e. the dot product of each individual
+considered orthogonal bases, i.e. the dot product of each individual
 polynomial with any other of its set vanishes and the dot product with
 itself is unity. In these cases, the mass matrix is equal to the
 identity matrix.
 However, other function spaces can be constructed by a linearly combiningn
-the orthonormal basis functions. By doing so, one can construct
+the orthogonal basis functions. By doing so, one can construct
 bases which satisfy particular boundary conditions
 like dirichlet (zero at the ends) or neumann (zero derivative at the ends).
 This is usefull for solving partial differential equations. When expressed
 in those composite function space, the boundary condition is automatically
 satisfied. This is known as the *Galerkin* Method.
 
-To switch from its composite form to the orthonormal form, each base implements
+To switch from its composite form to the orthogonal form, each base implements
 a [`FromOrtho`] trait, which defines the transform `to_ortho` and `from_ortho`.
 If the base is already orthogonal, the input will be returned, otherwise it
-is transformed from the composite space to the orthonormal space.
+is transformed from the composite space to the orthogonal space.
 Note that the size of the composite space is usually
 less than its orthogonal counterpart.  Therefore the output array must
 not maintain the same shape (but its dimensionality is conserved).
