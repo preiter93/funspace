@@ -72,7 +72,7 @@
 //! ```
 //!
 //! ## Composite Bases
-//! Bases such as those of Fourier polynomials or Chebyshev polynomials are
+//! Bases such as those of Fourier polynomials or Chebyshev polynomials
 //! are considered as orthogonal bases, i.e. the dot product of every single
 //! polynomial with any other polynomial in its set vanishes. In these cases
 //! the mass matrix is a diagonal matrix.
