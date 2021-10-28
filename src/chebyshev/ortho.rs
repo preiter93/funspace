@@ -50,6 +50,12 @@ impl<A: FloatNum> Chebyshev<A> {
     /// ```
     #[must_use]
     pub fn new(n: usize) -> Self {
+        // Premultiply with (-1)^k. This is a consequence of the choice
+        // to let run the grid points from -1 to 1, opposite to conventional
+        // Literature.
+        // Origin of (-1)^k:
+        // https://en.wikipedia.org/wiki/Discrete_Chebyshev_transform
+        // see section Discrete Chebyshev transform on the extrema grid
         let mut correct_dct = Array1::<A>::zeros(n);
         for (i, s) in correct_dct.iter_mut().enumerate() {
             *s = A::from_f64((-1.0_f64).powf(i as f64)).unwrap();
