@@ -78,7 +78,7 @@
 //! the mass matrix is a diagonal matrix.
 //! However, other function spaces can be constructed by a linear combination
 //! of the orthogonal basis functions. In this way, bases can be constructed
-//! construct bases that satisfy certain boundary conditions such as Dirichlet
+//! that satisfy certain boundary conditions such as Dirichlet
 //! (zero at the ends) or Neumann (zero derivative at the ends).
 //! This is useful for solving partial differential equations. If they are
 //! expressed in these composite function spaces, the boundary condition
