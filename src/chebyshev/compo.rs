@@ -109,7 +109,7 @@ impl<A: FloatNum + ScalarNum> FunspaceElemental for ChebyshevComposite<A> {
             + Sub<A, Output = T>,
     {
         let mut scratch: Vec<T> = vec![T::zero(); self.len_orth()];
-        self.to_ortho_slice(&indata, &mut scratch);
+        self.to_ortho_slice(indata, &mut scratch);
         self.ortho.differentiate_slice(&scratch, outdata, n_times);
     }
 
@@ -121,7 +121,7 @@ impl<A: FloatNum + ScalarNum> FunspaceElemental for ChebyshevComposite<A> {
 
     fn backward_slice(&self, indata: &[Self::Spectral], outdata: &mut [Self::Physical]) {
         let mut scratch: Vec<Self::Spectral> = vec![Self::Spectral::zero(); self.len_orth()];
-        self.to_ortho_slice(&indata, &mut scratch);
+        self.to_ortho_slice(indata, &mut scratch);
         self.ortho.backward_slice(&scratch, outdata);
     }
 
@@ -148,6 +148,9 @@ impl<A: FloatNum + ScalarNum> FunspaceElemental for ChebyshevComposite<A> {
     }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//                                          Tests
+//////////////////////////////////////////////////////////////////////////////////////////////////
 #[cfg(test)]
 mod test {
     use super::*;

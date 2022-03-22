@@ -261,6 +261,7 @@ impl<A: FloatNum> Neumann<A> {
     ///
     /// Reference:
     /// J. Shen: Effcient Spectral-Galerkin Method II.
+    #[allow(clippy::cast_precision_loss)]
     pub fn new(n: usize) -> Self {
         let m = Self::get_m(n);
         let diag = vec![A::one(); m];
@@ -451,6 +452,7 @@ impl<A: FloatNum> DirichletNeumann<A> {
     ///
     /// Reference:
     /// J. Shen: Effcient Spectral-Galerkin Method II.
+    #[allow(clippy::cast_precision_loss)]
     pub fn new(n: usize) -> Self {
         let m = Self::get_m(n);
         let diag = vec![A::one(); m];
