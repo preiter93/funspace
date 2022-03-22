@@ -1,56 +1,28 @@
-//! Collection of Types for `funspace`
+//! # Custom types
 //!
-//! FloatNum: Floating Point number
-//! Scalar: Generic type for linalg operations
-use ndarray::ScalarOperand;
+//! `FloatNum`: 	Floating Point number
+//! `ScalarNum`: 	Generic type for linalg operations
 use num_traits::{Float, FloatConst, FromPrimitive, Signed};
-use num_traits::{One, Zero};
+use rustdct::DctNum;
 use std::fmt::Debug;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 
 /// Generic floating point number, implemented for f32 and f64
-pub trait FloatNum:
-    'static
-    + Copy
-    + Zero
-    + FromPrimitive
-    + Signed
-    + Sync
-    + Send
-    + Float
-    + Debug
-    + ScalarOperand
-    + std::ops::MulAssign
-    + FloatConst
+pub trait FloatNum: Float
+// DCT
++ FloatConst
++ Debug
++ Send
++ Sync
++ Signed
++ FromPrimitive
++ DctNum
+// Assign Ops
++ MulAssign
++ DivAssign
++ AddAssign
++ SubAssign
 {
 }
 impl FloatNum for f32 {}
 impl FloatNum for f64 {}
-
-/// Elements that support linear algebra operations.
-///
-/// `'static` for type-based specialization, `Copy` so that they don't need move
-/// semantics or destructors, and the rest are numerical traits.
-pub trait Scalar:
-    'static
-    + Copy
-    + Zero
-    + One
-    + Add<Output = Self>
-    + Sub<Output = Self>
-    + Mul<Output = Self>
-    + Div<Output = Self>
-{
-}
-
-impl<T> Scalar for T where
-    T: 'static
-        + Copy
-        + Zero
-        + One
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-{
-}

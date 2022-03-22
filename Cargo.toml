@@ -1,6 +1,6 @@
 [package]
 name = "funspace"
-version = "0.2.3"
+version = "0.3.0"
 authors = ["preiter"]
 edition = "2018"
 description = "N-dimensional function spaces and transforms"
@@ -9,33 +9,24 @@ keywords = ["scientific", "numerical", "fourier", "chebyshev", "ndarray"]
 readme = "README.md"
 license = "MIT"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-ndarray = "0.15"
+rustdct = "0.7"
 num-traits = "0.2"
-num-complex = "0.4"
-ndrustfft = "0.2"
-enum_dispatch = "0.3.7"
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
 
-[lib]
-name = "funspace"
-path = "src/lib.rs"
+#[lib]
+#name = "funspace"
+#path = "src/lib.rs"
 
-[[bench]]
-name = "benchmark_chebyshev"
-harness = false
+#[[bench]]
+#name = "benchmark_chebyshev"
+#harness = false
 
-[[bench]]
-name = "benchmark_fourier"
-harness = false
-
-# [[bench]]
-# name = "benchmark_spacebase"
-# harness = false
+#[[bench]]
+#name = "benchmark_fourier"
+#harness = false
 
 # Enable katex in documentation
 # RUSTDOCFLAGS="--html-in-header docs-header.html" cargo doc --no-deps --open
