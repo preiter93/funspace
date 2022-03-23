@@ -1,6 +1,6 @@
 //! # Collection of traits that bases must implement
-use crate::types::ScalarNum;
-use ndarray::{Array, ArrayBase, Axis, Data, DataMut, Dimension, Zip};
+use crate::types::{FloatNum, ScalarNum};
+use ndarray::{Array, Array2, ArrayBase, Axis, Data, DataMut, Dimension, Zip};
 use num_traits::identities::Zero;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -12,9 +12,18 @@ use std::ops::{Add, Div, Mul, Sub};
 ///
 
 /// More helpful functions with function spaces
-pub trait FunspaceExtended: FunspaceElemental {
+pub trait FunspaceExtended<A: FloatNum> {
     /// Coordinates in physical space
-    fn nodes(&self) -> &[Self::Physical];
+    fn get_nodes(&self) -> Vec<A>;
+
+    /// Laplacian $ L $
+    fn laplace(&self) -> Array2<A>;
+
+    /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
+    fn laplace_inv(&self) -> Array2<A>;
+
+    /// Pseudoidentity matrix of laplacian $ L^{-1} L $
+    fn laplace_inv_eye(&self) -> Array2<A>;
 }
 
 pub trait FunspaceSize {
@@ -61,11 +70,7 @@ pub trait FunspaceElemental: FunspaceSize {
             + Sub<Self::Spectral, Output = T>;
 
     /// Physical values -> Spectral coefficients
-    fn forward_outplace<S, D>(
-        &mut self,
-        indata: &ArrayBase<S, D>,
-        axis: usize,
-    ) -> Array<Self::Spectral, D>
+    fn forward<S, D>(&mut self, indata: &ArrayBase<S, D>, axis: usize) -> Array<Self::Spectral, D>
     where
         S: Data<Elem = Self::Physical>,
         D: Dimension,
@@ -75,6 +80,25 @@ pub trait FunspaceElemental: FunspaceSize {
         use crate::utils::array_resized_axis;
         let mut outdata = array_resized_axis(indata, self.len_spec(), axis);
         self.forward_inplace(indata, &mut outdata, axis);
+        outdata
+    }
+
+    /// Physical values -> Spectral coefficients
+    fn forward_par<S, D>(
+        &mut self,
+        indata: &ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Spectral, D>
+    where
+        S: Data<Elem = Self::Physical>,
+        D: Dimension,
+        Self::Physical: Clone + Send + Sync,
+        Self::Spectral: Clone + Zero + Copy + Send + Sync,
+        Self: Sync,
+    {
+        use crate::utils::array_resized_axis;
+        let mut outdata = array_resized_axis(indata, self.len_spec(), axis);
+        self.forward_inplace_par(indata, &mut outdata, axis);
         outdata
     }
 
@@ -100,15 +124,15 @@ pub trait FunspaceElemental: FunspaceSize {
         let outer_axis = indata.ndim() - 1;
         if axis == outer_axis {
             // Data is contiguous in memory
-            Zip::from(indata.lanes(Axis(axis)))
-                .and(outdata.lanes_mut(Axis(axis)))
+            Zip::from(indata.rows())
+                .and(outdata.rows_mut())
                 .for_each(|x, mut y| {
                     self.forward_slice(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
                 });
         } else {
             // Data is *not* contiguous in memory.
-            let mut scratch: Vec<Self::Spectral> =
-                vec![Self::Spectral::zero(); outdata.shape()[axis]];
+            let scratch_size = outdata.shape()[axis];
+            let mut scratch: Vec<Self::Spectral> = vec![Self::Spectral::zero(); scratch_size];
             Zip::from(indata.lanes(Axis(axis)))
                 .and(outdata.lanes_mut(Axis(axis)))
                 .for_each(|x, mut y| {
@@ -120,12 +144,52 @@ pub trait FunspaceElemental: FunspaceSize {
         }
     }
 
-    /// Spectral coefficients -> Physical values
-    fn backward_outplace<S, D>(
-        &mut self,
-        indata: &ArrayBase<S, D>,
+    /// Physical values -> Spectral coefficients
+    ///
+    /// Transforms (multidimensional) `ndarray` along `axis`.
+    /// `axis` must be smaller than `ndim` - 1
+    fn forward_inplace_par<S1, S2, D>(
+        &self,
+        indata: &ArrayBase<S1, D>,
+        outdata: &mut ArrayBase<S2, D>,
         axis: usize,
-    ) -> Array<Self::Physical, D>
+    ) where
+        S1: Data<Elem = Self::Physical>,
+        S2: Data<Elem = Self::Spectral> + DataMut,
+        D: Dimension,
+        Self::Physical: Clone + Send + Sync,
+        Self::Spectral: Clone + Zero + Copy + Send + Sync,
+        Self: Sync,
+    {
+        assert!(indata.is_standard_layout());
+        assert!(outdata.is_standard_layout());
+
+        let outer_axis = indata.ndim() - 1;
+        if axis == outer_axis {
+            // Data is contiguous in memory
+            Zip::from(indata.rows())
+                .and(outdata.rows_mut())
+                .par_for_each(|x, mut y| {
+                    self.forward_slice(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
+                });
+        } else {
+            // Data is *not* contiguous in memory.
+            let scratch_size = outdata.shape()[axis];
+            Zip::from(indata.lanes(Axis(axis)))
+                .and(outdata.lanes_mut(Axis(axis)))
+                .par_for_each(|x, mut y| {
+                    let mut scratch: Vec<Self::Spectral> =
+                        vec![Self::Spectral::zero(); scratch_size];
+                    self.forward_slice(&x.to_vec(), &mut scratch);
+                    for (yi, si) in y.iter_mut().zip(scratch.iter()) {
+                        *yi = *si;
+                    }
+                });
+        }
+    }
+
+    /// Spectral coefficients -> Physical values
+    fn backward<S, D>(&mut self, indata: &ArrayBase<S, D>, axis: usize) -> Array<Self::Physical, D>
     where
         S: Data<Elem = Self::Spectral>,
         D: Dimension,
@@ -135,6 +199,25 @@ pub trait FunspaceElemental: FunspaceSize {
         use crate::utils::array_resized_axis;
         let mut outdata = array_resized_axis(indata, self.len_phys(), axis);
         self.backward_inplace(indata, &mut outdata, axis);
+        outdata
+    }
+
+    /// Spectral coefficients -> Physical values
+    fn backward_par<S, D>(
+        &mut self,
+        indata: &ArrayBase<S, D>,
+        axis: usize,
+    ) -> Array<Self::Physical, D>
+    where
+        S: Data<Elem = Self::Spectral>,
+        D: Dimension,
+        Self::Spectral: Clone + Send + Sync,
+        Self::Physical: Clone + Zero + Copy + Send + Sync,
+        Self: Sync,
+    {
+        use crate::utils::array_resized_axis;
+        let mut outdata = array_resized_axis(indata, self.len_phys(), axis);
+        self.backward_inplace_par(indata, &mut outdata, axis);
         outdata
     }
 
@@ -160,8 +243,8 @@ pub trait FunspaceElemental: FunspaceSize {
         let outer_axis = indata.ndim() - 1;
         if axis == outer_axis {
             // Data is contiguous in memory
-            Zip::from(indata.lanes(Axis(axis)))
-                .and(outdata.lanes_mut(Axis(axis)))
+            Zip::from(indata.rows())
+                .and(outdata.rows_mut())
                 .for_each(|x, mut y| {
                     self.backward_slice(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
                 });
@@ -180,8 +263,52 @@ pub trait FunspaceElemental: FunspaceSize {
         }
     }
 
+    /// Spectral coefficients -> Physical values
+    ///
+    /// Transforms (multidimensional) `ndarray` along `axis`.
+    /// `axis` must be smaller than `ndim` - 1
+    fn backward_inplace_par<S1, S2, D>(
+        &self,
+        indata: &ArrayBase<S1, D>,
+        outdata: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        S1: Data<Elem = Self::Spectral>,
+        S2: Data<Elem = Self::Physical> + DataMut,
+        D: Dimension,
+        Self::Spectral: Clone + Send + Sync,
+        Self::Physical: Clone + Zero + Copy + Send + Sync,
+        Self: Sync,
+    {
+        assert!(indata.is_standard_layout());
+        assert!(outdata.is_standard_layout());
+
+        let outer_axis = indata.ndim() - 1;
+        if axis == outer_axis {
+            // Data is contiguous in memory
+            Zip::from(indata.lanes(Axis(axis)))
+                .and(outdata.lanes_mut(Axis(axis)))
+                .par_for_each(|x, mut y| {
+                    self.backward_slice(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
+                });
+        } else {
+            // Data is *not* contiguous in memory.
+            let scratch_len = outdata.shape()[axis];
+            Zip::from(indata.lanes(Axis(axis)))
+                .and(outdata.lanes_mut(Axis(axis)))
+                .par_for_each(|x, mut y| {
+                    let mut scratch: Vec<Self::Physical> =
+                        vec![Self::Physical::zero(); scratch_len];
+                    self.backward_slice(&x.to_vec(), &mut scratch);
+                    for (yi, si) in y.iter_mut().zip(scratch.iter()) {
+                        *yi = *si;
+                    }
+                });
+        }
+    }
+
     /// Differentiate in spectral space
-    fn differentiate_outplace<T, S, D>(
+    fn differentiate<T, S, D>(
         &self,
         indata: &ArrayBase<S, D>,
         n_times: usize,
@@ -224,8 +351,8 @@ pub trait FunspaceElemental: FunspaceSize {
         let outer_axis = outdata.ndim() - 1;
         if axis == outer_axis {
             // Data is contiguous in memory
-            Zip::from(indata.lanes(Axis(axis)))
-                .and(outdata.lanes_mut(Axis(axis)))
+            Zip::from(indata.rows())
+                .and(outdata.rows_mut())
                 .for_each(|x, mut y| {
                     self.differentiate_slice(
                         x.as_slice().unwrap(),
@@ -270,6 +397,23 @@ pub trait FunspaceElemental: FunspaceSize {
             + Sub<Self::Spectral, Output = T>;
 
     /// Composite space coefficients -> Orthogonal space coefficients
+    fn to_ortho<T, S, D>(&self, indata: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    where
+        T: ScalarNum
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>,
+        S: Data<Elem = T>,
+        D: Dimension,
+    {
+        use crate::utils::array_resized_axis;
+        let mut outdata = array_resized_axis(indata, self.len_orth(), axis);
+        self.to_ortho_inplace(indata, &mut outdata, axis);
+        outdata
+    }
+
+    /// Composite space coefficients -> Orthogonal space coefficients
     fn to_ortho_inplace<T, S1, S2, D>(
         &self,
         indata: &ArrayBase<S1, D>,
@@ -308,6 +452,23 @@ pub trait FunspaceElemental: FunspaceSize {
                     }
                 });
         }
+    }
+
+    /// Composite space coefficients -> Orthogonal space coefficients
+    fn from_ortho<T, S, D>(&self, indata: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    where
+        T: ScalarNum
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>,
+        S: Data<Elem = T>,
+        D: Dimension,
+    {
+        use crate::utils::array_resized_axis;
+        let mut outdata = array_resized_axis(indata, self.len_spec(), axis);
+        self.from_ortho_inplace(indata, &mut outdata, axis);
+        outdata
     }
 
     /// Orthogonal space coefficients -> Composite space coefficients

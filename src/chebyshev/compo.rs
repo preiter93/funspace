@@ -2,8 +2,9 @@
 use super::ortho::Chebyshev;
 use super::stencils::StencilOperations;
 use super::stencils::{ChebyshevStencils, Dirichlet, DirichletNeumann, Neumann};
-use crate::traits::{FunspaceElemental, FunspaceSize};
+use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
 use crate::types::{FloatNum, ScalarNum};
+use ndarray::Array2;
 use std::clone::Clone;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -38,6 +39,28 @@ impl<A: FloatNum> FunspaceSize for ChebyshevComposite<A> {
     #[must_use]
     fn len_orth(&self) -> usize {
         self.ortho.len_orth()
+    }
+}
+
+impl<A: FloatNum> FunspaceExtended<A> for ChebyshevComposite<A> {
+    /// Coordinates in physical space
+    fn get_nodes(&self) -> Vec<A> {
+        Chebyshev::nodes(self.len_phys())
+    }
+
+    /// Laplacian $ L $
+    fn laplace(&self) -> Array2<A> {
+        Chebyshev::_dmat(self.n, 2)
+    }
+
+    /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
+    fn laplace_inv(&self) -> Array2<A> {
+        Chebyshev::_pinv(self.n, 2)
+    }
+
+    /// Pseudoidentity matrix of laplacian $ L^{-1} L $
+    fn laplace_inv_eye(&self) -> Array2<A> {
+        Chebyshev::_pinv_eye(self.n, 2)
     }
 }
 
@@ -274,7 +297,7 @@ mod test {
             [0.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 0.0],
         ];
-        let diff = cheby.differentiate_outplace(&data, 2, 0);
+        let diff = cheby.differentiate(&data, 2, 0);
         approx_eq_ndarray(&diff, &expected);
 
         // Axis 1
@@ -290,7 +313,7 @@ mod test {
             [-568.0, -2232.0, -864.0, -1520.0, 0.0, 0.0],
             [-696.0, -2712.0, -1056.0, -1840.0, 0.0, 0.0],
         ];
-        let diff = cheby.differentiate_outplace(&data, 2, 1);
+        let diff = cheby.differentiate(&data, 2, 1);
         approx_eq_ndarray(&diff, &expected);
     }
 }

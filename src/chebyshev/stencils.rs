@@ -129,15 +129,17 @@ impl<A: FloatNum> HelperStencil2Diag<A> {
             + Copy,
     {
         assert!(v.len() == self.diag.len());
-        // assert!(Self::get_m(u.len()) == u.len());
         let n = u.len();
-        u[0] = v[0] * self.diag[0];
-        u[1] = v[1] * self.diag[1];
-        for i in 2..n - 2 {
-            u[i] = v[i] * self.diag[i] + v[i - 2] * self.low2[i - 2];
+        unsafe {
+            *u.get_unchecked_mut(0) = *v.get_unchecked(0) * *self.diag.get_unchecked(0);
+            *u.get_unchecked_mut(1) = *v.get_unchecked(1) * *self.diag.get_unchecked(1);
+            for i in 2..n - 2 {
+                *u.get_unchecked_mut(i) = *v.get_unchecked(i) * *self.diag.get_unchecked(i)
+                    + *v.get_unchecked(i - 2) * *self.low2.get_unchecked(i - 2);
+            }
+            *u.get_unchecked_mut(n - 2) = *v.get_unchecked(n - 4) * *self.low2.get_unchecked(n - 4);
+            *u.get_unchecked_mut(n - 1) = *v.get_unchecked(n - 3) * *self.low2.get_unchecked(n - 3);
         }
-        u[n - 2] = v[n - 4] * self.low2[n - 4];
-        u[n - 1] = v[n - 3] * self.low2[n - 3];
     }
 
     fn solve_inplace<T>(&self, u: &[T], v: &mut [T])
@@ -157,9 +159,13 @@ impl<A: FloatNum> HelperStencil2Diag<A> {
         use crate::chebyshev::linalg::tdma;
         // assert!(Self::get_m(u.len()) == u.len());
         // Multiply right hand side
-        for i in 0..v.len() {
-            v[i] = u[i] * self.diag[i] + u[i + 2] * self.low2[i];
+        unsafe {
+            for i in 0..v.len() {
+                *v.get_unchecked_mut(i) = *u.get_unchecked(i) * *self.diag.get_unchecked(i)
+                    + *u.get_unchecked(i + 2) * *self.low2.get_unchecked(i);
+            }
         }
+
         // Solve tridiagonal system
         tdma(&self.tdma_off2, &self.tdma_diag, &self.tdma_off2, v);
     }
@@ -390,13 +396,19 @@ impl<A: FloatNum> HelperStencil3Diag<A> {
         assert!(v.len() == self.diag.len());
         // assert!(Self::get_m(u.len()) == u.len());
         let n = u.len();
-        u[0] = v[0] * self.diag[0];
-        u[1] = v[1] * self.diag[1] + v[0] * self.low1[0];
-        for i in 2..n - 2 {
-            u[i] = v[i] * self.diag[i] + v[i - 1] * self.low1[i - 1] + v[i - 2] * self.low2[i - 2];
+        unsafe {
+            *u.get_unchecked_mut(0) = *v.get_unchecked(0) * *self.diag.get_unchecked(0);
+            *u.get_unchecked_mut(1) = *v.get_unchecked(1) * *self.diag.get_unchecked(1)
+                + *v.get_unchecked(0) * *self.low1.get_unchecked(0);
+            for i in 2..n - 2 {
+                *u.get_unchecked_mut(i) = *v.get_unchecked(i) * *self.diag.get_unchecked(i)
+                    + *v.get_unchecked(i - 1) * *self.low1.get_unchecked(i - 1)
+                    + *v.get_unchecked(i - 2) * *self.low2.get_unchecked(i - 2);
+            }
+            *u.get_unchecked_mut(n - 2) = *v.get_unchecked(n - 3) * *self.low1.get_unchecked(n - 3)
+                + *v.get_unchecked(n - 4) * *self.low2.get_unchecked(n - 4);
+            *u.get_unchecked_mut(n - 1) = *v.get_unchecked(n - 3) * *self.low2.get_unchecked(n - 3);
         }
-        u[n - 2] = v[n - 3] * self.low1[n - 3] + v[n - 4] * self.low2[n - 4];
-        u[n - 1] = v[n - 3] * self.low2[n - 3];
     }
 
     fn solve_inplace<T>(&self, u: &[T], v: &mut [T])
@@ -416,9 +428,14 @@ impl<A: FloatNum> HelperStencil3Diag<A> {
         use crate::chebyshev::linalg::pdma;
         // assert!(Self::get_m(u.len()) == u.len());
         // Multiply right hand side
-        for i in 0..v.len() {
-            v[i] = u[i] * self.diag[i] + u[i + 1] * self.low1[i] + u[i + 2] * self.low2[i];
+        unsafe {
+            for i in 0..v.len() {
+                *v.get_unchecked_mut(i) = *u.get_unchecked(i) * *self.diag.get_unchecked(i)
+                    + *u.get_unchecked(i + 1) * *self.low1.get_unchecked(i)
+                    + *u.get_unchecked(i + 2) * *self.low2.get_unchecked(i);
+            }
         }
+
         // Solve tridiagonal system
         pdma(
             &self.fdma_off2,

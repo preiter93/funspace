@@ -1,6 +1,7 @@
 //! # Orthogonal Chebyshev Base
-use crate::traits::{FunspaceElemental, FunspaceSize};
+use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
 use crate::types::{FloatNum, ScalarNum};
+use ndarray::{s, Array2};
 use rustdct::{Dct1, DctPlanner};
 use std::f64::consts::PI;
 use std::sync::Arc;
@@ -54,8 +55,100 @@ impl<A: FloatNum> Chebyshev<A> {
 
     /// Returns grid points
     #[must_use]
-    pub fn nodes(&self) -> Vec<A> {
-        Self::chebyshev_nodes_2nd_kind(self.n)
+    pub fn nodes(n: usize) -> Vec<A> {
+        Self::chebyshev_nodes_2nd_kind(n)
+    }
+
+    /// Differentation Matrix see [`chebyshev::dmsuite::diffmat_chebyshev`
+    ///
+    /// # Panics
+    /// - Num conversion fails
+    /// - deriv > 2: Not implemented
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
+    pub fn _dmat(n: usize, deriv: usize) -> Array2<A> {
+        let mut dmat = Array2::<f64>::zeros((n, n));
+        if deriv == 1 {
+            for p in 0..n {
+                for q in p + 1..n {
+                    if (p + q) % 2 != 0 {
+                        dmat[[p, q]] = (q * 2) as f64;
+                    }
+                }
+            }
+        } else if deriv == 2 {
+            for p in 0..n {
+                for q in p + 2..n {
+                    if (p + q) % 2 == 0 {
+                        dmat[[p, q]] = (q * (q * q - p * p)) as f64;
+                    }
+                }
+            }
+        } else {
+            todo!()
+        }
+        for d in dmat.slice_mut(s![0, ..]).iter_mut() {
+            *d *= 0.5;
+        }
+        dmat.mapv(|elem| A::from_f64(elem).unwrap())
+    }
+    /// Pseudoinverse matrix of chebyshev spectral
+    /// differentiation matrices
+    ///
+    /// When preconditioned with the pseudoinverse Matrix,
+    /// systems become banded and thus efficient to solve.
+    ///
+    /// Literature:
+    /// Sahuck Oh - An Efficient Spectral Method to Solve Multi-Dimensional
+    /// Linear Partial Different Equations Using Chebyshev Polynomials
+    ///
+    /// Output:
+    /// ndarray (n x n) matrix, acts in spectral space
+    ///
+    /// # Panics
+    /// - Num conversion fails
+    /// - deriv > 2: Not implemented
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
+    pub fn _pinv(n: usize, deriv: usize) -> Array2<A> {
+        assert!(
+            !(deriv > 2),
+            "pinv does only support deriv's 1 & 2, got {}",
+            deriv
+        );
+        let mut pinv = Array2::<f64>::zeros([n, n]);
+        if deriv == 1 {
+            pinv[[1, 0]] = 1.;
+            for i in 2..n {
+                pinv[[i, i - 1]] = 1. / (2. * i as f64); // diag - 1
+            }
+            for i in 1..n - 2 {
+                pinv[[i, i + 1]] = -1. / (2. * i as f64); // diag + 1
+            }
+        } else if deriv == 2 {
+            pinv[[2, 0]] = 0.25;
+            for i in 3..n {
+                pinv[[i, i - 2]] = 1. / (4 * i * (i - 1)) as f64; // diag - 2
+            }
+            for i in 2..n - 2 {
+                pinv[[i, i]] = -1. / (2 * (i * i - 1)) as f64; // diag 0
+            }
+            for i in 2..n - 4 {
+                pinv[[i, i + 2]] = 1. / (4 * i * (i + 1)) as f64; // diag + 2
+            }
+        }
+        //pinv
+        pinv.mapv(|elem| A::from_f64(elem).unwrap())
+    }
+
+    /// Returns eye matrix, where the n ( = deriv) upper rows
+    ///
+    /// # Panics
+    /// Num conversion fails
+    #[must_use]
+    pub fn _pinv_eye(n: usize, deriv: usize) -> Array2<A> {
+        let pinv_eye = Array2::<f64>::eye(n).slice(s![deriv.., ..]).to_owned();
+        pinv_eye.mapv(|elem| A::from_f64(elem).unwrap())
     }
 }
 
@@ -76,6 +169,28 @@ impl<A: FloatNum> FunspaceSize for Chebyshev<A> {
     #[must_use]
     fn len_orth(&self) -> usize {
         self.m
+    }
+}
+
+impl<A: FloatNum> FunspaceExtended<A> for Chebyshev<A> {
+    /// Coordinates in physical space
+    fn get_nodes(&self) -> Vec<A> {
+        Chebyshev::nodes(self.len_phys())
+    }
+
+    /// Laplacian $ L $
+    fn laplace(&self) -> Array2<A> {
+        Self::_dmat(self.n, 2)
+    }
+
+    /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
+    fn laplace_inv(&self) -> Array2<A> {
+        Self::_pinv(self.n, 2)
+    }
+
+    /// Pseudoidentity matrix of laplacian $ L^{-1} L $
+    fn laplace_inv_eye(&self) -> Array2<A> {
+        Self::_pinv_eye(self.n, 2)
     }
 }
 
@@ -113,16 +228,21 @@ impl<A: FloatNum> FunspaceElemental for Chebyshev<A> {
         let two = T::one() + T::one();
         for _ in 0..n_times {
             // Forward
-            outdata[0] = outdata[1];
-            for i in 1..self.m - 1 {
-                outdata[i] = two * T::from_usize(i + 1).unwrap() * outdata[i + 1];
+            unsafe {
+                *outdata.get_unchecked_mut(0) = *outdata.get_unchecked(1);
+                for i in 1..self.m - 1 {
+                    *outdata.get_unchecked_mut(i) =
+                        two * T::from_usize(i + 1).unwrap() * *outdata.get_unchecked(i + 1);
+                }
+                *outdata.get_unchecked_mut(self.m - 1) = T::zero();
+                // Reverse
+                for i in (1..self.m - 2).rev() {
+                    *outdata.get_unchecked_mut(i) =
+                        *outdata.get_unchecked(i) + *outdata.get_unchecked(i + 2);
+                }
+                *outdata.get_unchecked_mut(0) =
+                    *outdata.get_unchecked(0) + *outdata.get_unchecked(2) / two;
             }
-            outdata[self.m - 1] = T::zero();
-            // Reverse
-            for i in (1..self.m - 2).rev() {
-                outdata[i] += outdata[i + 2];
-            }
-            outdata[0] += outdata[2] / two;
         }
     }
 

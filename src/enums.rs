@@ -1,0 +1,36 @@
+use crate::chebyshev::{Chebyshev, ChebyshevComposite};
+use crate::fourier::{FourierC2c, FourierR2c};
+use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
+use crate::types::{FloatNum, ScalarNum};
+use ndarray::Array2;
+use num_complex::Complex;
+use std::ops::{Add, Div, Mul, Sub};
+
+#[derive(Clone)]
+/// All bases who transform real-to-real
+pub enum BaseR2r<T: FloatNum> {
+    /// Chebyshev polynomials (orthogonal)
+    Chebyshev(Chebyshev<T>),
+    /// Chebyshev polynomials (composite)
+    ChebyshevComposite(ChebyshevComposite<T>),
+}
+
+#[derive(Clone)]
+/// All bases who transform: real-to-complex
+pub enum BaseR2c<T: FloatNum> {
+    /// Fourier polynomials
+    FourierR2c(FourierR2c<T>),
+}
+
+#[derive(Clone)]
+/// All bases who transform: complex-to-complex
+pub enum BaseC2c<T: FloatNum> {
+    /// Fourier polynomials
+    FourierC2c(FourierC2c<T>),
+}
+
+impl_funspace_elemental_for_base!(BaseR2r, A, A, Chebyshev, ChebyshevComposite);
+
+impl_funspace_elemental_for_base!(BaseR2c, A, Complex<A>, FourierR2c);
+
+impl_funspace_elemental_for_base!(BaseC2c, Complex<A>, Complex<A>, FourierC2c);
