@@ -29,11 +29,36 @@ macro_rules! impl_funspace_elemental_for_base {
             }
         }
 
-        impl<A: FloatNum> FunspaceExtended<A> for $base<A> {
+        impl<A: FloatNum> FunspaceExtended for $base<A> {
+            type Real = A;
+
+            type Spectral = $b;
+
+            /// Return kind of base
+            fn base_kind(&self) -> BaseKind{
+                match self {
+                    $(Self::$var(ref b) => b.base_kind(),)*
+                }
+            }
+
             /// Grid coordinates
             fn get_nodes(&self) -> Vec<A> {
                 match self {
                     $(Self::$var(ref b) => b.get_nodes(),)*
+                }
+            }
+
+            /// Mass matrix
+            fn mass(&self) -> Array2<A> {
+                match self {
+                    $(Self::$var(ref b) => b.mass(),)*
+                }
+            }
+
+            /// Explicit differential operator
+            fn diffmat(&self, deriv: usize) -> Array2<Self::Spectral> {
+                match self {
+                    $(Self::$var(ref b) => b.diffmat(deriv),)*
                 }
             }
 
@@ -47,14 +72,14 @@ macro_rules! impl_funspace_elemental_for_base {
             /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
             fn laplace_inv(&self) -> Array2<A> {
                 match self {
-                    $(Self::$var(ref b) => b.laplace(),)*
+                    $(Self::$var(ref b) => b.laplace_inv(),)*
                 }
             }
 
             /// Pseudoidentity matrix of laplacian $ L^{-1} L $
             fn laplace_inv_eye(&self) -> Array2<A> {
                 match self {
-                    $(Self::$var(ref b) => b.laplace(),)*
+                    $(Self::$var(ref b) => b.laplace_inv_eye(),)*
                 }
             }
         }

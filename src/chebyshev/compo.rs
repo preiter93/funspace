@@ -2,6 +2,7 @@
 use super::ortho::Chebyshev;
 use super::stencils::StencilOperations;
 use super::stencils::{ChebyshevStencils, Dirichlet, DirichletNeumann, Neumann};
+use crate::enums::BaseKind;
 use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::Array2;
@@ -42,25 +43,47 @@ impl<A: FloatNum> FunspaceSize for ChebyshevComposite<A> {
     }
 }
 
-impl<A: FloatNum> FunspaceExtended<A> for ChebyshevComposite<A> {
+impl<A: FloatNum> FunspaceExtended for ChebyshevComposite<A> {
+    type Real = A;
+
+    type Spectral = A;
+
+    /// Return kind of base
+    fn base_kind(&self) -> BaseKind {
+        match self.stencil {
+            ChebyshevStencils::Dirichlet(_) => BaseKind::ChebDirichlet,
+            ChebyshevStencils::Neumann(_) => BaseKind::ChebNeumann,
+            ChebyshevStencils::DirichletNeumann(_) => BaseKind::ChebDirichletNeumann,
+        }
+    }
     /// Coordinates in physical space
     fn get_nodes(&self) -> Vec<A> {
         Chebyshev::nodes(self.len_phys())
     }
 
+    /// Mass matrix
+    fn mass(&self) -> Array2<A> {
+        self.stencil.to_array()
+    }
+
+    /// Explicit differential operator
+    fn diffmat(&self, deriv: usize) -> Array2<A> {
+        self.ortho.diffmat(deriv)
+    }
+
     /// Laplacian $ L $
     fn laplace(&self) -> Array2<A> {
-        Chebyshev::_dmat(self.n, 2)
+        self.ortho.laplace()
     }
 
     /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
     fn laplace_inv(&self) -> Array2<A> {
-        Chebyshev::_pinv(self.n, 2)
+        self.ortho.laplace_inv()
     }
 
     /// Pseudoidentity matrix of laplacian $ L^{-1} L $
     fn laplace_inv_eye(&self) -> Array2<A> {
-        Chebyshev::_pinv_eye(self.n, 2)
+        self.ortho.laplace_inv_eye()
     }
 }
 

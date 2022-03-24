@@ -1,5 +1,6 @@
 //! # Collection of traits that bases must implement
-use crate::types::{FloatNum, ScalarNum};
+use crate::enums::BaseKind;
+use crate::types::ScalarNum;
 use ndarray::{Array, Array2, ArrayBase, Axis, Data, DataMut, Dimension, Zip};
 use num_traits::identities::Zero;
 use std::ops::{Add, Div, Mul, Sub};
@@ -12,18 +13,33 @@ use std::ops::{Add, Div, Mul, Sub};
 ///
 
 /// More helpful functions with function spaces
-pub trait FunspaceExtended<A: FloatNum> {
+pub trait FunspaceExtended {
+    /// Real valued scalar type
+    type Real;
+
+    /// Scalar type in spectral space
+    type Spectral;
+
+    /// Return kind of base
+    fn base_kind(&self) -> BaseKind;
+
     /// Coordinates in physical space
-    fn get_nodes(&self) -> Vec<A>;
+    fn get_nodes(&self) -> Vec<Self::Real>;
+
+    /// Mass matrix
+    fn mass(&self) -> Array2<Self::Real>;
+
+    /// Explicit differential operator $ D $
+    fn diffmat(&self, deriv: usize) -> Array2<Self::Spectral>;
 
     /// Laplacian $ L $
-    fn laplace(&self) -> Array2<A>;
+    fn laplace(&self) -> Array2<Self::Real>;
 
     /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
-    fn laplace_inv(&self) -> Array2<A>;
+    fn laplace_inv(&self) -> Array2<Self::Real>;
 
     /// Pseudoidentity matrix of laplacian $ L^{-1} L $
-    fn laplace_inv_eye(&self) -> Array2<A>;
+    fn laplace_inv_eye(&self) -> Array2<Self::Real>;
 }
 
 pub trait FunspaceSize {
@@ -374,6 +390,78 @@ pub trait FunspaceElemental: FunspaceSize {
         }
     }
 
+    /// Differentiate in spectral space
+    fn differentiate_par<T, S, D>(
+        &self,
+        indata: &ArrayBase<S, D>,
+        n_times: usize,
+        axis: usize,
+    ) -> Array<T, D>
+    where
+        T: ScalarNum
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>,
+        S: Data<Elem = T>,
+        D: Dimension,
+        T: Send + Sync,
+        Self: Sync,
+    {
+        use crate::utils::array_resized_axis;
+        let mut outdata = array_resized_axis(indata, self.len_orth(), axis);
+        self.differentiate_inplace_par(indata, &mut outdata, n_times, axis);
+        outdata
+    }
+
+    /// Differentiate in spectral space
+    fn differentiate_inplace_par<T, S1, S2, D>(
+        &self,
+        indata: &ArrayBase<S1, D>,
+        outdata: &mut ArrayBase<S2, D>,
+        n_times: usize,
+        axis: usize,
+    ) where
+        T: ScalarNum
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>,
+        S1: Data<Elem = T>,
+        S2: Data<Elem = T> + DataMut,
+        D: Dimension,
+        T: Send + Sync,
+        Self: Sync,
+    {
+        assert!(indata.is_standard_layout());
+        assert!(outdata.is_standard_layout());
+        let outer_axis = outdata.ndim() - 1;
+        if axis == outer_axis {
+            // Data is contiguous in memory
+            Zip::from(indata.rows())
+                .and(outdata.rows_mut())
+                .par_for_each(|x, mut y| {
+                    self.differentiate_slice(
+                        x.as_slice().unwrap(),
+                        y.as_slice_mut().unwrap(),
+                        n_times,
+                    );
+                });
+        } else {
+            // Data is *not* contiguous in memory.
+            let scratch_len = outdata.shape()[axis];
+            Zip::from(indata.lanes(Axis(axis)))
+                .and(outdata.lanes_mut(Axis(axis)))
+                .par_for_each(|x, mut y| {
+                    let mut scratch: Vec<T> = vec![T::zero(); scratch_len];
+                    self.differentiate_slice(&x.to_vec(), &mut scratch, n_times);
+                    for (yi, si) in y.iter_mut().zip(scratch.iter()) {
+                        *yi = *si;
+                    }
+                });
+        }
+    }
+
     /// Composite space coefficients -> Orthogonal space coefficients
     ///
     /// Todo: Are all these trait bounds necessary?
@@ -455,6 +543,72 @@ pub trait FunspaceElemental: FunspaceSize {
     }
 
     /// Composite space coefficients -> Orthogonal space coefficients
+    fn to_ortho_par<T, S, D>(&self, indata: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    where
+        T: ScalarNum
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>
+            + Send
+            + Sync,
+        S: Data<Elem = T>,
+        D: Dimension,
+        Self: Sync,
+    {
+        use crate::utils::array_resized_axis;
+        let mut outdata = array_resized_axis(indata, self.len_orth(), axis);
+        self.to_ortho_inplace_par(indata, &mut outdata, axis);
+        outdata
+    }
+
+    /// Composite space coefficients -> Orthogonal space coefficients
+    fn to_ortho_inplace_par<T, S1, S2, D>(
+        &self,
+        indata: &ArrayBase<S1, D>,
+        outdata: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        T: ScalarNum
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>
+            + Send
+            + Sync,
+        S1: Data<Elem = T>,
+        S2: Data<Elem = T> + DataMut,
+        D: Dimension,
+        Self: Sync,
+    {
+        assert!(indata.is_standard_layout());
+        assert!(outdata.is_standard_layout());
+
+        let outer_axis = indata.ndim() - 1;
+        if axis == outer_axis {
+            // Data is contiguous in memory
+            Zip::from(indata.lanes(Axis(axis)))
+                .and(outdata.lanes_mut(Axis(axis)))
+                .par_for_each(|x, mut y| {
+                    self.to_ortho_slice(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
+                });
+        } else {
+            // Data is *not* contiguous in memory.
+
+            let scratch_len = outdata.shape()[axis];
+            Zip::from(indata.lanes(Axis(axis)))
+                .and(outdata.lanes_mut(Axis(axis)))
+                .par_for_each(|x, mut y| {
+                    let mut scratch: Vec<T> = vec![T::zero(); scratch_len];
+                    self.to_ortho_slice(&x.to_vec(), &mut scratch);
+                    for (yi, si) in y.iter_mut().zip(scratch.iter()) {
+                        *yi = *si;
+                    }
+                });
+        }
+    }
+
+    /// Composite space coefficients -> Orthogonal space coefficients
     fn from_ortho<T, S, D>(&self, indata: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
     where
         T: ScalarNum
@@ -504,6 +658,71 @@ pub trait FunspaceElemental: FunspaceSize {
             Zip::from(indata.lanes(Axis(axis)))
                 .and(outdata.lanes_mut(Axis(axis)))
                 .for_each(|x, mut y| {
+                    self.from_ortho_slice(&x.to_vec(), &mut scratch);
+                    for (yi, si) in y.iter_mut().zip(scratch.iter()) {
+                        *yi = *si;
+                    }
+                });
+        }
+    }
+
+    /// Composite space coefficients -> Orthogonal space coefficients
+    fn from_ortho_par<T, S, D>(&self, indata: &ArrayBase<S, D>, axis: usize) -> Array<T, D>
+    where
+        T: ScalarNum
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>
+            + Send
+            + Sync,
+        S: Data<Elem = T>,
+        D: Dimension,
+        Self: Sync,
+    {
+        use crate::utils::array_resized_axis;
+        let mut outdata = array_resized_axis(indata, self.len_spec(), axis);
+        self.from_ortho_inplace_par(indata, &mut outdata, axis);
+        outdata
+    }
+
+    /// Orthogonal space coefficients -> Composite space coefficients
+    fn from_ortho_inplace_par<T, S1, S2, D>(
+        &self,
+        indata: &ArrayBase<S1, D>,
+        outdata: &mut ArrayBase<S2, D>,
+        axis: usize,
+    ) where
+        T: ScalarNum
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>
+            + Send
+            + Sync,
+        S1: Data<Elem = T>,
+        S2: Data<Elem = T> + DataMut,
+        D: Dimension,
+        Self: Sync,
+    {
+        assert!(indata.is_standard_layout());
+        assert!(outdata.is_standard_layout());
+
+        let outer_axis = indata.ndim() - 1;
+        if axis == outer_axis {
+            // Data is contiguous in memory
+            Zip::from(indata.lanes(Axis(axis)))
+                .and(outdata.lanes_mut(Axis(axis)))
+                .par_for_each(|x, mut y| {
+                    self.from_ortho_slice(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
+                });
+        } else {
+            // Data is *not* contiguous in memory.
+            let scratch_len = outdata.shape()[axis];
+            Zip::from(indata.lanes(Axis(axis)))
+                .and(outdata.lanes_mut(Axis(axis)))
+                .par_for_each(|x, mut y| {
+                    let mut scratch: Vec<T> = vec![T::zero(); scratch_len];
                     self.from_ortho_slice(&x.to_vec(), &mut scratch);
                     for (yi, si) in y.iter_mut().zip(scratch.iter()) {
                         *yi = *si;

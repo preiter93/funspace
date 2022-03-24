@@ -17,6 +17,7 @@ enum_dispatch = "0.3"
 rustfft = "6.0"
 rustdct = "0.7"
 realfft = "3.0"
+mpi_crate = {package="mpi-fork-fnsp", version = "0.6", optional = true}
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
@@ -32,6 +33,10 @@ harness = false
 [[bench]]
 name = "benchmark_fourier"
 harness = false
+
+[features]
+mpi = ["mpi_crate"]
+mpi-derive = ["mpi_crate"]
 
 # Enable katex in documentation
 # RUSTDOCFLAGS="--html-in-header docs-header.html" cargo doc --no-deps --open

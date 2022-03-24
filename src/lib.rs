@@ -148,7 +148,26 @@
 //! println!("chebyshev     : {:?}", ch_vhat);
 //! println!("cheb_dirichlet: {:?}", cd_vhat_ortho);
 //! ```
+//! ## MPI Support (Feature)
+//! `Funspace` comes with limited mpi support. Currently this is restricted
+//! to 2D spaces. Under the hood it uses the rust mpi libary
+//! *https://github.com/rsmpi/rsmpi* which requires an existing MPI implementation
+//! and `libclang`.
 //!
+//! Activate the feature in your ``Cargo.toml`
+//!
+//! funspace = {version = "0.3", features = ["mpi"]}`
+//!
+//! ### Examples
+//! `examples/space_mpi.rs`
+//!
+//! Install `cargo mpirun`, for example, and run
+//! ```ignore
+//! cargo mpirun --np 2 --example space_mpi --features="mpi"
+//! ```
+//!
+//! # Versions
+//! - v0.3.0: Major API changes + Performance improvements
 #[macro_use]
 extern crate enum_dispatch;
 mod internal_macros;
@@ -156,14 +175,20 @@ mod internal_macros;
 pub mod chebyshev;
 pub mod enums;
 pub mod fourier;
+pub mod spaces;
 pub mod traits;
 pub mod types;
 pub mod utils;
-pub use crate::enums::{BaseC2c, BaseR2c, BaseR2r};
+pub use crate::enums::{BaseC2c, BaseKind, BaseR2c, BaseR2r};
 use chebyshev::{Chebyshev, ChebyshevComposite};
 use fourier::{FourierC2c, FourierR2c};
-pub use traits::{FunspaceElemental, FunspaceSize};
+pub use spaces::traits::BaseSpace;
+pub use spaces::{Space1, Space2, Space3};
+pub use traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
 pub use types::{FloatNum, ScalarNum};
+
+#[cfg(feature = "mpi")]
+pub mod spaces_mpi;
 
 /// Function space for Chebyshev Polynomials
 ///
@@ -204,6 +229,26 @@ pub fn chebyshev<A: FloatNum>(n: usize) -> BaseR2r<A> {
 #[must_use]
 pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> BaseR2r<A> {
     BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::dirichlet(n))
+}
+
+/// Function space with Neumann boundary conditions
+///
+/// ```text
+///  \phi_k = T_k - k^{2} \/ (k+2)^2 T_{k+2}
+/// ```
+/// ## Example
+/// Transform array to function space.
+/// ```
+/// use funspace::cheb_neumann;
+/// use funspace::traits::FunspaceElemental;
+/// use ndarray::Array1;
+/// let mut ch = cheb_neumann::<f64>(10);
+/// let mut y = Array1::<f64>::linspace(0., 9., 10);
+/// let yhat: Array1<f64> = ch.forward(&mut y, 0);
+/// ```
+#[must_use]
+pub fn cheb_neumann<A: FloatNum>(n: usize) -> BaseR2r<A> {
+    BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::neumann(n))
 }
 
 /// Function space with Dirichlet boundary conditions at x=-1

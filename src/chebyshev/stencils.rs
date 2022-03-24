@@ -8,6 +8,7 @@
 //! The stencil matrix is usually sparse, so we can define efficient methods
 //! to get `v` from `u` and vice versa.
 use crate::types::FloatNum;
+use ndarray::{Array2, ShapeBuilder};
 use num_traits::Zero;
 use std::clone::Clone;
 use std::ops::{Add, Div, Mul, Sub};
@@ -70,8 +71,8 @@ pub trait StencilOperations<A> {
             + Clone
             + Copy;
 
-    // /// Return stencil as 2d array
-    // fn to_array(&self) -> Array2<A>;
+    /// Return stencil as 2d array
+    fn to_array(&self) -> Array2<A>;
 }
 
 /// Container for Chebyshev Stencil with two diagonals
@@ -109,10 +110,16 @@ impl<A: FloatNum> HelperStencil2Diag<A> {
         (tdma_diag, tdma_off2)
     }
 
-    // /// Composite spaces is 2 elements smaller than orthogonal space
-    // fn get_m(n: usize) -> usize {
-    //     n - 2
-    // }
+    /// Returns transform stencil as2d ndarray
+    fn to_array(&self) -> Array2<A> {
+        let m = self.diag.len();
+        let mut mat = Array2::<A>::zeros((m + 2, m).f());
+        for (i, (d, l)) in self.diag.iter().zip(self.low2.iter()).enumerate() {
+            mat[[i, i]] = *d;
+            mat[[i + 2, i]] = *l;
+        }
+        mat
+    }
 
     fn dot_inplace<T>(&self, v: &[T], u: &mut [T])
     where
@@ -246,6 +253,11 @@ impl<A: FloatNum> StencilOperations<A> for Dirichlet<A> {
     {
         self.helper.solve_inplace(v, u);
     }
+
+    /// Returns transform stencil as2d ndarray
+    fn to_array(&self) -> Array2<A> {
+        self.helper.to_array()
+    }
 }
 
 /// Container for Chebyshev Stencil with Neumann boundary conditions
@@ -328,6 +340,11 @@ impl<A: FloatNum> StencilOperations<A> for Neumann<A> {
             + Copy,
     {
         self.helper.solve_inplace(v, u);
+    }
+
+    /// Returns transform stencil as2d ndarray
+    fn to_array(&self) -> Array2<A> {
+        self.helper.to_array()
     }
 }
 
@@ -446,6 +463,24 @@ impl<A: FloatNum> HelperStencil3Diag<A> {
             v,
         );
     }
+
+    /// Returns transform stencil as2d ndarray
+    fn to_array(&self) -> Array2<A> {
+        let m = self.diag.len();
+        let mut mat = Array2::<A>::zeros((m + 2, m).f());
+        for (i, ((d, l1), l2)) in self
+            .diag
+            .iter()
+            .zip(self.low1.iter())
+            .zip(self.low2.iter())
+            .enumerate()
+        {
+            mat[[i, i]] = *d;
+            mat[[i + 1, i]] = *l1;
+            mat[[i + 2, i]] = *l2;
+        }
+        mat
+    }
 }
 
 /// Container for Chebyshev Stencil with
@@ -542,5 +577,10 @@ impl<A: FloatNum> StencilOperations<A> for DirichletNeumann<A> {
             + Copy,
     {
         self.helper.solve_inplace(v, u);
+    }
+
+    /// Returns transform stencil as2d ndarray
+    fn to_array(&self) -> Array2<A> {
+        self.helper.to_array()
     }
 }

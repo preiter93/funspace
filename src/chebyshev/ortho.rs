@@ -1,4 +1,5 @@
 //! # Orthogonal Chebyshev Base
+use crate::enums::BaseKind;
 use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::{s, Array2};
@@ -42,14 +43,29 @@ impl<A: FloatNum> Chebyshev<A> {
         }
     }
 
-    /// Chebyshev points of the second kind. $[-1, 1]$
+    // /// Chebyshev points of the second kind. $[-1, 1]$
+    // /// $$$
+    // /// x = - cos( pi*k/(npts - 1) )
+    // /// $$$
+    // #[allow(clippy::cast_precision_loss)]
+    // fn chebyshev_nodes_2nd_kind(n: usize) -> Vec<A> {
+    //     (0..n)
+    //         .map(|k| -A::one() * A::from_f64(PI * k as f64 / (n - 1) as f64).unwrap().cos())
+    //         .collect::<Vec<A>>()
+    // }
+
+    /// Chebyshev nodes of the second kind on intervall $[-1, 1]$
     /// $$$
-    /// x = cos( pi*k/(npts - 1) )
+    /// x = - cos( pi*k/(npts - 1) )
     /// $$$
     #[allow(clippy::cast_precision_loss)]
     fn chebyshev_nodes_2nd_kind(n: usize) -> Vec<A> {
+        let m = (n - 1) as f64;
         (0..n)
-            .map(|k| A::from_f64(PI * k as f64 / (n - 1) as f64).unwrap().cos())
+            .map(|k| {
+                let arg = A::from_f64(PI * (m - 2. * k as f64) / (2. * m)).unwrap();
+                -A::one() * arg.sin()
+            })
             .collect::<Vec<A>>()
     }
 
@@ -172,10 +188,29 @@ impl<A: FloatNum> FunspaceSize for Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum> FunspaceExtended<A> for Chebyshev<A> {
+impl<A: FloatNum> FunspaceExtended for Chebyshev<A> {
+    type Real = A;
+
+    type Spectral = A;
+
+    /// Return kind of base
+    fn base_kind(&self) -> BaseKind {
+        BaseKind::Chebyshev
+    }
+
     /// Coordinates in physical space
     fn get_nodes(&self) -> Vec<A> {
         Chebyshev::nodes(self.len_phys())
+    }
+
+    /// Mass matrix
+    fn mass(&self) -> Array2<A> {
+        Array2::<A>::eye(self.len_spec())
+    }
+
+    /// Explicit differential operator
+    fn diffmat(&self, deriv: usize) -> Array2<A> {
+        Self::_dmat(self.n, deriv)
     }
 
     /// Laplacian $ L $
@@ -253,11 +288,11 @@ impl<A: FloatNum> FunspaceElemental for Chebyshev<A> {
 
         // Copy and correct input data
         let cor = (A::one() + A::one()) * A::one() / A::from(self.n - 1).unwrap();
+
         // Reverse indata since it is defined on $[-1, 1]$, instead of $[1, -1]$
         for (y, x) in outdata.iter_mut().zip(indata.iter().rev()) {
             *y = *x * cor;
         }
-
         // Transform via dct
         self.plan_dct.process_dct1(outdata);
 
@@ -291,13 +326,19 @@ impl<A: FloatNum> FunspaceElemental for Chebyshev<A> {
     }
 
     /// Composite space coefficients -> Orthogonal space coefficients
-    fn to_ortho_slice<T>(&self, _indata: &[T], _outdata: &mut [T]) {
-        panic!("Function space Chebyshev is already orthogonal");
+    fn to_ortho_slice<T: Copy>(&self, indata: &[T], outdata: &mut [T]) {
+        // panic!("Function space Chebyshev is already orthogonal");
+        for (y, x) in outdata.iter_mut().zip(indata.iter()) {
+            *y = *x;
+        }
     }
 
     /// Orthogonal space coefficients -> Composite space coefficients
-    fn from_ortho_slice<T>(&self, _indata: &[T], _outdata: &mut [T]) {
-        panic!("Function space Chebyshev is already orthogonal");
+    fn from_ortho_slice<T: Copy>(&self, indata: &[T], outdata: &mut [T]) {
+        // panic!("Function space Chebyshev is already orthogonal");
+        for (y, x) in outdata.iter_mut().zip(indata.iter()) {
+            *y = *x;
+        }
     }
 }
 

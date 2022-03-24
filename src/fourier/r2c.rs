@@ -1,4 +1,5 @@
 //! # Real - to - complex fourier space
+use crate::enums::BaseKind;
 use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::{s, Array2};
@@ -75,10 +76,35 @@ impl<A: FloatNum> FunspaceSize for FourierR2c<A> {
     }
 }
 
-impl<A: FloatNum> FunspaceExtended<A> for FourierR2c<A> {
+impl<A: FloatNum> FunspaceExtended for FourierR2c<A> {
+    type Real = A;
+
+    type Spectral = Complex<A>;
+
+    /// Return kind of base
+    fn base_kind(&self) -> BaseKind {
+        BaseKind::FourierR2c
+    }
+
     /// Coordinates in physical space
     fn get_nodes(&self) -> Vec<A> {
         Self::nodes(self.len_phys())
+    }
+
+    /// Mass matrix
+    fn mass(&self) -> Array2<A> {
+        Array2::<A>::eye(self.len_spec())
+    }
+
+    /// Explicit differential operator
+    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
+    fn diffmat(&self, deriv: usize) -> Array2<Self::Spectral> {
+        let mut diff_mat = Array2::<Complex<A>>::zeros((self.len_spec(), self.len_spec()));
+        let wavenum = Self::wavenumber(self.len_phys());
+        for (l, k) in diff_mat.diag_mut().iter_mut().zip(wavenum.iter()) {
+            *l = Complex::new(A::zero(), k.im).powi(deriv as i32);
+        }
+        diff_mat
     }
 
     /// Laplacian $ L $
@@ -212,16 +238,28 @@ impl<A: FloatNum> FunspaceElemental for FourierR2c<A> {
             a.re = cor * b.re;
             a.im = cor * b.im;
         }
+        // First element must be real
+        indata_mut[0].im = A::zero();
+        // If size is even, last element must be real too
+        if self.n % 2 == 0 {
+            indata_mut[self.m - 1].im = A::zero();
+        }
         self.plan_bwd.process(&mut indata_mut, outdata).unwrap();
     }
 
     /// Composite space coefficients -> Orthogonal space coefficients
-    fn to_ortho_slice<T>(&self, _indata: &[T], _outdata: &mut [T]) {
-        panic!("Function space Chebyshev is already orthogonal");
+    fn to_ortho_slice<T: Copy>(&self, indata: &[T], outdata: &mut [T]) {
+        // panic!("Function space Chebyshev is already orthogonal");
+        for (y, x) in outdata.iter_mut().zip(indata.iter()) {
+            *y = *x;
+        }
     }
 
     /// Orthogonal space coefficients -> Composite space coefficients
-    fn from_ortho_slice<T>(&self, _indata: &[T], _outdata: &mut [T]) {
-        panic!("Function space Chebyshev is already orthogonal");
+    fn from_ortho_slice<T: Copy>(&self, indata: &[T], outdata: &mut [T]) {
+        // panic!("Function space Chebyshev is already orthogonal");
+        for (y, x) in outdata.iter_mut().zip(indata.iter()) {
+            *y = *x;
+        }
     }
 }
