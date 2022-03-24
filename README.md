@@ -19,7 +19,7 @@ A transformation describes a change from physical space to functional space.
 For example, a Fourier transform transforms a function
 on a equispaced grid into coefficients of sine/cosine polynomials.
 This is analogous to other function spaces. The transformations are
-implemented by the [`Transform`] trait.
+implemented by the [`FunspaceElemental`] trait.
 
 #### Example
 Apply forward transform of 1d array in `cheb_dirichlet` space
@@ -39,7 +39,7 @@ Fourier space becomes multiplication with the wavenumber vector.
 Differentiation in Chebyshev space is done by a recurrence
 relation and almost as fast as in Fourier space.
 Each base implements a differentiation method, which is applied to
-an array of coefficents. This is defined by the [`Differentiate`] trait.
+an array of coefficents. This is defined by the [`FunspaceElemental`] trait.
 
 #### Example
 Apply differentiation
@@ -89,10 +89,10 @@ This is useful for solving partial differential equations (see *Galerkin* method
 since calculation in these bases automatically satisfy the boundary conditions.
 
 To switch from its composite form to the orthogonal form, each base implements
-a [`FromOrtho`] trait, which defines the transform `to_ortho` and `from_ortho`.
+a [`FunspaceElemental`] trait, which defines the transform `to_ortho` and `from_ortho`.
 If the base is already orthogonal, the input will be returned, otherwise it
-is transformed from the composite space to the orthogonal space (to_ortho`), or vice versa
-(from_ortho`).
+is transformed from the composite space to the orthogonal space (`to_ortho`), or vice versa
+(`from_ortho`).
 Note that the size of the composite space is usually
 less than its orthogonal counterpart. In other words, the composite space is
 usually a lower dimensional subspace of the orthogonal space. Therefore the number of coefficients
@@ -150,6 +150,25 @@ let cd_vhat_ortho = cd.to_ortho(&cd_vhat, 0);
 println!("chebyshev     : {:?}", ch_vhat);
 println!("cheb_dirichlet: {:?}", cd_vhat_ortho);
 ```
+### MPI Support (Feature)
+`Funspace` comes with limited mpi support. Currently this is restricted
+to 2D spaces. Under the hood it uses a fork of the rust mpi libary
+<https://github.com/rsmpi/rsmpi> which requires an existing MPI implementation
+and `libclang`.
 
+Activate the feature in your ``Cargo.toml`
+
+funspace = {version = "0.3", features = ["mpi"]}`
+
+#### Examples
+`examples/space_mpi.rs`
+
+Install `cargo mpirun`, for example, and run
+```rust
+cargo mpirun --np 2 --example space_mpi --features="mpi"
+```
+
+## Versions
+- v0.3.0: Major API changes + Performance improvements
 
 License: MIT

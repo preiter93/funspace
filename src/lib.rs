@@ -17,7 +17,7 @@
 //! For example, a Fourier transform transforms a function
 //! on a equispaced grid into coefficients of sine/cosine polynomials.
 //! This is analogous to other function spaces. The transformations are
-//! implemented by the [`Transform`] trait.
+//! implemented by the [`FunspaceElemental`] trait.
 //!
 //! ### Example
 //! Apply forward transform of 1d array in `cheb_dirichlet` space
@@ -37,7 +37,7 @@
 //! Differentiation in Chebyshev space is done by a recurrence
 //! relation and almost as fast as in Fourier space.
 //! Each base implements a differentiation method, which is applied to
-//! an array of coefficents. This is defined by the [`Differentiate`] trait.
+//! an array of coefficents. This is defined by the [`FunspaceElemental`] trait.
 //!
 //! ### Example
 //! Apply differentiation
@@ -87,7 +87,7 @@
 //! since calculation in these bases automatically satisfy the boundary conditions.
 //!
 //! To switch from its composite form to the orthogonal form, each base implements
-//! a [`FromOrtho`] trait, which defines the transform `to_ortho` and `from_ortho`.
+//! a [`FunspaceElemental`] trait, which defines the transform `to_ortho` and `from_ortho`.
 //! If the base is already orthogonal, the input will be returned, otherwise it
 //! is transformed from the composite space to the orthogonal space (`to_ortho`), or vice versa
 //! (`from_ortho`).
@@ -150,8 +150,8 @@
 //! ```
 //! ## MPI Support (Feature)
 //! `Funspace` comes with limited mpi support. Currently this is restricted
-//! to 2D spaces. Under the hood it uses the rust mpi libary
-//! *https://github.com/rsmpi/rsmpi* which requires an existing MPI implementation
+//! to 2D spaces. Under the hood it uses a fork of the rust mpi libary
+//! <https://github.com/rsmpi/rsmpi> which requires an existing MPI implementation
 //! and `libclang`.
 //!
 //! Activate the feature in your ``Cargo.toml`
