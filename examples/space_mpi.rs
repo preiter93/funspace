@@ -8,7 +8,7 @@ use funspace::{cheb_dirichlet, BaseSpace};
 fn main() {
     let (nx, ny) = (16, 10);
     let universe = initialize().unwrap();
-    let mut space = Space2::new(
+    let space = Space2::new(
         &cheb_dirichlet::<f64>(nx),
         &cheb_dirichlet::<f64>(ny),
         &universe,

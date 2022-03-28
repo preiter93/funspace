@@ -8,7 +8,7 @@ use funspace::{cheb_dirichlet, fourier_r2c, BaseSpace};
 fn main() {
     let (nx, ny) = (32, 10);
     let universe = initialize().unwrap();
-    let mut space = Space2::new(
+    let space = Space2::new(
         &fourier_r2c::<f64>(nx),
         &cheb_dirichlet::<f64>(ny),
         &universe,

@@ -297,7 +297,7 @@ macro_rules! impl_space2 {
             }
 
             fn forward<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 2]>>
             where
@@ -308,7 +308,7 @@ macro_rules! impl_space2 {
             }
 
             fn forward_inplace<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
@@ -320,7 +320,7 @@ macro_rules! impl_space2 {
             }
 
             fn backward<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Physical, Dim<[usize; 2]>>
             where
@@ -331,7 +331,7 @@ macro_rules! impl_space2 {
             }
 
             fn backward_inplace<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
@@ -343,7 +343,7 @@ macro_rules! impl_space2 {
             }
 
             fn forward_par<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 2]>>
             where
@@ -354,7 +354,7 @@ macro_rules! impl_space2 {
             }
 
             fn forward_inplace_par<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
@@ -366,7 +366,7 @@ macro_rules! impl_space2 {
             }
 
             fn backward_par<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Physical, Dim<[usize; 2]>>
             where
@@ -377,7 +377,7 @@ macro_rules! impl_space2 {
             }
 
             fn backward_inplace_par<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
@@ -624,7 +624,7 @@ macro_rules! impl_space2_mpi {
             }
 
             fn forward_mpi<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 2]>>
             where
@@ -641,7 +641,7 @@ macro_rules! impl_space2_mpi {
             }
 
             fn forward_inplace_mpi<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
@@ -659,7 +659,7 @@ macro_rules! impl_space2_mpi {
             }
 
             fn backward_mpi<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
             ) -> Array<Self::Physical, Dim<[usize; 2]>>
             where
@@ -676,7 +676,7 @@ macro_rules! impl_space2_mpi {
             }
 
             fn backward_inplace_mpi<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where

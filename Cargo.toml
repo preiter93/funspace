@@ -1,6 +1,6 @@
 [package]
 name = "funspace"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["preiter"]
 edition = "2018"
 description = "N-dimensional function spaces and transforms"
@@ -21,10 +21,6 @@ mpi_crate = {package="mpi-fork-fnsp", version = "0.6", optional = true}
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
-
-#[lib]
-#name = "funspace"
-#path = "src/lib.rs"
 
 [[bench]]
 name = "benchmark_chebyshev"

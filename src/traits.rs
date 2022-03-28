@@ -86,7 +86,7 @@ pub trait FunspaceElemental: FunspaceSize {
             + Sub<Self::Spectral, Output = T>;
 
     /// Physical values -> Spectral coefficients
-    fn forward<S, D>(&mut self, indata: &ArrayBase<S, D>, axis: usize) -> Array<Self::Spectral, D>
+    fn forward<S, D>(&self, indata: &ArrayBase<S, D>, axis: usize) -> Array<Self::Spectral, D>
     where
         S: Data<Elem = Self::Physical>,
         D: Dimension,
@@ -101,7 +101,7 @@ pub trait FunspaceElemental: FunspaceSize {
 
     /// Physical values -> Spectral coefficients
     fn forward_par<S, D>(
-        &mut self,
+        &self,
         indata: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Spectral, D>
@@ -205,7 +205,7 @@ pub trait FunspaceElemental: FunspaceSize {
     }
 
     /// Spectral coefficients -> Physical values
-    fn backward<S, D>(&mut self, indata: &ArrayBase<S, D>, axis: usize) -> Array<Self::Physical, D>
+    fn backward<S, D>(&self, indata: &ArrayBase<S, D>, axis: usize) -> Array<Self::Physical, D>
     where
         S: Data<Elem = Self::Spectral>,
         D: Dimension,
@@ -220,7 +220,7 @@ pub trait FunspaceElemental: FunspaceSize {
 
     /// Spectral coefficients -> Physical values
     fn backward_par<S, D>(
-        &mut self,
+        &self,
         indata: &ArrayBase<S, D>,
         axis: usize,
     ) -> Array<Self::Physical, D>

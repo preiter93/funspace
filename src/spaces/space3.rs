@@ -305,7 +305,7 @@ macro_rules! impl_space3 {
             }
 
             fn forward<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 3]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 3]>>
             where
@@ -317,7 +317,7 @@ macro_rules! impl_space3 {
             }
 
             fn forward_inplace<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 3]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
             ) where
@@ -330,7 +330,7 @@ macro_rules! impl_space3 {
             }
 
             fn backward<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 3]>>,
             ) -> Array<Self::Physical, Dim<[usize; 3]>>
             where
@@ -342,7 +342,7 @@ macro_rules! impl_space3 {
             }
 
             fn backward_inplace<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 3]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
             ) where
@@ -355,7 +355,7 @@ macro_rules! impl_space3 {
             }
 
             fn forward_par<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 3]>>,
             ) -> Array<Self::Spectral, Dim<[usize; 3]>>
             where
@@ -367,7 +367,7 @@ macro_rules! impl_space3 {
             }
 
             fn forward_inplace_par<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 3]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
             ) where
@@ -380,7 +380,7 @@ macro_rules! impl_space3 {
             }
 
             fn backward_par<S>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S, Dim<[usize; 3]>>,
             ) -> Array<Self::Physical, Dim<[usize; 3]>>
             where
@@ -392,7 +392,7 @@ macro_rules! impl_space3 {
             }
 
             fn backward_inplace_par<S1, S2>(
-                &mut self,
+                &self,
                 input: &ArrayBase<S1, Dim<[usize; 3]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 3]>>,
             ) where

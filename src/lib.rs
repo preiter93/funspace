@@ -108,8 +108,8 @@
 //! use ndarray::Array1;
 //! use num_complex::Complex;
 //! // Define base
-//! let mut ch = chebyshev(8);
-//! let mut cd = cheb_dirichlet(8);
+//! let ch = chebyshev(8);
+//! let cd = cheb_dirichlet(8);
 //! // Get coordinates in physical space
 //! let x: Vec<f64> = ch.get_nodes().clone();
 //! let v: Array1<f64> = x
@@ -202,7 +202,7 @@ pub mod spaces_mpi;
 /// use funspace::chebyshev;
 /// use funspace::traits::FunspaceElemental;
 /// use ndarray::Array1;
-/// let mut ch = chebyshev::<f64>(10);
+/// let ch = chebyshev::<f64>(10);
 /// let mut y = Array1::<f64>::linspace(0., 9., 10);
 /// let yhat: Array1<f64> = ch.forward(&mut y, 0);
 /// ```
@@ -222,7 +222,7 @@ pub fn chebyshev<A: FloatNum>(n: usize) -> BaseR2r<A> {
 /// use funspace::cheb_dirichlet;
 /// use funspace::traits::FunspaceElemental;
 /// use ndarray::Array1;
-/// let mut cd = cheb_dirichlet::<f64>(10);
+/// let cd = cheb_dirichlet::<f64>(10);
 /// let mut y = Array1::<f64>::linspace(0., 9., 10);
 /// let yhat: Array1<f64> = cd.forward(&mut y, 0);
 /// ```
@@ -242,7 +242,7 @@ pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> BaseR2r<A> {
 /// use funspace::cheb_neumann;
 /// use funspace::traits::FunspaceElemental;
 /// use ndarray::Array1;
-/// let mut ch = cheb_neumann::<f64>(10);
+/// let ch = cheb_neumann::<f64>(10);
 /// let mut y = Array1::<f64>::linspace(0., 9., 10);
 /// let yhat: Array1<f64> = ch.forward(&mut y, 0);
 /// ```
@@ -270,7 +270,7 @@ pub fn cheb_dirichlet_neumann<A: FloatNum>(n: usize) -> BaseR2r<A> {
 /// use funspace::fourier_c2c;
 /// use funspace::traits::FunspaceElemental;
 /// use num_complex::Complex;
-/// let mut fo = fourier_c2c::<f64>(10);
+/// let fo = fourier_c2c::<f64>(10);
 /// let real = ndarray::Array::linspace(0., 9., 10);
 /// let mut y = real.mapv(|x| Complex::new(x,x));
 /// let yhat = fo.forward(&mut y, 0);
@@ -294,7 +294,7 @@ pub fn fourier_c2c<A: FloatNum>(n: usize) -> BaseC2c<A> {
 /// use funspace::traits::FunspaceElemental;
 /// use num_complex::Complex;
 /// use ndarray::Array1;
-/// let mut fo = fourier_r2c::<f64>(10);
+/// let fo = fourier_r2c::<f64>(10);
 /// let mut y = ndarray::Array::linspace(0., 9., 10);
 /// let yhat: Array1<Complex<f64>> = fo.forward(&mut y, 0);
 /// ```

@@ -110,8 +110,8 @@ use ndarray::prelude::*;
 use ndarray::Array1;
 use num_complex::Complex;
 // Define base
-let mut ch = chebyshev(8);
-let mut cd = cheb_dirichlet(8);
+let ch = chebyshev(8);
+let cd = cheb_dirichlet(8);
 // Get coordinates in physical space
 let x: Vec<f64> = ch.get_nodes().clone();
 let v: Array1<f64> = x
