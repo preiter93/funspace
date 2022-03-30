@@ -156,7 +156,7 @@
 //!
 //! Activate the feature in your ``Cargo.toml``
 //!
-//! funspace = {version = "0.3", features = ["mpi"]}`
+//! funspace = {version = "0.3", features = ["mpi"]}
 //!
 //! ### Examples
 //! `examples/space_mpi.rs`

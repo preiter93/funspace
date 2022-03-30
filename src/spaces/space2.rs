@@ -128,93 +128,173 @@ macro_rules! impl_space2 {
                 }
             }
 
-            fn to_ortho<S>(
+            fn to_ortho<T, S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            ) -> Array<T, Dim<[usize; 2]>>
             where
-                S: Data<Elem = Self::Spectral>,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>,
+                S: Data<Elem = T>,
             {
                 let buffer = self.base0.to_ortho(input, 0);
                 self.base1.to_ortho(&buffer, 1)
             }
 
-            fn to_ortho_inplace<S1, S2>(
+            fn to_ortho_inplace<T, S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
-                S1: Data<Elem = Self::Spectral>,
-                S2: Data<Elem = Self::Spectral> + DataMut,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>,
+                S1: Data<Elem = T>,
+                S2: Data<Elem = T> + DataMut,
             {
                 let buffer = self.base0.to_ortho(input, 0);
                 self.base1.to_ortho_inplace(&buffer, output, 1);
             }
 
-            fn from_ortho<S>(
+            fn from_ortho<T, S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            ) -> Array<T, Dim<[usize; 2]>>
             where
-                S: Data<Elem = Self::Spectral>,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>,
+                S: Data<Elem = T>,
             {
                 let buffer = self.base0.from_ortho(input, 0);
                 self.base1.from_ortho(&buffer, 1)
             }
 
-            fn from_ortho_inplace<S1, S2>(
+            fn from_ortho_inplace<T, S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
-                S1: Data<Elem = Self::Spectral>,
-                S2: Data<Elem = Self::Spectral> + DataMut,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>,
+                S1: Data<Elem = T>,
+                S2: Data<Elem = T> + DataMut,
             {
                 let buffer = self.base0.from_ortho(input, 0);
                 self.base1.from_ortho_inplace(&buffer, output, 1);
             }
 
-            fn to_ortho_par<S>(
+            fn to_ortho_par<T, S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            ) -> Array<T, Dim<[usize; 2]>>
             where
-                S: Data<Elem = Self::Spectral>,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>
+                    + Send
+                    + Sync,
+                S: Data<Elem = T>,
             {
                 let buffer = self.base0.to_ortho_par(input, 0);
                 self.base1.to_ortho_par(&buffer, 1)
             }
 
-            fn to_ortho_inplace_par<S1, S2>(
+            fn to_ortho_inplace_par<T, S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
-                S1: Data<Elem = Self::Spectral>,
-                S2: Data<Elem = Self::Spectral> + DataMut,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>
+                    + Send
+                    + Sync,
+                S1: Data<Elem = T>,
+                S2: Data<Elem = T> + DataMut,
             {
                 let buffer = self.base0.to_ortho_par(input, 0);
                 self.base1.to_ortho_inplace_par(&buffer, output, 1);
             }
 
-            fn from_ortho_par<S>(
+            fn from_ortho_par<T, S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            ) -> Array<T, Dim<[usize; 2]>>
             where
-                S: Data<Elem = Self::Spectral>,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>
+                    + Send
+                    + Sync,
+                S: Data<Elem = T>,
             {
                 let buffer = self.base0.from_ortho_par(input, 0);
                 self.base1.from_ortho_par(&buffer, 1)
             }
 
-            fn from_ortho_inplace_par<S1, S2>(
+            fn from_ortho_inplace_par<T, S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
             ) where
-                S1: Data<Elem = Self::Spectral>,
-                S2: Data<Elem = Self::Spectral> + DataMut,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>
+                    + Send
+                    + Sync,
+                S1: Data<Elem = T>,
+                S2: Data<Elem = T> + DataMut,
             {
                 let buffer = self.base0.from_ortho_par(input, 0);
                 self.base1.from_ortho_inplace_par(&buffer, output, 1);
