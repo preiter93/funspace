@@ -154,7 +154,7 @@
 //! <https://github.com/rsmpi/rsmpi> which requires an existing MPI implementation
 //! and `libclang`.
 //!
-//! Activate the feature in your ``Cargo.toml`
+//! Activate the feature in your ``Cargo.toml``
 //!
 //! funspace = {version = "0.3", features = ["mpi"]}`
 //!

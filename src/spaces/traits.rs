@@ -1,7 +1,8 @@
 //! Common traits for space, independent of dimensionality
 use crate::enums::BaseKind;
-use crate::FloatNum;
+use crate::types::{FloatNum, ScalarNum};
 use ndarray::{prelude::*, Data, DataMut};
+use std::ops::{Add, Div, Mul, Sub};
 
 pub trait BaseSpace<A, const N: usize>: Clone
 where
@@ -177,14 +178,24 @@ where
     /// * `input` - *ndarray* with num type of spectral space
     /// * `deriv` - [usize; N], derivative along each axis
     /// * `scale` - [float; N], scaling factor along each axis (default [1.;n])
-    fn gradient<S>(
+    fn gradient<T, S>(
         &self,
         input: &ArrayBase<S, Dim<[usize; N]>>,
         deriv: [usize; N],
         scale: Option<[A; N]>,
-    ) -> Array<Self::Spectral, Dim<[usize; N]>>
+    ) -> Array<T, Dim<[usize; N]>>
     where
-        S: Data<Elem = Self::Spectral>;
+        T: ScalarNum
+            + Add<A, Output = T>
+            + Mul<A, Output = T>
+            + Div<A, Output = T>
+            + Sub<A, Output = T>
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>
+            + From<A>,
+        S: Data<Elem = T>;
 
     /// Take gradient. Optional: Rescale result by a constant. (Parallel)
     ///
@@ -193,14 +204,26 @@ where
     /// * `input` - *ndarray* with num type of spectral space
     /// * `deriv` - [usize; N], derivative along each axis
     /// * `scale` - [float; N], scaling factor along each axis (default [1.;n])
-    fn gradient_par<S>(
+    fn gradient_par<T, S>(
         &self,
         input: &ArrayBase<S, Dim<[usize; N]>>,
         deriv: [usize; N],
         scale: Option<[A; N]>,
-    ) -> Array<Self::Spectral, Dim<[usize; N]>>
+    ) -> Array<T, Dim<[usize; N]>>
     where
-        S: Data<Elem = Self::Spectral>;
+        T: ScalarNum
+            + Add<A, Output = T>
+            + Mul<A, Output = T>
+            + Div<A, Output = T>
+            + Sub<A, Output = T>
+            + Add<Self::Spectral, Output = T>
+            + Mul<Self::Spectral, Output = T>
+            + Div<Self::Spectral, Output = T>
+            + Sub<Self::Spectral, Output = T>
+            + From<A>
+            + Send
+            + Sync,
+        S: Data<Elem = T>;
 
     /// Transform physical -> spectral space
     ///

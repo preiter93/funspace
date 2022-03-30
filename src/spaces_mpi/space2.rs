@@ -12,6 +12,7 @@ use crate::BaseSpace;
 use crate::{BaseC2c, BaseR2c, BaseR2r, FloatNum, ScalarNum};
 use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dim};
 use num_complex::Complex;
+use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Clone)]
 pub struct Space2<'a, B0, B1> {
@@ -254,20 +255,29 @@ macro_rules! impl_space2 {
                 self.base1.from_ortho_inplace_par(&buffer, output, 1);
             }
 
-            fn gradient<S>(
+            fn gradient<T, S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
                 deriv: [usize; 2],
                 scale: Option<[A; 2]>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            ) -> Array<T, Dim<[usize; 2]>>
             where
-                S: Data<Elem = Self::Spectral>,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>
+                    + From<A>,
+                S: Data<Elem = T>,
             {
                 let buffer = self.base0.differentiate(input, deriv[0], 0);
                 let mut output = self.base1.differentiate(&buffer, deriv[1], 1);
                 if let Some(s) = scale {
-                    let sc: Self::Spectral =
-                        (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
+                    let sc: T = (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
                     for x in output.iter_mut() {
                         *x /= sc;
                     }
@@ -275,20 +285,31 @@ macro_rules! impl_space2 {
                 output
             }
 
-            fn gradient_par<S>(
+            fn gradient_par<T, S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
                 deriv: [usize; 2],
                 scale: Option<[A; 2]>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            ) -> Array<T, Dim<[usize; 2]>>
             where
-                S: Data<Elem = Self::Spectral>,
+                T: ScalarNum
+                    + Add<A, Output = T>
+                    + Mul<A, Output = T>
+                    + Div<A, Output = T>
+                    + Sub<A, Output = T>
+                    + Add<Self::Spectral, Output = T>
+                    + Mul<Self::Spectral, Output = T>
+                    + Div<Self::Spectral, Output = T>
+                    + Sub<Self::Spectral, Output = T>
+                    + From<A>
+                    + Send
+                    + Sync,
+                S: Data<Elem = T>,
             {
                 let buffer = self.base0.differentiate_par(input, deriv[0], 0);
                 let mut output = self.base1.differentiate_par(&buffer, deriv[1], 1);
                 if let Some(s) = scale {
-                    let sc: Self::Spectral =
-                        (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
+                    let sc: T = (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
                     for x in output.iter_mut() {
                         *x /= sc;
                     }
