@@ -1,8 +1,7 @@
 //! Common traits for space, independent of dimensionality
 use crate::enums::BaseKind;
-use crate::types::{FloatNum, ScalarNum};
+use crate::FloatNum;
 use ndarray::{prelude::*, Data, DataMut};
-use std::ops::{Add, Div, Mul, Sub};
 
 pub trait BaseSpace<A, const N: usize>: Clone
 where
@@ -72,18 +71,12 @@ where
     /// # Arguments
     ///
     /// * `input` - *ndarray* with num type of spectral space
-    fn to_ortho<T, S>(&self, input: &ArrayBase<S, Dim<[usize; N]>>) -> Array<T, Dim<[usize; N]>>
+    fn to_ortho<S>(
+        &self,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
+    ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>,
-        S: Data<Elem = T>;
+        S: Data<Elem = Self::Spectral>;
 
     /// Transformation from composite and to orthonormal space (inplace).
     ///
@@ -91,40 +84,25 @@ where
     ///
     /// * `input` - *ndarray* with num type of spectral space
     /// * `output` - *ndarray* with num type of spectral space
-    fn to_ortho_inplace<T, S1, S2>(
+    fn to_ortho_inplace<S1, S2>(
         &self,
         input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>,
-        S1: Data<Elem = T>,
-        S2: Data<Elem = T> + DataMut;
+        S1: Data<Elem = Self::Spectral>,
+        S2: Data<Elem = Self::Spectral> + DataMut;
 
     /// Transformation from orthonormal and to composite space.
     ///
     /// # Arguments
     ///
     /// * `input` - *ndarray* with num type of spectral space
-    fn from_ortho<T, S>(&self, input: &ArrayBase<S, Dim<[usize; N]>>) -> Array<T, Dim<[usize; N]>>
+    fn from_ortho<S>(
+        &self,
+        input: &ArrayBase<S, Dim<[usize; N]>>,
+    ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>,
-        S: Data<Elem = T>;
+        S: Data<Elem = Self::Spectral>;
 
     /// Transformation from orthonormal and to composite space (inplace).
     ///
@@ -132,45 +110,25 @@ where
     ///
     /// * `input` - *ndarray* with num type of spectral space
     /// * `output` - *ndarray* with num type of spectral space
-    fn from_ortho_inplace<T, S1, S2>(
+    fn from_ortho_inplace<S1, S2>(
         &self,
         input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>,
-        S1: Data<Elem = T>,
-        S2: Data<Elem = T> + DataMut;
+        S1: Data<Elem = Self::Spectral>,
+        S2: Data<Elem = Self::Spectral> + DataMut;
 
     /// Transformation from composite and to orthonormal space.
     ///
     /// # Arguments
     ///
     /// * `input` - *ndarray* with num type of spectral space
-    fn to_ortho_par<T, S>(
+    fn to_ortho_par<S>(
         &self,
         input: &ArrayBase<S, Dim<[usize; N]>>,
-    ) -> Array<T, Dim<[usize; N]>>
+    ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>
-            + Send
-            + Sync,
-        S: Data<Elem = T>;
+        S: Data<Elem = Self::Spectral>;
 
     /// Transformation from composite and to orthonormal space (inplace).
     ///
@@ -178,47 +136,25 @@ where
     ///
     /// * `input` - *ndarray* with num type of spectral space
     /// * `output` - *ndarray* with num type of spectral space
-    fn to_ortho_inplace_par<T, S1, S2>(
+    fn to_ortho_inplace_par<S1, S2>(
         &self,
         input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>
-            + Send
-            + Sync,
-        S1: Data<Elem = T>,
-        S2: Data<Elem = T> + DataMut;
+        S1: Data<Elem = Self::Spectral>,
+        S2: Data<Elem = Self::Spectral> + DataMut;
 
     /// Transformation from orthonormal and to composite space.
     ///
     /// # Arguments
     ///
     /// * `input` - *ndarray* with num type of spectral space
-    fn from_ortho_par<T, S>(
+    fn from_ortho_par<S>(
         &self,
         input: &ArrayBase<S, Dim<[usize; N]>>,
-    ) -> Array<T, Dim<[usize; N]>>
+    ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>
-            + Send
-            + Sync,
-        S: Data<Elem = T>;
+        S: Data<Elem = Self::Spectral>;
 
     /// Transformation from orthonormal and to composite space (inplace).
     ///
@@ -226,24 +162,13 @@ where
     ///
     /// * `input` - *ndarray* with num type of spectral space
     /// * `output` - *ndarray* with num type of spectral space
-    fn from_ortho_inplace_par<T, S1, S2>(
+    fn from_ortho_inplace_par<S1, S2>(
         &self,
         input: &ArrayBase<S1, Dim<[usize; N]>>,
         output: &mut ArrayBase<S2, Dim<[usize; N]>>,
     ) where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>
-            + Send
-            + Sync,
-        S1: Data<Elem = T>,
-        S2: Data<Elem = T> + DataMut;
+        S1: Data<Elem = Self::Spectral>,
+        S2: Data<Elem = Self::Spectral> + DataMut;
 
     /// Take gradient. Optional: Rescale result by a constant.
     ///
@@ -252,24 +177,14 @@ where
     /// * `input` - *ndarray* with num type of spectral space
     /// * `deriv` - [usize; N], derivative along each axis
     /// * `scale` - [float; N], scaling factor along each axis (default [1.;n])
-    fn gradient<T, S>(
+    fn gradient<S>(
         &self,
         input: &ArrayBase<S, Dim<[usize; N]>>,
         deriv: [usize; N],
         scale: Option<[A; N]>,
-    ) -> Array<T, Dim<[usize; N]>>
+    ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>
-            + From<A>,
-        S: Data<Elem = T>;
+        S: Data<Elem = Self::Spectral>;
 
     /// Take gradient. Optional: Rescale result by a constant. (Parallel)
     ///
@@ -278,26 +193,14 @@ where
     /// * `input` - *ndarray* with num type of spectral space
     /// * `deriv` - [usize; N], derivative along each axis
     /// * `scale` - [float; N], scaling factor along each axis (default [1.;n])
-    fn gradient_par<T, S>(
+    fn gradient_par<S>(
         &self,
         input: &ArrayBase<S, Dim<[usize; N]>>,
         deriv: [usize; N],
         scale: Option<[A; N]>,
-    ) -> Array<T, Dim<[usize; N]>>
+    ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>
-            + From<A>
-            + Send
-            + Sync,
-        S: Data<Elem = T>;
+        S: Data<Elem = Self::Spectral>;
 
     /// Transform physical -> spectral space
     ///

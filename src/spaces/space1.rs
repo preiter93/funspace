@@ -22,7 +22,6 @@ use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
 use crate::{BaseC2c, BaseR2c, BaseR2r, FloatNum, ScalarNum};
 use ndarray::{prelude::*, Data, DataMut};
 use num_complex::Complex;
-use std::ops::{Add, Div, Mul, Sub};
 
 /// Create one-dimensional space
 #[derive(Clone)]
@@ -97,192 +96,102 @@ macro_rules! impl_space1 {
                 self.base0.base_kind()
             }
 
-            fn to_ortho<T, S>(
+            fn to_ortho<S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 1]>>,
-            ) -> Array<T, Dim<[usize; 1]>>
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
             where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>,
-                S: Data<Elem = T>,
+                S: Data<Elem = Self::Spectral>,
             {
                 self.base0.to_ortho(input, 0)
             }
 
-            fn to_ortho_inplace<T, S1, S2>(
+            fn to_ortho_inplace<S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 1]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
             ) where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>,
-                S1: Data<Elem = T>,
-                S2: Data<Elem = T> + DataMut,
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 self.base0.to_ortho_inplace(input, output, 0)
             }
 
-            fn from_ortho<T, S>(
+            fn from_ortho<S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 1]>>,
-            ) -> Array<T, Dim<[usize; 1]>>
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
             where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>,
-                S: Data<Elem = T>,
+                S: Data<Elem = Self::Spectral>,
             {
                 self.base0.from_ortho(input, 0)
             }
 
-            fn from_ortho_inplace<T, S1, S2>(
+            fn from_ortho_inplace<S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 1]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
             ) where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>,
-                S1: Data<Elem = T>,
-                S2: Data<Elem = T> + DataMut,
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 self.base0.from_ortho_inplace(input, output, 0)
             }
 
-            fn to_ortho_par<T, S>(
+            fn to_ortho_par<S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 1]>>,
-            ) -> Array<T, Dim<[usize; 1]>>
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
             where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>
-                    + Send
-                    + Sync,
-                S: Data<Elem = T>,
+                S: Data<Elem = Self::Spectral>,
             {
                 self.base0.to_ortho_par(input, 0)
             }
 
-            fn to_ortho_inplace_par<T, S1, S2>(
+            fn to_ortho_inplace_par<S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 1]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
             ) where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>
-                    + Send
-                    + Sync,
-                S1: Data<Elem = T>,
-                S2: Data<Elem = T> + DataMut,
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 self.base0.to_ortho_inplace_par(input, output, 0)
             }
 
-            fn from_ortho_par<T, S>(
+            fn from_ortho_par<S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 1]>>,
-            ) -> Array<T, Dim<[usize; 1]>>
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
             where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>
-                    + Send
-                    + Sync,
-                S: Data<Elem = T>,
+                S: Data<Elem = Self::Spectral>,
             {
                 self.base0.from_ortho_par(input, 0)
             }
 
-            fn from_ortho_inplace_par<T, S1, S2>(
+            fn from_ortho_inplace_par<S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 1]>>,
                 output: &mut ArrayBase<S2, Dim<[usize; 1]>>,
             ) where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>
-                    + Send
-                    + Sync,
-                S1: Data<Elem = T>,
-                S2: Data<Elem = T> + DataMut,
+                S1: Data<Elem = Self::Spectral>,
+                S2: Data<Elem = Self::Spectral> + DataMut,
             {
                 self.base0.from_ortho_inplace_par(input, output, 0)
             }
 
-            fn gradient<T, S>(
+            fn gradient<S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 1]>>,
                 deriv: [usize; 1],
                 scale: Option<[A; 1]>,
-            ) -> Array<T, Dim<[usize; 1]>>
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
             where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>
-                    + From<A>,
-                S: Data<Elem = T>,
+                S: Data<Elem = Self::Spectral>,
             {
                 let mut output = self.base0.differentiate(input, deriv[0], 0);
                 if let Some(s) = scale {
-                    let sc: T = s[0].powi(deriv[0] as i32).into();
+                    let sc: Self::Spectral = s[0].powi(deriv[0] as i32).into();
                     for x in output.iter_mut() {
                         *x /= sc;
                     }
@@ -290,30 +199,18 @@ macro_rules! impl_space1 {
                 output
             }
 
-            fn gradient_par<T, S>(
+            fn gradient_par<S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 1]>>,
                 deriv: [usize; 1],
                 scale: Option<[A; 1]>,
-            ) -> Array<T, Dim<[usize; 1]>>
+            ) -> Array<Self::Spectral, Dim<[usize; 1]>>
             where
-                T: ScalarNum
-                    + Add<A, Output = T>
-                    + Mul<A, Output = T>
-                    + Div<A, Output = T>
-                    + Sub<A, Output = T>
-                    + Add<Self::Spectral, Output = T>
-                    + Mul<Self::Spectral, Output = T>
-                    + Div<Self::Spectral, Output = T>
-                    + Sub<Self::Spectral, Output = T>
-                    + From<A>
-                    + Send
-                    + Sync,
-                S: Data<Elem = T>,
+                S: Data<Elem = Self::Spectral>,
             {
                 let mut output = self.base0.differentiate_par(input, deriv[0], 0);
                 if let Some(s) = scale {
-                    let sc: T = s[0].powi(deriv[0] as i32).into();
+                    let sc: Self::Spectral = s[0].powi(deriv[0] as i32).into();
                     for x in output.iter_mut() {
                         *x /= sc;
                     }
