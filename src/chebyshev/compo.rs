@@ -1,7 +1,7 @@
 //! # Composite chebyshev spaces
 use super::ortho::Chebyshev;
 use super::stencils::StencilOperations;
-use super::stencils::{ChebyshevStencils, Dirichlet, DirichletNeumann, Neumann};
+use super::stencils::{BiHarmonic, ChebyshevStencils, Dirichlet, DirichletNeumann, Neumann};
 use crate::enums::BaseKind;
 use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
 use crate::types::{FloatNum, ScalarNum};
@@ -54,6 +54,7 @@ impl<A: FloatNum> FunspaceExtended for ChebyshevComposite<A> {
             ChebyshevStencils::Dirichlet(_) => BaseKind::ChebDirichlet,
             ChebyshevStencils::Neumann(_) => BaseKind::ChebNeumann,
             ChebyshevStencils::DirichletNeumann(_) => BaseKind::ChebDirichletNeumann,
+            ChebyshevStencils::BiHarmonic(_) => BaseKind::ChebBiHarmonic,
         }
     }
     /// Coordinates in physical space
@@ -94,6 +95,10 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     ///  \phi_k = T_k - T_{k+2}
     /// ```
     ///
+    ///```text
+    /// u(-1)=0 and u(1)=0
+    ///```
+    ///
     /// Stencil has entries on diagonals 0, -2
     #[must_use]
     pub fn dirichlet(n: usize) -> Self {
@@ -107,10 +112,14 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     }
 
     /// Return function space of chebyshev space
-    /// with *dirichlet* boundary conditions
+    /// with *neumann* boundary conditions
     /// ```text
     ///  \phi_k = T_k - k^{2} \/ (k+2)^2 T_{k+2}
     /// ```
+    ///
+    /// ```text
+    /// u'(-1)=0 and u'(1)=0
+    ///```
     ///
     /// Stencil has entries on diagonals 0, -2
     #[must_use]
@@ -128,6 +137,10 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     /// with *dirichlet* boundary conditions at *x=-1*
     /// and *neumann* boundary conditions at *x=1*
     ///
+    /// ```text
+    /// u(-1)=0 and u'(1)=0
+    ///```
+    ///
     /// Stencil has entries on diagonals 0, -1, -2
     #[must_use]
     pub fn dirichlet_neumann(n: usize) -> Self {
@@ -136,6 +149,25 @@ impl<A: FloatNum> ChebyshevComposite<A> {
             n,
             m: DirichletNeumann::<A>::get_m(n),
             stencil: ChebyshevStencils::DirichletNeumann(stencil),
+            ortho: Chebyshev::<A>::new(n),
+        }
+    }
+
+    /// Return function space of chebyshev space
+    /// with biharmonic boundary conditions, i.e.
+    ///
+    /// ```text
+    /// u(-1)=0, u(1)=0, u'(-1)=0 and u'(1)=0
+    ///```
+    ///
+    /// Stencil has entries on diagonals 0, -2, -4
+    #[must_use]
+    pub fn biharmonic(n: usize) -> Self {
+        let stencil = BiHarmonic::new(n);
+        Self {
+            n,
+            m: BiHarmonic::<A>::get_m(n),
+            stencil: ChebyshevStencils::BiHarmonic(stencil),
             ortho: Chebyshev::<A>::new(n),
         }
     }
@@ -242,6 +274,22 @@ mod test {
                 2.846040171074075,
                 4.282240563110729,
                 4.570948448263369,
+            ],
+        );
+    }
+
+    #[test]
+    fn test_cheb_biharmonic_transform() {
+        let n = 14;
+        let ch = ChebyshevComposite::<f64>::biharmonic(n);
+        let mut indata: Vec<f64> = (0..n).map(|x| x as f64).collect();
+        let mut outdata: Vec<f64> = vec![0.; n - 4];
+        ch.forward_slice(&indata, &mut outdata);
+        approx_eq(
+            &outdata,
+            &vec![
+                4.56547619, 3.33647046, 4.23015873, 3.78717098, 3.62142857, 3.31016028, 2.43197279,
+                2.21938133, 1.04034392, 0.9391508,
             ],
         );
     }

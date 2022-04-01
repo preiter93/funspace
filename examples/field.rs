@@ -115,7 +115,10 @@ where
                 let mass_sliced = mass.slice(s![.., 2..]);
                 (pinv.dot(&mass_sliced), peye.dot(&mass_sliced), Some(pinv))
             }
-            BaseKind::ChebDirichlet | BaseKind::ChebNeumann | BaseKind::ChebDirichletNeumann => {
+            BaseKind::ChebDirichlet
+            | BaseKind::ChebNeumann
+            | BaseKind::ChebDirichletNeumann
+            | BaseKind::ChebBiHarmonic => {
                 let peye = self.space.laplace_inv_eye(axis);
                 let pinv = peye.dot(&self.space.laplace_inv(axis));
                 (pinv.dot(&mass), peye.dot(&mass), Some(pinv))
@@ -141,7 +144,8 @@ where
             BaseKind::Chebyshev
             | BaseKind::ChebDirichlet
             | BaseKind::ChebNeumann
-            | BaseKind::ChebDirichletNeumann => false,
+            | BaseKind::ChebDirichletNeumann
+            | BaseKind::ChebBiHarmonic => false,
             BaseKind::FourierR2c | BaseKind::FourierC2c => true,
             _ => panic!("No ingredients found for Base kind: {}!", kind),
         };

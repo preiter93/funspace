@@ -11,6 +11,7 @@ Collection of function spaces.
 - `ChebDirichlet` (Composite), see [`cheb_dirichlet()`]
 - `ChebNeumann` (Composite), see [`cheb_neumann()`]
 - `ChebDirichletNeumann` (Composite), see [`cheb_dirichlet_neumann()`]
+- `ChebBiHarmonic` (Composite), see [`cheb_biharmonic()`]
 - `FourierC2c` (Orthogonal), see [`fourier_c2c()`]
 - `FourierR2c` (Orthogonal), see [`fourier_r2c()`]
 
@@ -158,7 +159,7 @@ and `libclang`.
 
 Activate the feature in your ``Cargo.toml``
 
-funspace = {version = "0.3", features = ["mpi"]}`
+funspace = {version = "0.3", features = ["mpi"]}
 
 #### Examples
 `examples/space_mpi.rs`

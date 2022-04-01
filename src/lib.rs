@@ -9,6 +9,7 @@
 //! - `ChebDirichlet` (Composite), see [`cheb_dirichlet()`]
 //! - `ChebNeumann` (Composite), see [`cheb_neumann()`]
 //! - `ChebDirichletNeumann` (Composite), see [`cheb_dirichlet_neumann()`]
+//! - `ChebBiHarmonic` (Composite), see [`cheb_biharmonic()`]
 //! - `FourierC2c` (Orthogonal), see [`fourier_c2c()`]
 //! - `FourierR2c` (Orthogonal), see [`fourier_r2c()`]
 //!
@@ -168,6 +169,7 @@
 //!
 //! # Versions
 //! - v0.3.0: Major API changes + Performance improvements
+#![warn(clippy::pedantic)]
 #[macro_use]
 extern crate enum_dispatch;
 mod internal_macros;
@@ -213,6 +215,11 @@ pub fn chebyshev<A: FloatNum>(n: usize) -> BaseR2r<A> {
 
 /// Function space with Dirichlet boundary conditions
 ///
+///```text
+/// u(-1)=0 and u(1)=0
+///```
+///
+///
 /// ```text
 ///  \phi_k = T_k - T_{k+2}
 /// ```
@@ -232,6 +239,11 @@ pub fn cheb_dirichlet<A: FloatNum>(n: usize) -> BaseR2r<A> {
 }
 
 /// Function space with Neumann boundary conditions
+///
+///```text
+/// u'(-1)=0 and u'(1)=0
+///```
+///
 ///
 /// ```text
 ///  \phi_k = T_k - k^{2} \/ (k+2)^2 T_{k+2}
@@ -253,9 +265,23 @@ pub fn cheb_neumann<A: FloatNum>(n: usize) -> BaseR2r<A> {
 
 /// Function space with Dirichlet boundary conditions at x=-1
 /// and Neumann boundary conditions at x=1
+///
+///```text
+/// u(-1)=0 and u'(1)=0
+///```
 #[must_use]
 pub fn cheb_dirichlet_neumann<A: FloatNum>(n: usize) -> BaseR2r<A> {
     BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::dirichlet_neumann(n))
+}
+
+/// Function space with biharmonic boundary conditions, i.e
+///
+/// ```text
+/// u(-1)=0, u(1)=0, u'(-1)=0 and u'(1)=0
+///```
+#[must_use]
+pub fn cheb_biharmonic<A: FloatNum>(n: usize) -> BaseR2r<A> {
+    BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::biharmonic(n))
 }
 
 /// Function space for Fourier Polynomials
