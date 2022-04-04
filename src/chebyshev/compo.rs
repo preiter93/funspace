@@ -19,8 +19,6 @@ pub struct ChebyshevComposite<A: FloatNum> {
     pub ortho: Chebyshev<A>,
     /// Transform stencil
     pub stencil: ChebyshevStencils<A>,
-    // /// Kind of base
-    // pub base_kind: BaseKind,
 }
 
 impl<A: FloatNum> FunspaceSize for ChebyshevComposite<A> {
@@ -65,6 +63,11 @@ impl<A: FloatNum> FunspaceExtended for ChebyshevComposite<A> {
     /// Mass matrix
     fn mass(&self) -> Array2<A> {
         self.stencil.to_array()
+    }
+
+    /// Inverse of mass matrix
+    fn mass_inv(&self) -> Array2<A> {
+        self.stencil.pinv()
     }
 
     /// Explicit differential operator
@@ -282,7 +285,7 @@ mod test {
     fn test_cheb_biharmonic_transform() {
         let n = 14;
         let ch = ChebyshevComposite::<f64>::biharmonic(n);
-        let mut indata: Vec<f64> = (0..n).map(|x| x as f64).collect();
+        let indata: Vec<f64> = (0..n).map(|x| x as f64).collect();
         let mut outdata: Vec<f64> = vec![0.; n - 4];
         ch.forward_slice(&indata, &mut outdata);
         approx_eq(

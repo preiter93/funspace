@@ -55,6 +55,13 @@ macro_rules! impl_funspace_elemental_for_base {
                 }
             }
 
+            /// Inverse of mass matrix
+            fn mass_inv(&self) -> Array2<A> {
+                match self {
+                    $(Self::$var(ref b) => b.mass_inv(),)*
+                }
+            }
+
             /// Explicit differential operator
             fn diffmat(&self, deriv: usize) -> Array2<Self::Spectral> {
                 match self {

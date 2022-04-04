@@ -208,6 +208,11 @@ impl<A: FloatNum> FunspaceExtended for Chebyshev<A> {
         Array2::<A>::eye(self.len_spec())
     }
 
+    /// Inverse of mass matrix
+    fn mass_inv(&self) -> Array2<A> {
+        Array2::<A>::eye(self.len_spec())
+    }
+
     /// Explicit differential operator
     fn diffmat(&self, deriv: usize) -> Array2<A> {
         Self::_dmat(self.n, deriv)

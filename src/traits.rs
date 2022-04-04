@@ -26,8 +26,11 @@ pub trait FunspaceExtended {
     /// Coordinates in physical space
     fn get_nodes(&self) -> Vec<Self::Real>;
 
-    /// Mass matrix
+    /// Mass matrix (=Stencil for non-orthogonal matrices)
     fn mass(&self) -> Array2<Self::Real>;
+
+    /// Inverse of mass matrix, might be unimplemented
+    fn mass_inv(&self) -> Array2<Self::Real>;
 
     /// Explicit differential operator $ D $
     fn diffmat(&self, deriv: usize) -> Array2<Self::Spectral>;

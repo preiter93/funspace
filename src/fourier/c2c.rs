@@ -87,6 +87,11 @@ impl<A: FloatNum> FunspaceExtended for FourierC2c<A> {
         Array2::<A>::eye(self.len_spec())
     }
 
+    /// Inverse of mass matrix
+    fn mass_inv(&self) -> Array2<A> {
+        Array2::<A>::eye(self.len_spec())
+    }
+
     /// Explicit differential operator
     #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
     fn diffmat(&self, deriv: usize) -> Array2<Self::Spectral> {
