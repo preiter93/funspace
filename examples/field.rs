@@ -30,6 +30,8 @@ impl<A, T1, T2, S, const N: usize> FieldBase<A, T1, T2, S, N>
 where
     A: FloatNum + ScalarNum,
     Complex<A>: ScalarNum,
+    T1: ScalarNum,
+    T2: ScalarNum,
     S: BaseSpace<A, N, Physical = T1, Spectral = T2>,
 {
     pub fn new(space: &S) -> Self {
@@ -104,26 +106,26 @@ where
     #[allow(unreachable_patterns)]
     pub fn ingredients_for_hholtz(&self, axis: usize) -> (Array2<A>, Array2<A>, Option<Array2<A>>) {
         let kind = self.space.base_kind(axis);
-        let mass = self.space.mass(axis);
+        let sten = self.space.stencil(axis);
         let lap = self.space.laplace(axis);
 
         // Matrices and optional preconditioner
         match kind {
             BaseKind::Chebyshev => {
-                let peye = self.space.laplace_inv_eye(axis);
-                let pinv = peye.dot(&self.space.laplace_inv(axis));
-                let mass_sliced = mass.slice(s![.., 2..]);
-                (pinv.dot(&mass_sliced), peye.dot(&mass_sliced), Some(pinv))
+                let (mut pinv, peye) = self.space.laplace_pinv(axis);
+                pinv.assign(&peye.dot(&pinv));
+                let sten_sliced = sten.slice(s![.., 2..]);
+                (pinv.dot(&sten_sliced), peye.dot(&sten_sliced), Some(pinv))
             }
             BaseKind::ChebDirichlet
             | BaseKind::ChebNeumann
             | BaseKind::ChebDirichletNeumann
             | BaseKind::ChebBiHarmonic => {
-                let peye = self.space.laplace_inv_eye(axis);
-                let pinv = peye.dot(&self.space.laplace_inv(axis));
-                (pinv.dot(&mass), peye.dot(&mass), Some(pinv))
+                let (mut pinv, peye) = self.space.laplace_pinv(axis);
+                pinv.assign(&peye.dot(&pinv));
+                (pinv.dot(&sten), peye.dot(&sten), Some(pinv))
             }
-            BaseKind::FourierR2c | BaseKind::FourierC2c => (mass, lap, None),
+            BaseKind::FourierR2c | BaseKind::FourierC2c => (sten, lap, None),
             _ => panic!("No ingredients found for Base kind: {}!", kind),
         }
     }

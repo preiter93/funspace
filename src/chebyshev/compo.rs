@@ -2,8 +2,11 @@
 use super::ortho::Chebyshev;
 use super::stencils::StencilOperations;
 use super::stencils::{BiHarmonic, ChebyshevStencils, Dirichlet, DirichletNeumann, Neumann};
-use crate::enums::BaseKind;
-use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
+use crate::enums::{BaseKind, TransformKind};
+use crate::traits::{
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
+    BaseTransform,
+};
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::Array2;
 use std::clone::Clone;
@@ -21,7 +24,7 @@ pub struct ChebyshevComposite<A: FloatNum> {
     pub stencil: ChebyshevStencils<A>,
 }
 
-impl<A: FloatNum> FunspaceSize for ChebyshevComposite<A> {
+impl<A: FloatNum> BaseSize for ChebyshevComposite<A> {
     /// Size in physical space
     #[must_use]
     fn len_phys(&self) -> usize {
@@ -41,10 +44,9 @@ impl<A: FloatNum> FunspaceSize for ChebyshevComposite<A> {
     }
 }
 
-impl<A: FloatNum> FunspaceExtended for ChebyshevComposite<A> {
-    type Real = A;
-
-    type Spectral = A;
+impl<A: FloatNum> BaseElements for ChebyshevComposite<A> {
+    /// Real valued scalar type
+    type RealNum = A;
 
     /// Return kind of base
     fn base_kind(&self) -> BaseKind {
@@ -55,39 +57,113 @@ impl<A: FloatNum> FunspaceExtended for ChebyshevComposite<A> {
             ChebyshevStencils::BiHarmonic(_) => BaseKind::ChebBiHarmonic,
         }
     }
+
+    /// Return kind of transform
+    fn transform_kind(&self) -> TransformKind {
+        TransformKind::R2r
+    }
+
     /// Coordinates in physical space
-    fn get_nodes(&self) -> Vec<A> {
+    fn coords(&self) -> Vec<A> {
         Chebyshev::nodes(self.len_phys())
     }
+}
 
-    /// Mass matrix
-    fn mass(&self) -> Array2<A> {
-        self.stencil.to_array()
-    }
+impl<A: FloatNum> BaseMatOpGeneral for ChebyshevComposite<A> {
+    /// Real valued scalar type
+    type RealNum = A;
 
-    /// Inverse of mass matrix
-    fn mass_inv(&self) -> Array2<A> {
-        self.stencil.pinv()
-    }
+    /// Scalar type of spectral coefficients
+    type SpectralNum = A;
 
-    /// Explicit differential operator
-    fn diffmat(&self, deriv: usize) -> Array2<A> {
+    /// Explicit differential operator $ D $
+    ///
+    /// Matrix-based version of [`BaseGradient::gradient()`]
+    fn diffmat(&self, deriv: usize) -> Array2<Self::SpectralNum> {
         self.ortho.diffmat(deriv)
     }
 
+    /// Explicit inverse of differential operator $ D^* $
+    ///
+    /// Returns ``(D_pinv, I_pinv)``, where `D_pinv` is the pseudoinverse
+    /// and ``I_pinv`` the corresponding pseudoidentity matrix, such
+    /// that
+    ///
+    /// ```text
+    /// D_pinv @ D = I_pinv
+    /// ```
+    ///
+    /// Can be used as a preconditioner.
+    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::SpectralNum>, Array2<Self::SpectralNum>) {
+        self.ortho.diffmat_pinv(deriv)
+    }
+
+    /// Transformation stencil composite -> orthogonal space
+    fn stencil(&self) -> Array2<Self::RealNum> {
+        self.stencil.to_array()
+    }
+
+    /// Inverse of transformation stencil
+    fn stencil_inv(&self) -> Array2<Self::RealNum> {
+        self.stencil.pinv()
+    }
+}
+
+impl<A: FloatNum> BaseMatOpLaplacian for ChebyshevComposite<A> {
+    /// Scalar type of laplacian matrix
+    type ScalarNum = A;
+
     /// Laplacian $ L $
-    fn laplace(&self) -> Array2<A> {
-        self.ortho.laplace()
+    fn laplace(&self) -> Array2<Self::ScalarNum> {
+        self.diffmat(2)
     }
 
-    /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
-    fn laplace_inv(&self) -> Array2<A> {
-        self.ortho.laplace_inv()
+    /// Pseudoinverse matrix of Laplacian $ L^{-1} $
+    ///
+    /// Returns pseudoinverse and pseudoidentity,i.e
+    /// ``(D_pinv, I_pinv)``
+    ///
+    /// ```text
+    /// D_pinv @ D = I_pinv
+    /// ``
+    fn laplace_pinv(&self) -> (Array2<Self::ScalarNum>, Array2<Self::ScalarNum>) {
+        self.diffmat_pinv(2)
+    }
+}
+
+impl<A, T> BaseFromOrtho<T> for ChebyshevComposite<A>
+where
+    A: FloatNum,
+    T: ScalarNum
+        + Add<A, Output = T>
+        + Mul<A, Output = T>
+        + Div<A, Output = T>
+        + Sub<A, Output = T>,
+{
+    /// Composite space coefficients -> Orthogonal space coefficients
+    fn to_ortho_slice(&self, indata: &[T], outdata: &mut [T]) {
+        self.stencil.dot_inplace(indata, outdata);
     }
 
-    /// Pseudoidentity matrix of laplacian $ L^{-1} L $
-    fn laplace_inv_eye(&self) -> Array2<A> {
-        self.ortho.laplace_inv_eye()
+    /// Orthogonal space coefficients -> Composite space coefficients
+    fn from_ortho_slice(&self, indata: &[T], outdata: &mut [T]) {
+        self.stencil.solve_inplace(indata, outdata);
+    }
+}
+
+impl<A, T> BaseGradient<T> for ChebyshevComposite<A>
+where
+    A: FloatNum,
+    T: ScalarNum
+        + Add<A, Output = T>
+        + Mul<A, Output = T>
+        + Div<A, Output = T>
+        + Sub<A, Output = T>,
+{
+    fn gradient_slice(&self, indata: &[T], outdata: &mut [T], n_times: usize) {
+        let mut scratch: Vec<T> = vec![T::zero(); self.len_orth()];
+        self.to_ortho_slice(indata, &mut scratch);
+        self.ortho.gradient_slice(&scratch, outdata, n_times);
     }
 }
 
@@ -176,23 +252,10 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     }
 }
 
-impl<A: FloatNum + ScalarNum> FunspaceElemental for ChebyshevComposite<A> {
+impl<A: FloatNum + ScalarNum> BaseTransform for ChebyshevComposite<A> {
     type Physical = A;
 
     type Spectral = A;
-
-    fn differentiate_slice<T>(&self, indata: &[T], outdata: &mut [T], n_times: usize)
-    where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>,
-    {
-        let mut scratch: Vec<T> = vec![T::zero(); self.len_orth()];
-        self.to_ortho_slice(indata, &mut scratch);
-        self.ortho.differentiate_slice(&scratch, outdata, n_times);
-    }
 
     fn forward_slice(&self, indata: &[Self::Physical], outdata: &mut [Self::Spectral]) {
         let mut scratch: Vec<Self::Spectral> = vec![Self::Spectral::zero(); self.len_orth()];
@@ -204,28 +267,6 @@ impl<A: FloatNum + ScalarNum> FunspaceElemental for ChebyshevComposite<A> {
         let mut scratch: Vec<Self::Spectral> = vec![Self::Spectral::zero(); self.len_orth()];
         self.to_ortho_slice(indata, &mut scratch);
         self.ortho.backward_slice(&scratch, outdata);
-    }
-
-    fn to_ortho_slice<T>(&self, indata: &[T], outdata: &mut [T])
-    where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>,
-    {
-        self.stencil.dot_inplace(indata, outdata);
-    }
-
-    fn from_ortho_slice<T>(&self, indata: &[T], outdata: &mut [T])
-    where
-        T: ScalarNum
-            + Add<A, Output = T>
-            + Mul<A, Output = T>
-            + Div<A, Output = T>
-            + Sub<A, Output = T>,
-    {
-        self.stencil.solve_inplace(indata, outdata);
     }
 }
 
@@ -343,7 +384,7 @@ mod test {
         let mut outdata: Vec<f64> = vec![0.; ch.len_spec()];
         let mut deriv: Vec<f64> = vec![0.; ch.len_orth()];
         ch.forward_slice(&indata, &mut outdata);
-        ch.differentiate_slice(&outdata, &mut deriv, 2);
+        ch.gradient_slice(&outdata, &mut deriv, 2);
         approx_eq(
             &deriv,
             &vec![-30.0, -100.66625258399796, -40.0, -58.6666, 0.0, 0.0],
@@ -371,7 +412,7 @@ mod test {
             [0.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 0.0],
         ];
-        let diff = cheby.differentiate(&data, 2, 0);
+        let diff = cheby.gradient(&data, 2, 0);
         approx_eq_ndarray(&diff, &expected);
 
         // Axis 1
@@ -387,7 +428,7 @@ mod test {
             [-568.0, -2232.0, -864.0, -1520.0, 0.0, 0.0],
             [-696.0, -2712.0, -1056.0, -1840.0, 0.0, 0.0],
         ];
-        let diff = cheby.differentiate(&data, 2, 1);
+        let diff = cheby.gradient(&data, 2, 1);
         approx_eq_ndarray(&diff, &expected);
     }
 }

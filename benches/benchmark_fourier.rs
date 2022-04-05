@@ -10,7 +10,7 @@ pub fn bench_transform(c: &mut Criterion) {
     let mut group = c.benchmark_group("TransformFourierR2c");
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
-        let mut fo = fourier_r2c::<f64>(*n);
+        let fo = fourier_r2c::<f64>(*n);
         let mut arr = Array2::from_elem((*n, *n), 1.);
         let name = format!("Size: {} x {}", *n, *n);
         group.bench_function(&name, |b| {
@@ -35,7 +35,7 @@ pub fn bench_differentiate(c: &mut Criterion) {
         let fo = fourier_r2c::<f64>(*n);
         let mut arr = Array1::from_elem(fo.len_spec(), Complex::new(1., 1.));
         let name = format!("Size: {}", *n);
-        group.bench_function(&name, |b| b.iter(|| fo.differentiate(&mut arr, 2, AXIS)));
+        group.bench_function(&name, |b| b.iter(|| fo.gradient(&mut arr, 2, 0)));
     }
     group.finish();
 }

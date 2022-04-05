@@ -37,6 +37,9 @@ pub trait ScalarNum:
     + Copy
     + Zero
     + One
+    + Debug
+    + Send
+    + Sync
     + FromPrimitive
     + Add<Output = Self>
     + Sub<Output = Self>

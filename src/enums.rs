@@ -1,6 +1,9 @@
 use crate::chebyshev::{Chebyshev, ChebyshevComposite};
 use crate::fourier::{FourierC2c, FourierR2c};
-use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
+use crate::traits::{
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
+    BaseTransform,
+};
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::Array2;
 use num_complex::Complex;
@@ -34,6 +37,16 @@ impl_funspace_elemental_for_base!(BaseR2r, A, A, Chebyshev, ChebyshevComposite);
 impl_funspace_elemental_for_base!(BaseR2c, A, Complex<A>, FourierR2c);
 
 impl_funspace_elemental_for_base!(BaseC2c, Complex<A>, Complex<A>, FourierC2c);
+
+/// Set of transform kinds
+pub enum TransformKind {
+    /// real-to-real
+    R2r,
+    /// real-to-complex
+    R2c,
+    /// complex-to-complex
+    C2c,
+}
 
 /// All available function spaces
 #[derive(Debug, Clone, Copy)]

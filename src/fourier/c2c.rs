@@ -1,11 +1,15 @@
 //! # Complex - to - complex fourier space
-use crate::enums::BaseKind;
-use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
+use crate::enums::{BaseKind, TransformKind};
+use crate::traits::{
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
+    BaseTransform,
+};
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::{s, Array2};
 use num_complex::Complex;
-use num_traits::Zero;
+use num_traits::{One, Zero};
 use rustfft::{Fft, FftPlanner};
+use std::convert::TryInto;
 use std::f64::consts::PI;
 use std::ops::{Add, Div, Mul, Sub};
 use std::sync::Arc;
@@ -67,69 +71,7 @@ impl<A: FloatNum> FourierC2c<A> {
     }
 }
 
-impl<A: FloatNum> FunspaceExtended for FourierC2c<A> {
-    type Real = A;
-
-    type Spectral = Complex<A>;
-
-    /// Return kind of base
-    fn base_kind(&self) -> BaseKind {
-        BaseKind::FourierC2c
-    }
-
-    /// Coordinates in physical space
-    fn get_nodes(&self) -> Vec<A> {
-        Self::nodes(self.len_phys())
-    }
-
-    /// Mass matrix
-    fn mass(&self) -> Array2<A> {
-        Array2::<A>::eye(self.len_spec())
-    }
-
-    /// Inverse of mass matrix
-    fn mass_inv(&self) -> Array2<A> {
-        Array2::<A>::eye(self.len_spec())
-    }
-
-    /// Explicit differential operator
-    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
-    fn diffmat(&self, deriv: usize) -> Array2<Self::Spectral> {
-        let mut diff_mat = Array2::<Complex<A>>::zeros((self.len_spec(), self.len_spec()));
-        let wavenum = Self::wavenumber(self.len_phys());
-        for (l, k) in diff_mat.diag_mut().iter_mut().zip(wavenum.iter()) {
-            *l = Complex::new(A::zero(), k.im).powi(deriv as i32);
-        }
-        diff_mat
-    }
-
-    /// Laplacian $ L $
-    fn laplace(&self) -> Array2<A> {
-        let mut lap = Array2::<A>::zeros((self.len_spec(), self.len_spec()));
-        let wavenum = Self::wavenumber(self.len_phys());
-        for (l, k) in lap.diag_mut().iter_mut().zip(wavenum.iter()) {
-            *l = -k.im * k.im;
-        }
-        lap
-    }
-
-    /// Pseudoinverse mtrix of Laplacian $ L^{-1} $
-    fn laplace_inv(&self) -> Array2<A> {
-        let mut pinv = self.laplace();
-        for p in pinv.slice_mut(ndarray::s![1.., 1..]).diag_mut().iter_mut() {
-            *p = A::one() / *p;
-        }
-        pinv
-    }
-
-    /// Pseudoidentity matrix of laplacian $ L^{-1} L $
-    fn laplace_inv_eye(&self) -> Array2<A> {
-        let eye = Array2::<A>::eye(self.m);
-        eye.slice(s![1.., ..]).to_owned()
-    }
-}
-
-impl<A: FloatNum> FunspaceSize for FourierC2c<A> {
+impl<A: FloatNum> BaseSize for FourierC2c<A> {
     /// Size in physical space
     fn len_phys(&self) -> usize {
         self.n
@@ -144,14 +86,117 @@ impl<A: FloatNum> FunspaceSize for FourierC2c<A> {
     }
 }
 
-impl<A: FloatNum> FunspaceElemental for FourierC2c<A> {
-    type Physical = Complex<A>;
+impl<A: FloatNum> BaseElements for FourierC2c<A> {
+    /// Real valued scalar type
+    type RealNum = A;
 
-    type Spectral = Complex<A>;
+    /// Return kind of base
+    fn base_kind(&self) -> BaseKind {
+        BaseKind::FourierC2c
+    }
 
+    /// Return kind of transform
+    fn transform_kind(&self) -> TransformKind {
+        TransformKind::C2c
+    }
+
+    /// Coordinates in physical space
+    fn coords(&self) -> Vec<A> {
+        Self::nodes(self.len_phys())
+    }
+}
+
+impl<A: FloatNum> BaseMatOpGeneral for FourierC2c<A> {
+    /// Real valued scalar type
+    type RealNum = A;
+
+    /// Scalar type of spectral coefficients
+    type SpectralNum = Complex<A>;
+
+    /// Explicit differential operator $ D $
+    ///
+    /// Matrix-based version of [`BaseGradient::gradient()`]
+    ///
+    /// # Panics
+    /// Type conversion fails
+    fn diffmat(&self, deriv: usize) -> Array2<Self::SpectralNum> {
+        assert!(deriv > 0);
+        let mut mat = Array2::<Self::SpectralNum>::zeros((self.len_spec(), self.len_spec()));
+        let wavenum = Self::wavenumber(self.len_phys());
+        for (l, k) in mat.diag_mut().iter_mut().zip(wavenum.iter()) {
+            *l = k.powi(deriv.try_into().unwrap());
+        }
+        mat
+    }
+
+    /// Explicit inverse of differential operator $ D^* $
+    ///
+    /// Returns ``(D_pinv, I_pinv)``, where `D_pinv` is the pseudoinverse
+    /// and ``I_pinv`` the corresponding pseudoidentity matrix, such
+    /// that
+    ///
+    /// ```text
+    /// D_pinv @ D = I_pinv
+    /// ```
+    ///
+    /// Can be used as a preconditioner.
+    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::SpectralNum>, Array2<Self::SpectralNum>) {
+        assert!(deriv > 0);
+        let peye: Array2<Self::SpectralNum> = Array2::<Self::SpectralNum>::eye(self.m)
+            .slice(s![1.., ..])
+            .to_owned();
+        let mut pinv = self.diffmat(deriv);
+        for p in pinv.slice_mut(ndarray::s![1.., 1..]).diag_mut().iter_mut() {
+            *p = Self::SpectralNum::one() / *p;
+        }
+        (pinv, peye)
+    }
+
+    /// Transformation stencil composite -> orthogonal space
+    fn stencil(&self) -> Array2<Self::RealNum> {
+        Array2::<A>::eye(self.len_spec())
+    }
+
+    /// Inverse of transformation stencil
+    fn stencil_inv(&self) -> Array2<Self::RealNum> {
+        Array2::<A>::eye(self.len_spec())
+    }
+}
+
+impl<A: FloatNum> BaseMatOpLaplacian for FourierC2c<A> {
+    /// Scalar type of laplacian matrix
+    type ScalarNum = A;
+
+    /// Laplacian $ L $
+    fn laplace(&self) -> Array2<Self::ScalarNum> {
+        unimplemented!()
+    }
+
+    /// Pseudoinverse matrix of Laplacian $ L^{-1} $
+    ///
+    /// Returns pseudoinverse and pseudoidentity,i.e
+    /// ``(D_pinv, I_pinv)``
+    ///
+    /// ```text
+    /// D_pinv @ D = I_pinv
+    /// ``
+    fn laplace_pinv(&self) -> (Array2<Self::ScalarNum>, Array2<Self::ScalarNum>) {
+        unimplemented!()
+    }
+}
+
+impl<A, T> BaseGradient<T> for FourierC2c<A>
+where
+    A: FloatNum,
+    T: ScalarNum
+        + Add<Complex<A>, Output = T>
+        + Mul<Complex<A>, Output = T>
+        + Div<Complex<A>, Output = T>
+        + Sub<Complex<A>, Output = T>,
+{
     /// Differentiate along slice
     /// ```
-    /// use funspace::traits::FunspaceElemental;
+    /// use funspace::traits::BaseGradient;
     /// use funspace::fourier::FourierC2c;
     /// use funspace::utils::approx_eq_complex;
     /// use num_complex::Complex;
@@ -160,20 +205,13 @@ impl<A: FloatNum> FunspaceElemental for FourierC2c<A> {
     /// let mut k = FourierC2c::<f64>::wavenumber(5);
     /// let expected: Vec<Complex<f64>> = k.iter().map(|x| x.powi(2)).collect();
     /// let mut outdata = vec![Complex::<f64>::zero(); 5];
-    /// fo.differentiate_slice(&k, &mut outdata, 1);
+    /// fo.gradient_slice(&k, &mut outdata, 1);
     /// approx_eq_complex(&outdata, &expected);
     /// ```
     ///
     /// # Panics
     /// When type conversion fails ( safe )
-    fn differentiate_slice<T>(&self, indata: &[T], outdata: &mut [T], n_times: usize)
-    where
-        T: ScalarNum
-            + Add<Self::Spectral, Output = T>
-            + Mul<Self::Spectral, Output = T>
-            + Div<Self::Spectral, Output = T>
-            + Sub<Self::Spectral, Output = T>,
-    {
+    fn gradient_slice(&self, indata: &[T], outdata: &mut [T], n_times: usize) {
         assert!(outdata.len() == indata.len());
         assert!(outdata.len() == self.len_spec());
         // Copy over
@@ -193,11 +231,37 @@ impl<A: FloatNum> FunspaceElemental for FourierC2c<A> {
             }
         }
     }
+}
+
+impl<A, T> BaseFromOrtho<T> for FourierC2c<A>
+where
+    A: FloatNum,
+    T: ScalarNum,
+{
+    /// Composite space coefficients -> Orthogonal space coefficients
+    fn to_ortho_slice(&self, indata: &[T], outdata: &mut [T]) {
+        for (y, x) in outdata.iter_mut().zip(indata.iter()) {
+            *y = *x;
+        }
+    }
+
+    /// Orthogonal space coefficients -> Composite space coefficients
+    fn from_ortho_slice(&self, indata: &[T], outdata: &mut [T]) {
+        for (y, x) in outdata.iter_mut().zip(indata.iter()) {
+            *y = *x;
+        }
+    }
+}
+
+impl<A: FloatNum> BaseTransform for FourierC2c<A> {
+    type Physical = Complex<A>;
+
+    type Spectral = Complex<A>;
 
     /// # Example
     /// Forward transform
     /// ```
-    /// use funspace::traits::FunspaceElemental;
+    /// use funspace::traits::BaseTransform;
     /// use funspace::fourier::FourierC2c;
     /// use funspace::utils::approx_eq_complex;
     /// use num_complex::Complex;
@@ -233,7 +297,7 @@ impl<A: FloatNum> FunspaceElemental for FourierC2c<A> {
     /// # Example
     /// Backward transform
     /// ```
-    /// use funspace::traits::FunspaceElemental;
+    /// use funspace::traits::BaseTransform;
     /// use funspace::fourier::FourierC2c;
     /// use funspace::utils::approx_eq_complex;
     /// use num_complex::Complex;
@@ -266,21 +330,5 @@ impl<A: FloatNum> FunspaceElemental for FourierC2c<A> {
             a.im = cor * b.im;
         }
         self.plan_bwd.process(outdata);
-    }
-
-    /// Composite space coefficients -> Orthogonal space coefficients
-    fn to_ortho_slice<T: Copy>(&self, indata: &[T], outdata: &mut [T]) {
-        // panic!("Function space Chebyshev is already orthogonal");
-        for (y, x) in outdata.iter_mut().zip(indata.iter()) {
-            *y = *x;
-        }
-    }
-
-    /// Orthogonal space coefficients -> Composite space coefficients
-    fn from_ortho_slice<T: Copy>(&self, indata: &[T], outdata: &mut [T]) {
-        // panic!("Function space Chebyshev is already orthogonal");
-        for (y, x) in outdata.iter_mut().zip(indata.iter()) {
-            *y = *x;
-        }
     }
 }

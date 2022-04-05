@@ -1,3 +1,5 @@
+//! # Multidimensional function spaces
+#![allow(clippy::module_name_repetitions)]
 pub mod space1;
 pub mod space2;
 pub mod space3;

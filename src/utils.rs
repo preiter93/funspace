@@ -124,33 +124,67 @@ where
 /// ```should_panic
 /// use funspace::utils::check_array_axis;
 /// let array = ndarray::Array2::<f64>::zeros((5, 3));
-/// check_array_axis(&array, 3, 0, None);
+/// check_array_axis(&array, 3, 0, "");
 /// ```
 pub fn check_array_axis<A, S, D>(
     input: &ndarray::ArrayBase<S, D>,
     size: usize,
     axis: usize,
-    function_name: Option<&str>,
+    function_name: &str,
 ) where
-    A: ndarray::LinalgScalar,
     S: ndarray::Data<Elem = A>,
     D: ndarray::Dimension,
 {
     // Arrays size
     let m = input.shape()[axis];
 
-    // Panic
-    if size != m {
-        if let Some(name) = function_name {
-            panic!(
-                "Size mismatch in {}, got {} expected {} along axis {}",
-                name, size, m, axis
-            );
-        } else {
-            panic!(
-                "Size mismatch, got {} expected {} along axis {}",
-                size, m, axis
-            );
-        };
-    }
+    assert!(
+        input.shape()[axis] == size,
+        "Size mismatch in {}, got {} expected {} along axis {}",
+        function_name,
+        size,
+        m,
+        axis
+    );
 }
+
+// /// Checks size of axis.
+// ///
+// /// # Panics
+// /// Panics when inputs shape does not match
+// /// axis' size
+// ///
+// /// # Example
+// /// ```should_panic
+// /// use funspace::utils::check_array_axis;
+// /// let array = ndarray::Array2::<f64>::zeros((5, 3));
+// /// check_array_axis(&array, 3, 0, None);
+// /// ```
+// pub fn check_array_axis<A, S, D>(
+//     input: &ndarray::ArrayBase<S, D>,
+//     size: usize,
+//     axis: usize,
+//     function_name: Option<&str>,
+// ) where
+//     A: ndarray::LinalgScalar,
+//     S: ndarray::Data<Elem = A>,
+//     D: ndarray::Dimension,
+// {
+//     // Arrays size
+//     let m = input.shape()[axis];
+//
+//     // Panic
+//     if size != m {
+//         if let Some(name) = function_name {
+//             panic!(
+//                 "Size mismatch in {}, got {} expected {} along axis {}",
+//                 name, size, m, axis
+//             );
+//         } else {
+//             panic!(
+//                 "Size mismatch, got {} expected {} along axis {}",
+//                 size, m, axis
+//             );
+//         };
+//     }
+// }
