@@ -154,18 +154,20 @@
 //! and `libclang`.
 //!
 //! Activate the feature in your ``Cargo.toml``
-//!
-//! funspace = {version = "0.3", features = ["mpi"]}
+//! ```text
+//! funspace = {version = "0.4", features = ["mpi"]}
+//! ```
 //!
 //! ### Examples
 //! `examples/space_mpi.rs`
 //!
-//! Install `cargo mpirun`, for example, and run
+//! Install `cargo mpirun`, then
 //! ```ignore
 //! cargo mpirun --np 2 --example space_mpi --features="mpi"
 //! ```
 //!
 //! # Versions
+//! - v0.4.0: Major API changes + New methods
 //! - v0.3.0: Major API changes + Performance improvements
 #![warn(clippy::pedantic)]
 #[macro_use]
