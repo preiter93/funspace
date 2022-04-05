@@ -78,7 +78,7 @@ macro_rules! impl_space2 {
             }
         }
 
-        impl<A> BaseSpaceElements<2> for Space2<$base0<A>, $base1<A>>
+        impl<A> BaseSpaceElements<2> for $space<$base0<A>, $base1<A>>
         where
             A: FloatNum,
         {
@@ -121,7 +121,7 @@ macro_rules! impl_space2 {
             }
         }
 
-        impl<A> BaseSpaceMatOpGeneral for Space2<$base0<A>, $base1<A>>
+        impl<A> BaseSpaceMatOpGeneral for $space<$base0<A>, $base1<A>>
         where
             A: FloatNum,
         {
@@ -169,7 +169,7 @@ macro_rules! impl_space2 {
             }
         }
 
-        impl<A> BaseSpaceMatOpLaplacian for Space2<$base0<A>, $base1<A>>
+        impl<A> BaseSpaceMatOpLaplacian for $space<$base0<A>, $base1<A>>
         where
             A: FloatNum,
         {

@@ -161,7 +161,6 @@ macro_rules! impl_space3 {
             /// Scalar type of spectral coefficients
             type SpectralNum = $s;
 
-
             /// Transformation stencil
             ///
             /// Multiplication of this matrix with a coefficient vector has

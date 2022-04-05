@@ -1,14 +1,14 @@
 //! # Use
 //! cargo mpirun --np 2 --example space_complex_mpi --features="mpi"
 #[cfg(feature = "mpi")]
-use funspace::spaces_mpi::{initialize, BaseSpaceMpi, Space2};
+use funspace::space_mpi::{initialize, BaseSpaceMpi, Space2Mpi};
 #[cfg(feature = "mpi")]
-use funspace::{cheb_dirichlet, fourier_r2c, BaseSpace};
+use funspace::{cheb_dirichlet, fourier_r2c, BaseSpaceTransform};
 #[cfg(feature = "mpi")]
 fn main() {
     let (nx, ny) = (32, 10);
     let universe = initialize().unwrap();
-    let space = Space2::new(
+    let space = Space2Mpi::new(
         &fourier_r2c::<f64>(nx),
         &cheb_dirichlet::<f64>(ny),
         &universe,

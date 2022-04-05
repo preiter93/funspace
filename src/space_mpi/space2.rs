@@ -1,20 +1,24 @@
 //! Two-dimensional function space with mpi support
 #![cfg(feature = "mpi")]
-use super::traits::BaseSpaceMpi;
-use super::Communicator;
-use super::Decomp2d;
-use super::DecompHandler;
-use super::Equivalence;
-use super::Universe;
-use crate::traits::{FunspaceElemental, FunspaceExtended, FunspaceSize};
-use crate::BaseKind;
-use crate::BaseSpace;
+#![allow(clippy::module_name_repetitions)]
+use super::{BaseSpaceMpi, Communicator, Decomp2d, DecompHandler, Equivalence, Universe};
+use crate::enums::{BaseKind, TransformKind};
+use crate::space::traits::{
+    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpGeneral,
+    BaseSpaceMatOpLaplacian, BaseSpaceSize, BaseSpaceTransform,
+};
+use crate::traits::{
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
+    BaseTransform,
+};
 use crate::{BaseC2c, BaseR2c, BaseR2r, FloatNum, ScalarNum};
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dim};
+use ndarray::{prelude::*, Data, DataMut};
 use num_complex::Complex;
+use num_traits::Zero;
+use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Clone)]
-pub struct Space2<'a, B0, B1> {
+pub struct Space2Mpi<'a, B0, B1> {
     // Intermediate <-> Spectral
     pub base0: B0,
     // Phsical <-> Intermediate
@@ -23,10 +27,10 @@ pub struct Space2<'a, B0, B1> {
     pub decomp_handler: DecompHandler<'a>,
 }
 
-impl<'a, B0, B1> Space2<'a, B0, B1>
+impl<'a, B0, B1> Space2Mpi<'a, B0, B1>
 where
-    B0: Clone + FunspaceSize,
-    B1: Clone + FunspaceSize,
+    B0: Clone + BaseSize,
+    B1: Clone + BaseSize,
 {
     /// Create a new space
     pub fn new(base0: &B0, base1: &B1, universe: &'a Universe) -> Self {
@@ -64,18 +68,12 @@ where
     }
 }
 
-/// Exactly as implementation in 'crate::space2'
 macro_rules! impl_space2 {
-    ($base0: ident, $base1: ident, $p: ty, $s: ty) => {
-        impl<A> BaseSpace<A, 2> for Space2<'_, $base0<A>, $base1<A>>
+    ($space: ident, $base0: ident, $base1: ident, $p: ty, $s: ty) => {
+        impl<A> BaseSpaceSize<2> for $space<'_, $base0<A>, $base1<A>>
         where
-            A: FloatNum + ScalarNum,
-            Complex<A>: ScalarNum,
+            A: FloatNum,
         {
-            type Physical = $p;
-
-            type Spectral = $s;
-
             fn shape_physical(&self) -> [usize; 2] {
                 [self.base0.len_phys(), self.base1.len_phys()]
             }
@@ -84,76 +82,40 @@ macro_rules! impl_space2 {
                 [self.base0.len_spec(), self.base1.len_spec()]
             }
 
-            fn ndarray_physical(&self) -> Array2<Self::Physical> {
-                let shape = [self.base0.len_phys(), self.base1.len_phys()];
+            fn shape_spectral_ortho(&self) -> [usize; 2] {
+                [self.base0.len_orth(), self.base1.len_orth()]
+            }
+
+            fn ndarray_from_shape<T: Clone + Zero>(&self, shape: [usize; 2]) -> Array2<T> {
                 Array2::zeros(shape)
             }
+        }
 
-            fn ndarray_spectral(&self) -> Array2<Self::Spectral> {
-                let shape = [self.base0.len_spec(), self.base1.len_spec()];
-                Array2::zeros(shape)
-            }
+        impl<A> BaseSpaceElements<2> for $space<'_, $base0<A>, $base1<A>>
+        where
+            A: FloatNum,
+        {
+            type RealNum = A;
 
-            fn laplace(&self, axis: usize) -> Array2<A> {
-                if axis == 0 {
-                    self.base0.laplace()
-                } else {
-                    self.base1.laplace()
-                }
-            }
-
-            fn laplace_inv(&self, axis: usize) -> Array2<A> {
-                if axis == 0 {
-                    self.base0.laplace_inv()
-                } else {
-                    self.base1.laplace_inv()
-                }
-            }
-
-            fn laplace_inv_eye(&self, axis: usize) -> Array2<A> {
-                if axis == 0 {
-                    self.base0.laplace_inv_eye()
-                } else {
-                    self.base1.laplace_inv_eye()
-                }
-            }
-
-            fn mass(&self, axis: usize) -> Array2<A> {
-                if axis == 0 {
-                    self.base0.mass()
-                } else {
-                    self.base1.mass()
-                }
-            }
-
-            // fn diff_op(&self, deriv: usize, axis: usize) -> Array2<Self::Spectral> {
-            //     if axis == 0 {
-            //         self.base0.diff_op(deriv)
-            //     } else {
-            //         self.base1.diff_op(deriv)
-            //     }
-            // }
-            //
-            // fn stencil(&self, axis: usize) -> Option<Array2<Self::Spectral>> {
-            //     if axis == 0 {
-            //         self.base0.stencil()
-            //     } else {
-            //         self.base1.stencil()
-            //     }
-            // }
-
-            fn coords(&self) -> [Array1<A>; 2] {
+            /// Array of coordinates
+            fn coords(&self) -> [Array1<Self::RealNum>; 2] {
                 [self.coords_axis(0), self.coords_axis(1)]
             }
 
+            /// Coordinates of grid points (in physical space)
+            ///
+            /// # Arguments
+            ///
+            /// * `axis` - usize
             fn coords_axis(&self, axis: usize) -> Array1<A> {
                 if axis == 0 {
-                    self.base0.get_nodes().into()
+                    self.base0.coords().into()
                 } else {
-                    self.base1.get_nodes().into()
+                    self.base1.coords().into()
                 }
             }
 
+            /// Return base key
             fn base_kind(&self, axis: usize) -> BaseKind {
                 if axis == 0 {
                     self.base0.base_kind()
@@ -162,151 +124,276 @@ macro_rules! impl_space2 {
                 }
             }
 
-            fn to_ortho<S>(
-                &self,
-                input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
-            where
-                S: Data<Elem = Self::Spectral>,
-            {
-                let buffer = self.base0.to_ortho(input, 0);
-                self.base1.to_ortho(&buffer, 1)
+            /// Return transform kind
+            fn transform_kind(&self, axis: usize) -> TransformKind {
+                if axis == 0 {
+                    self.base0.transform_kind()
+                } else {
+                    self.base1.transform_kind()
+                }
+            }
+        }
+
+        impl<A> BaseSpaceMatOpGeneral for $space<'_, $base0<A>, $base1<A>>
+        where
+            A: FloatNum,
+        {
+            type RealNum = A;
+
+            /// Scalar type of spectral coefficients
+            type SpectralNum = $s;
+
+            /// Transformation stencil
+            ///
+            /// Multiplication of this matrix with a coefficient vector has
+            /// the same effect as  [`BaseSpaceFromOrtho::to_ortho()`],
+            /// but is less efficient.
+            ///
+            /// Returns identity matrix for orthogonal bases
+            ///
+            /// # Arguments
+            ///
+            /// * `axis` - usize
+            fn stencil(&self, axis: usize) -> Array2<A> {
+                if axis == 0 {
+                    self.base0.stencil()
+                } else {
+                    self.base1.stencil()
+                }
             }
 
-            fn to_ortho_inplace<S1, S2>(
-                &self,
-                input: &ArrayBase<S1, Dim<[usize; 2]>>,
-                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
-            ) where
-                S1: Data<Elem = Self::Spectral>,
-                S2: Data<Elem = Self::Spectral> + DataMut,
-            {
-                let buffer = self.base0.to_ortho(input, 0);
-                self.base1.to_ortho_inplace(&buffer, output, 1);
+            /// Inverse of transformation stencil
+            ///
+            /// Multiplication of this matrix with a coefficient vector has
+            /// the same effect as  [`BaseSpaceFromOrtho::from_ortho()`],
+            /// but is less efficient.
+            ///
+            /// Returns identity matrix for orthogonal bases
+            ///
+            /// # Arguments
+            ///
+            /// * `axis` - usize
+            fn stencil_inv(&self, axis: usize) -> Array2<A> {
+                if axis == 0 {
+                    self.base0.stencil_inv()
+                } else {
+                    self.base1.stencil_inv()
+                }
+            }
+        }
+
+        impl<A> BaseSpaceMatOpLaplacian for $space<'_, $base0<A>, $base1<A>>
+        where
+            A: FloatNum,
+        {
+            type ScalarNum = A;
+
+            /// Laplacian `L`
+            ///
+            /// ```text
+            /// L_pinv @ L = I_pinv
+            /// ```
+            ///
+            /// # Arguments
+            ///
+            /// * `axis` - usize
+            fn laplace(&self, axis: usize) -> Array2<A> {
+                if axis == 0 {
+                    self.base0.laplace()
+                } else {
+                    self.base1.laplace()
+                }
             }
 
-            fn from_ortho<S>(
-                &self,
-                input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
-            where
-                S: Data<Elem = Self::Spectral>,
-            {
-                let buffer = self.base0.from_ortho(input, 0);
-                self.base1.from_ortho(&buffer, 1)
+            /// Pseudoinverse matrix `L_pinv` of Laplacian
+            ///
+            /// Returns (`L_pinv`, `I_pinv`)
+            ///
+            /// ```text
+            /// L_pinv @ L = I_pinv
+            /// ```
+            ///
+            /// # Arguments
+            ///
+            /// * `axis` - usize
+            fn laplace_pinv(&self, axis: usize) -> (Array2<A>, Array2<A>) {
+                if axis == 0 {
+                    self.base0.laplace_pinv()
+                } else {
+                    self.base1.laplace_pinv()
+                }
             }
+        }
 
-            fn from_ortho_inplace<S1, S2>(
-                &self,
-                input: &ArrayBase<S1, Dim<[usize; 2]>>,
-                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
-            ) where
-                S1: Data<Elem = Self::Spectral>,
-                S2: Data<Elem = Self::Spectral> + DataMut,
-            {
-                let buffer = self.base0.from_ortho(input, 0);
-                self.base1.from_ortho_inplace(&buffer, output, 1);
-            }
-
-            fn to_ortho_par<S>(
-                &self,
-                input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
-            where
-                S: Data<Elem = Self::Spectral>,
-            {
-                let buffer = self.base0.to_ortho_par(input, 0);
-                self.base1.to_ortho_par(&buffer, 1)
-            }
-
-            fn to_ortho_inplace_par<S1, S2>(
-                &self,
-                input: &ArrayBase<S1, Dim<[usize; 2]>>,
-                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
-            ) where
-                S1: Data<Elem = Self::Spectral>,
-                S2: Data<Elem = Self::Spectral> + DataMut,
-            {
-                let buffer = self.base0.to_ortho_par(input, 0);
-                self.base1.to_ortho_inplace_par(&buffer, output, 1);
-            }
-
-            fn from_ortho_par<S>(
-                &self,
-                input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
-            where
-                S: Data<Elem = Self::Spectral>,
-            {
-                let buffer = self.base0.from_ortho_par(input, 0);
-                self.base1.from_ortho_par(&buffer, 1)
-            }
-
-            fn from_ortho_inplace_par<S1, S2>(
-                &self,
-                input: &ArrayBase<S1, Dim<[usize; 2]>>,
-                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
-            ) where
-                S1: Data<Elem = Self::Spectral>,
-                S2: Data<Elem = Self::Spectral> + DataMut,
-            {
-                let buffer = self.base0.from_ortho_par(input, 0);
-                self.base1.from_ortho_inplace_par(&buffer, output, 1);
-            }
-
+        impl<A, T> BaseSpaceGradient<A, T, 2> for $space<'_, $base0<A>, $base1<A>>
+        where
+            A: FloatNum + ScalarNum,
+            T: ScalarNum
+                + From<A>
+                + Add<A, Output = T>
+                + Mul<A, Output = T>
+                + Div<A, Output = T>
+                + Sub<A, Output = T>
+                + Add<$s, Output = T>
+                + Mul<$s, Output = T>
+                + Div<$s, Output = T>
+                + Sub<$s, Output = T>,
+        {
+            /// Take gradient. Optional: Rescale result by a constant.
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of spectral space
+            /// * `deriv` - [usize; N], derivative along each axis
+            /// * `scale` - [float; N], scaling factor along each axis (default [1.;n])
             fn gradient<S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
                 deriv: [usize; 2],
                 scale: Option<[A; 2]>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            ) -> Array<T, Dim<[usize; 2]>>
             where
-                S: Data<Elem = Self::Spectral>,
+                S: Data<Elem = T>,
             {
-                let buffer = self.base0.differentiate(input, deriv[0], 0);
-                let mut output = self.base1.differentiate(&buffer, deriv[1], 1);
+                let buffer = self.base0.gradient(input, deriv[0], 0);
+                let mut output = self.base1.gradient(&buffer, deriv[1], 1);
                 if let Some(s) = scale {
-                    let sc: Self::Spectral =
-                        (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
+                    let sc: T = (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
                     for x in output.iter_mut() {
                         *x /= sc;
                     }
                 }
                 output
             }
-
+            /// Take gradient. Optional: Rescale result by a constant.
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of spectral space
+            /// * `deriv` - [usize; N], derivative along each axis
+            /// * `scale` - [float; N], scaling factor along each axis (default [1.;n])
             fn gradient_par<S>(
                 &self,
                 input: &ArrayBase<S, Dim<[usize; 2]>>,
                 deriv: [usize; 2],
                 scale: Option<[A; 2]>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
+            ) -> Array<T, Dim<[usize; 2]>>
             where
-                S: Data<Elem = Self::Spectral>,
+                S: Data<Elem = T>,
             {
-                let buffer = self.base0.differentiate_par(input, deriv[0], 0);
-                let mut output = self.base1.differentiate_par(&buffer, deriv[1], 1);
+                let buffer = self.base0.gradient_par(input, deriv[0], 0);
+                let mut output = self.base1.gradient_par(&buffer, deriv[1], 1);
                 if let Some(s) = scale {
-                    let sc: Self::Spectral =
-                        (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
+                    let sc: T = (s[0].powi(deriv[0] as i32) * s[1].powi(deriv[1] as i32)).into();
                     for x in output.iter_mut() {
                         *x /= sc;
                     }
                 }
                 output
             }
-
-            fn forward<S>(
+        }
+        impl<A, T> BaseSpaceFromOrtho<A, T, 2> for $space<'_, $base0<A>, $base1<A>>
+        where
+            A: FloatNum + ScalarNum,
+            T: ScalarNum
+                + From<A>
+                + Add<A, Output = T>
+                + Mul<A, Output = T>
+                + Div<A, Output = T>
+                + Sub<A, Output = T>
+                + Add<$s, Output = T>
+                + Mul<$s, Output = T>
+                + Div<$s, Output = T>
+                + Sub<$s, Output = T>,
+        {
+            /// Transformation from composite and to orthonormal space (inplace).
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of spectral space
+            /// * `output` - *ndarray* with num type of spectral space
+            fn to_ortho_inplace<S1, S2>(
                 &self,
-                input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
-            where
-                S: Data<Elem = Self::Physical>,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = T>,
+                S2: Data<Elem = T> + DataMut,
             {
-                let buffer = self.base1.forward(input, 1);
-                self.base0.forward(&buffer, 0)
+                let buffer = self.base0.to_ortho(input, 0);
+                self.base1.to_ortho_inplace(&buffer, output, 1);
             }
 
+            /// Transformation from orthonormal and to composite space (inplace).
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of spectral space
+            /// * `output` - *ndarray* with num type of spectral space
+            fn from_ortho_inplace<S1, S2>(
+                &self,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = T>,
+                S2: Data<Elem = T> + DataMut,
+            {
+                let buffer = self.base0.from_ortho(input, 0);
+                self.base1.from_ortho_inplace(&buffer, output, 1);
+            }
+
+            /// Transformation from composite and to orthonormal space (inplace).
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of spectral space
+            /// * `output` - *ndarray* with num type of spectral space
+            fn to_ortho_inplace_par<S1, S2>(
+                &self,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = T>,
+                S2: Data<Elem = T> + DataMut,
+            {
+                let buffer = self.base0.to_ortho_par(input, 0);
+                self.base1.to_ortho_inplace_par(&buffer, output, 1);
+            }
+
+            /// Transformation from orthonormal and to composite space (inplace).
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of spectral space
+            /// * `output` - *ndarray* with num type of spectral space
+            fn from_ortho_inplace_par<S1, S2>(
+                &self,
+                input: &ArrayBase<S1, Dim<[usize; 2]>>,
+                output: &mut ArrayBase<S2, Dim<[usize; 2]>>,
+            ) where
+                S1: Data<Elem = T>,
+                S2: Data<Elem = T> + DataMut,
+            {
+                let buffer = self.base0.from_ortho_par(input, 0);
+                self.base1.from_ortho_inplace_par(&buffer, output, 1);
+            }
+        }
+
+        impl<A> BaseSpaceTransform<A, 2> for $space<'_, $base0<A>, $base1<A>>
+        where
+            A: FloatNum + ScalarNum,
+            Complex<A>: ScalarNum,
+        {
+            type Physical = $p;
+
+            type Spectral = $s;
+
+            /// Transform physical -> spectral space (inplace)
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of physical space
+            /// * `output` - *ndarray* with num type of spectral space
             fn forward_inplace<S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
@@ -319,17 +406,12 @@ macro_rules! impl_space2 {
                 self.base0.forward_inplace(&buffer, output, 0);
             }
 
-            fn backward<S>(
-                &self,
-                input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Physical, Dim<[usize; 2]>>
-            where
-                S: Data<Elem = Self::Spectral>,
-            {
-                let buffer = self.base0.backward(input, 0);
-                self.base1.backward(&buffer, 1)
-            }
-
+            /// Transform spectral -> physical space (inplace)
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of spectral space
+            /// * `output` - *ndarray* with num type of physical space
             fn backward_inplace<S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
@@ -342,17 +424,12 @@ macro_rules! impl_space2 {
                 self.base1.backward_inplace(&buffer, output, 1);
             }
 
-            fn forward_par<S>(
-                &self,
-                input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Spectral, Dim<[usize; 2]>>
-            where
-                S: Data<Elem = Self::Physical>,
-            {
-                let buffer = self.base1.forward_par(input, 1);
-                self.base0.forward_par(&buffer, 0)
-            }
-
+            /// Transform physical -> spectral space (inplace)
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of physical space
+            /// * `output` - *ndarray* with num type of spectral space
             fn forward_inplace_par<S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
@@ -365,17 +442,12 @@ macro_rules! impl_space2 {
                 self.base0.forward_inplace_par(&buffer, output, 0);
             }
 
-            fn backward_par<S>(
-                &self,
-                input: &ArrayBase<S, Dim<[usize; 2]>>,
-            ) -> Array<Self::Physical, Dim<[usize; 2]>>
-            where
-                S: Data<Elem = Self::Spectral>,
-            {
-                let buffer = self.base0.backward_par(input, 0);
-                self.base1.backward_par(&buffer, 1)
-            }
-
+            /// Transform spectral -> physical space (inplace)
+            ///
+            /// # Arguments
+            ///
+            /// * `input` - *ndarray* with num type of spectral space
+            /// * `output` - *ndarray* with num type of physical space
             fn backward_inplace_par<S1, S2>(
                 &self,
                 input: &ArrayBase<S1, Dim<[usize; 2]>>,
@@ -390,14 +462,14 @@ macro_rules! impl_space2 {
         }
     };
 }
-impl_space2!(BaseR2r, BaseR2r, A, A);
-impl_space2!(BaseR2c, BaseR2r, A, Complex<A>);
-impl_space2!(BaseC2c, BaseR2c, A, Complex<A>);
-impl_space2!(BaseC2c, BaseC2c, Complex<A>, Complex<A>);
+impl_space2!(Space2Mpi, BaseR2r, BaseR2r, A, A);
+impl_space2!(Space2Mpi, BaseR2c, BaseR2r, A, Complex<A>);
+impl_space2!(Space2Mpi, BaseC2c, BaseR2c, A, Complex<A>);
+impl_space2!(Space2Mpi, BaseC2c, BaseC2c, Complex<A>, Complex<A>);
 
 macro_rules! impl_space2_mpi {
     ($base0: ident, $base1: ident, $p: ty, $s: ty) => {
-        impl<A> BaseSpaceMpi<A, 2> for Space2<'_, $base0<A>, $base1<A>>
+        impl<A> BaseSpaceMpi<A, 2> for Space2Mpi<'_, $base0<A>, $base1<A>>
         where
             A: FloatNum + ScalarNum + Equivalence,
             Complex<A>: ScalarNum + Equivalence,
@@ -596,10 +668,10 @@ macro_rules! impl_space2_mpi {
                     ]);
                     let mut buffer_ypen = Array2::zeros(dcp.y_pencil.sz);
                     dcp.transpose_x_to_y(
-                        &self.base0.differentiate(input, deriv[0], 0),
+                        &self.base0.gradient(input, deriv[0], 0),
                         &mut buffer_ypen,
                     );
-                    self.base1.differentiate(&buffer_ypen, deriv[1], 1)
+                    self.base1.gradient(&buffer_ypen, deriv[1], 1)
                 };
 
                 // transform back to x pencil
