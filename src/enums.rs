@@ -1,8 +1,8 @@
 use crate::chebyshev::{Chebyshev, ChebyshevComposite};
 use crate::fourier::{FourierC2c, FourierR2c};
 use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
-    BaseTransform,
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpDiffmat, BaseMatOpLaplacian,
+    BaseMatOpStencil, BaseSize, BaseTransform,
 };
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::Array2;

@@ -8,8 +8,8 @@ use num_traits::Zero;
 pub trait BaseSpace<A, const N: usize>:
     Clone
     + BaseSpaceElements<N, RealNum = A>
-    + BaseSpaceMatOpGeneral<RealNum = A, SpectralNum = Self::Spectral>
-    + BaseSpaceMatOpLaplacian<ScalarNum = A>
+    + BaseSpaceMatOpStencil<NumType = A>
+    + BaseSpaceMatOpLaplacian<NumType = A>
     + BaseSpaceFromOrtho<A, Self::Spectral, N>
     + BaseSpaceGradient<A, Self::Spectral, N>
     + BaseSpaceTransform<A, N>
@@ -23,8 +23,8 @@ where
     A: FloatNum,
     T: Clone
         + BaseSpaceElements<N, RealNum = A>
-        + BaseSpaceMatOpGeneral<RealNum = A, SpectralNum = Self::Spectral>
-        + BaseSpaceMatOpLaplacian<ScalarNum = A>
+        + BaseSpaceMatOpStencil<NumType = A>
+        + BaseSpaceMatOpLaplacian<NumType = A>
         + BaseSpaceFromOrtho<A, Self::Spectral, N>
         + BaseSpaceGradient<A, Self::Spectral, N>
         + BaseSpaceTransform<A, N>,
@@ -69,12 +69,9 @@ pub trait BaseSpaceElements<const N: usize> {
 }
 
 /// Collection of matrix operators
-pub trait BaseSpaceMatOpGeneral {
-    /// Real valued scalar type
-    type RealNum;
-
-    /// Scalar type of spectral coefficients
-    type SpectralNum;
+pub trait BaseSpaceMatOpStencil {
+    /// Scalar type of matrix
+    type NumType;
 
     /// Transformation stencil
     ///
@@ -87,7 +84,7 @@ pub trait BaseSpaceMatOpGeneral {
     /// # Arguments
     ///
     /// * `axis` - usize
-    fn stencil(&self, axis: usize) -> Array2<Self::RealNum>;
+    fn stencil(&self, axis: usize) -> Array2<Self::NumType>;
 
     /// Inverse of transformation stencil
     ///
@@ -100,13 +97,13 @@ pub trait BaseSpaceMatOpGeneral {
     /// # Arguments
     ///
     /// * `axis` - usize
-    fn stencil_inv(&self, axis: usize) -> Array2<Self::RealNum>;
+    fn stencil_inv(&self, axis: usize) -> Array2<Self::NumType>;
 }
 
 /// Collection of *Laplacian* matrix operators
 pub trait BaseSpaceMatOpLaplacian {
     /// Scalar type of laplacian matrix
-    type ScalarNum;
+    type NumType;
 
     /// Laplacian `L`
     ///
@@ -117,7 +114,7 @@ pub trait BaseSpaceMatOpLaplacian {
     /// # Arguments
     ///
     /// * `axis` - usize
-    fn laplace(&self, axis: usize) -> Array2<Self::ScalarNum>;
+    fn laplacian(&self, axis: usize) -> Array2<Self::NumType>;
 
     /// Pseudoinverse matrix `L_pinv` of Laplacian
     ///
@@ -130,7 +127,7 @@ pub trait BaseSpaceMatOpLaplacian {
     /// # Arguments
     ///
     /// * `axis` - usize
-    fn laplace_pinv(&self, axis: usize) -> (Array2<Self::ScalarNum>, Array2<Self::ScalarNum>);
+    fn laplacian_pinv(&self, axis: usize) -> (Array2<Self::NumType>, Array2<Self::NumType>);
 }
 
 /// # Transform from orthogonal <-> composite base

@@ -1,8 +1,8 @@
 //! # Orthogonal Chebyshev Base
 use crate::enums::{BaseKind, TransformKind};
 use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
-    BaseTransform,
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpDiffmat, BaseMatOpLaplacian,
+    BaseMatOpStencil, BaseSize, BaseTransform,
 };
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::{s, Array2};
@@ -211,17 +211,14 @@ impl<A: FloatNum> BaseElements for Chebyshev<A> {
     }
 }
 
-impl<A: FloatNum> BaseMatOpGeneral for Chebyshev<A> {
-    /// Real valued scalar type
-    type RealNum = A;
-
-    /// Scalar type of spectral coefficients
-    type SpectralNum = A;
+impl<A: FloatNum> BaseMatOpDiffmat for Chebyshev<A> {
+    /// Scalar type of matrix
+    type NumType = A;
 
     /// Explicit differential operator $ D $
     ///
     /// Matrix-based version of [`BaseGradient::gradient()`]
-    fn diffmat(&self, deriv: usize) -> Array2<Self::SpectralNum> {
+    fn diffmat(&self, deriv: usize) -> Array2<Self::NumType> {
         assert!(deriv > 0);
         Self::_dmat(self.n, deriv)
     }
@@ -237,28 +234,33 @@ impl<A: FloatNum> BaseMatOpGeneral for Chebyshev<A> {
     /// ```
     ///
     /// Can be used as a preconditioner.
-    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::SpectralNum>, Array2<Self::SpectralNum>) {
+    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
         assert!(deriv > 0);
         (Self::_pinv(self.n, deriv), Self::_pinv_eye(self.n, deriv))
     }
+}
+
+impl<A: FloatNum> BaseMatOpStencil for Chebyshev<A> {
+    /// Scalar type of matrix
+    type NumType = A;
 
     /// Transformation stencil composite -> orthogonal space
-    fn stencil(&self) -> Array2<Self::RealNum> {
+    fn stencil(&self) -> Array2<Self::NumType> {
         Array2::<A>::eye(self.len_spec())
     }
 
     /// Inverse of transformation stencil
-    fn stencil_inv(&self) -> Array2<Self::RealNum> {
+    fn stencil_inv(&self) -> Array2<Self::NumType> {
         Array2::<A>::eye(self.len_spec())
     }
 }
 
 impl<A: FloatNum> BaseMatOpLaplacian for Chebyshev<A> {
-    /// Scalar type of laplacian matrix
-    type ScalarNum = A;
+    /// Scalar type of matrix
+    type NumType = A;
 
     /// Laplacian $ L $
-    fn laplace(&self) -> Array2<Self::ScalarNum> {
+    fn laplacian(&self) -> Array2<Self::NumType> {
         self.diffmat(2)
     }
 
@@ -270,7 +272,7 @@ impl<A: FloatNum> BaseMatOpLaplacian for Chebyshev<A> {
     /// ```text
     /// D_pinv @ D = I_pinv
     /// ``
-    fn laplace_pinv(&self) -> (Array2<Self::ScalarNum>, Array2<Self::ScalarNum>) {
+    fn laplacian_pinv(&self) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
         self.diffmat_pinv(2)
     }
 }

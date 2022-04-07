@@ -4,11 +4,11 @@
 use super::{BaseSpaceMpi, Communicator, Decomp2d, DecompHandler, Equivalence, Universe};
 use crate::enums::{BaseKind, TransformKind};
 use crate::space::traits::{
-    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpGeneral,
+    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpStencil,
     BaseSpaceMatOpLaplacian, BaseSpaceSize, BaseSpaceTransform,
 };
 use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpStencil, BaseMatOpLaplacian, BaseSize,
     BaseTransform,
 };
 use crate::{BaseC2c, BaseR2c, BaseR2r, FloatNum, ScalarNum};

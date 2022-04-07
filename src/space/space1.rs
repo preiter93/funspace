@@ -19,11 +19,11 @@
 #![allow(clippy::module_name_repetitions)]
 use crate::enums::{BaseKind, TransformKind};
 use crate::space::traits::{
-    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpGeneral,
+    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpStencil,
     BaseSpaceMatOpLaplacian, BaseSpaceSize, BaseSpaceTransform,
 };
 use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpStencil, BaseMatOpLaplacian, BaseSize,
     BaseTransform,
 };
 use crate::{BaseC2c, BaseR2c, BaseR2r, FloatNum, ScalarNum};
@@ -105,15 +105,12 @@ macro_rules! impl_space1 {
             }
         }
 
-        impl<A> BaseSpaceMatOpGeneral for Space1<$base0<A>>
+        impl<A> BaseSpaceMatOpStencil for Space1<$base0<A>>
         where
             A: FloatNum,
         {
-            /// Real valued scalar type
-            type RealNum = A;
-
-            /// Scalar type of spectral coefficients
-            type SpectralNum = $s;
+            /// Scalar type of laplacian matrix
+            type NumType = A;
 
             /// Transformation stencil
             ///
@@ -150,7 +147,8 @@ macro_rules! impl_space1 {
         where
             A: FloatNum,
         {
-            type ScalarNum = A;
+            /// Scalar type of laplacian matrix
+            type NumType = A;
             /// Laplacian `L`
             ///
             /// ```text
@@ -160,8 +158,8 @@ macro_rules! impl_space1 {
             /// # Arguments
             ///
             /// * `axis` - usize
-            fn laplace(&self, _axis: usize) -> Array2<A> {
-                self.base0.laplace()
+            fn laplacian(&self, _axis: usize) -> Array2<A> {
+                self.base0.laplacian()
             }
 
             /// Pseudoinverse matrix `L_pinv` of Laplacian
@@ -175,8 +173,8 @@ macro_rules! impl_space1 {
             /// # Arguments
             ///
             /// * `axis` - usize
-            fn laplace_pinv(&self, _axis: usize) -> (Array2<A>, Array2<A>) {
-                self.base0.laplace_pinv()
+            fn laplacian_pinv(&self, _axis: usize) -> (Array2<A>, Array2<A>) {
+                self.base0.laplacian_pinv()
             }
         }
 

@@ -55,36 +55,38 @@ macro_rules! impl_funspace_elemental_for_base {
             }
         }
 
-        impl<A: FloatNum> BaseMatOpGeneral for $base<A> {
-            /// Real valued scalar type
-            type RealNum = A;
-
-            /// Scalar type of spectral coefficients
-            type SpectralNum = $b;
+        impl<A: FloatNum> BaseMatOpDiffmat for $base<A> {
+            //// Scalar type of matrix
+            type NumType = $b;
 
             /// Explicit differential operator $ D $
-            fn diffmat(&self, deriv: usize) -> Array2<Self::SpectralNum> {
+            fn diffmat(&self, deriv: usize) -> Array2<Self::NumType> {
                 match self {
                     $(Self::$var(ref b) => b.diffmat(deriv),)*
                 }
             }
 
             /// Explicit inverse of differential operator $ D^* $
-            fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::SpectralNum>, Array2<Self::SpectralNum>) {
+            fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
                 match self {
                     $(Self::$var(ref b) => b.diffmat_pinv(deriv),)*
                 }
             }
+        }
+
+        impl<A: FloatNum> BaseMatOpStencil for $base<A> {
+            //// Scalar type of matrix
+            type NumType = A;
 
             /// Transformation stencil composite -> orthogonal space
-            fn stencil(&self) -> Array2<Self::RealNum> {
+            fn stencil(&self) -> Array2<Self::NumType> {
                 match self {
                     $(Self::$var(ref b) => b.stencil(),)*
                 }
             }
 
             /// Inverse of transformation stencil
-            fn stencil_inv(&self) -> Array2<Self::RealNum> {
+            fn stencil_inv(&self) -> Array2<Self::NumType> {
                 match self {
                     $(Self::$var(ref b) => b.stencil_inv(),)*
                 }
@@ -93,12 +95,12 @@ macro_rules! impl_funspace_elemental_for_base {
 
         impl<A: FloatNum> BaseMatOpLaplacian for $base<A> {
             /// Scalar type of laplacian matrix
-            type ScalarNum = A;
+            type NumType = A;
 
             /// Laplacian $ L $
-            fn laplace(&self) -> Array2<Self::ScalarNum> {
+            fn laplacian(&self) -> Array2<Self::NumType> {
                 match self {
-                    $(Self::$var(ref b) => b.laplace(),)*
+                    $(Self::$var(ref b) => b.laplacian(),)*
                 }
             }
 
@@ -110,9 +112,9 @@ macro_rules! impl_funspace_elemental_for_base {
             /// ```text
             /// D_pinv @ D = I_pinv
             /// ``
-            fn laplace_pinv(&self) -> (Array2<Self::ScalarNum>, Array2<Self::ScalarNum>) {
+            fn laplacian_pinv(&self) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
                 match self {
-                    $(Self::$var(ref b) => b.laplace_pinv(),)*
+                    $(Self::$var(ref b) => b.laplacian_pinv(),)*
                 }
             }
         }

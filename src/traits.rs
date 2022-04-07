@@ -8,7 +8,8 @@ use num_traits::identities::Zero;
 pub trait Base<T>:
     BaseSize
     + BaseMatOpLaplacian
-    + BaseMatOpGeneral
+    + BaseMatOpDiffmat
+    + BaseMatOpStencil
     + BaseElements
     + BaseGradient<T>
     + BaseFromOrtho<T>
@@ -23,7 +24,8 @@ where
     T: Zero + Copy,
     A: BaseSize
         + BaseMatOpLaplacian
-        + BaseMatOpGeneral
+        + BaseMatOpDiffmat
+        + BaseMatOpStencil
         + BaseElements
         + BaseGradient<T>
         + BaseFromOrtho<T>
@@ -58,18 +60,15 @@ pub trait BaseElements {
     fn coords(&self) -> Vec<Self::RealNum>;
 }
 
-/// Collection of matrix operators
-pub trait BaseMatOpGeneral {
-    /// Real valued scalar type
-    type RealNum;
-
-    /// Scalar type of spectral coefficients
-    type SpectralNum;
+/// Collection of differentiation matrix operators
+pub trait BaseMatOpDiffmat {
+    /// Scalar type of matrix
+    type NumType;
 
     /// Explicit differential operator $ D $
     ///
     /// Matrix-based version of [`BaseGradient::gradient()`]
-    fn diffmat(&self, _deriv: usize) -> Array2<Self::SpectralNum>;
+    fn diffmat(&self, _deriv: usize) -> Array2<Self::NumType>;
 
     /// Explicit inverse of differential operator $ D^* $
     ///
@@ -82,23 +81,28 @@ pub trait BaseMatOpGeneral {
     /// ```
     ///
     /// Can be used as a preconditioner.
-    fn diffmat_pinv(&self, _deriv: usize)
-        -> (Array2<Self::SpectralNum>, Array2<Self::SpectralNum>);
+    fn diffmat_pinv(&self, _deriv: usize) -> (Array2<Self::NumType>, Array2<Self::NumType>);
+}
+
+/// Collection of stencil matrix operators
+pub trait BaseMatOpStencil {
+    /// Scalar type of matrix
+    type NumType;
 
     /// Transformation stencil composite -> orthogonal space
-    fn stencil(&self) -> Array2<Self::RealNum>;
+    fn stencil(&self) -> Array2<Self::NumType>;
 
     /// Inverse of transformation stencil
-    fn stencil_inv(&self) -> Array2<Self::RealNum>;
+    fn stencil_inv(&self) -> Array2<Self::NumType>;
 }
 
 /// Collection of *Laplacian* matrix operators
 pub trait BaseMatOpLaplacian {
-    /// Scalar type of laplacian matrix
-    type ScalarNum;
+    /// Scalar type of matrix
+    type NumType;
 
     /// Laplacian $ L $
-    fn laplace(&self) -> Array2<Self::ScalarNum>;
+    fn laplacian(&self) -> Array2<Self::NumType>;
 
     /// Pseudoinverse matrix of Laplacian $ L^{-1} $
     ///
@@ -108,7 +112,7 @@ pub trait BaseMatOpLaplacian {
     /// ```text
     /// D_pinv @ D = I_pinv
     /// ```
-    fn laplace_pinv(&self) -> (Array2<Self::ScalarNum>, Array2<Self::ScalarNum>);
+    fn laplacian_pinv(&self) -> (Array2<Self::NumType>, Array2<Self::NumType>);
 }
 
 /// # Transform from orthogonal <-> composite base

@@ -1,8 +1,8 @@
 //! # Complex - to - complex fourier space
 use crate::enums::{BaseKind, TransformKind};
 use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
-    BaseTransform,
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpDiffmat, BaseMatOpLaplacian,
+    BaseMatOpStencil, BaseSize, BaseTransform,
 };
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::{s, Array2};
@@ -106,12 +106,9 @@ impl<A: FloatNum> BaseElements for FourierC2c<A> {
     }
 }
 
-impl<A: FloatNum> BaseMatOpGeneral for FourierC2c<A> {
-    /// Real valued scalar type
-    type RealNum = A;
-
-    /// Scalar type of spectral coefficients
-    type SpectralNum = Complex<A>;
+impl<A: FloatNum> BaseMatOpDiffmat for FourierC2c<A> {
+    /// Scalar type of matrix
+    type NumType = Complex<A>;
 
     /// Explicit differential operator $ D $
     ///
@@ -119,9 +116,9 @@ impl<A: FloatNum> BaseMatOpGeneral for FourierC2c<A> {
     ///
     /// # Panics
     /// Type conversion fails
-    fn diffmat(&self, deriv: usize) -> Array2<Self::SpectralNum> {
+    fn diffmat(&self, deriv: usize) -> Array2<Self::NumType> {
         assert!(deriv > 0);
-        let mut mat = Array2::<Self::SpectralNum>::zeros((self.len_spec(), self.len_spec()));
+        let mut mat = Array2::<Self::NumType>::zeros((self.len_spec(), self.len_spec()));
         let wavenum = Self::wavenumber(self.len_phys());
         for (l, k) in mat.diag_mut().iter_mut().zip(wavenum.iter()) {
             *l = k.powi(deriv.try_into().unwrap());
@@ -140,36 +137,46 @@ impl<A: FloatNum> BaseMatOpGeneral for FourierC2c<A> {
     /// ```
     ///
     /// Can be used as a preconditioner.
-    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::SpectralNum>, Array2<Self::SpectralNum>) {
+    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
         assert!(deriv > 0);
-        let peye: Array2<Self::SpectralNum> = Array2::<Self::SpectralNum>::eye(self.m)
+        let peye: Array2<Self::NumType> = Array2::<Self::NumType>::eye(self.m)
             .slice(s![1.., ..])
             .to_owned();
         let mut pinv = self.diffmat(deriv);
         for p in pinv.slice_mut(ndarray::s![1.., 1..]).diag_mut().iter_mut() {
-            *p = Self::SpectralNum::one() / *p;
+            *p = Self::NumType::one() / *p;
         }
         (pinv, peye)
     }
+}
+
+impl<A: FloatNum> BaseMatOpStencil for FourierC2c<A> {
+    /// Scalar type of matrix
+    type NumType = A;
 
     /// Transformation stencil composite -> orthogonal space
-    fn stencil(&self) -> Array2<Self::RealNum> {
+    fn stencil(&self) -> Array2<Self::NumType> {
         Array2::<A>::eye(self.len_spec())
     }
 
     /// Inverse of transformation stencil
-    fn stencil_inv(&self) -> Array2<Self::RealNum> {
+    fn stencil_inv(&self) -> Array2<Self::NumType> {
         Array2::<A>::eye(self.len_spec())
     }
 }
 
 impl<A: FloatNum> BaseMatOpLaplacian for FourierC2c<A> {
     /// Scalar type of laplacian matrix
-    type ScalarNum = A;
+    type NumType = A;
 
     /// Laplacian $ L $
-    fn laplace(&self) -> Array2<Self::ScalarNum> {
-        unimplemented!()
+    fn laplacian(&self) -> Array2<Self::NumType> {
+        let wavenum = Self::wavenumber(self.len_phys());
+        let mut lap = Array2::<A>::zeros((self.m, self.m));
+        for (l, k) in lap.diag_mut().iter_mut().zip(wavenum.iter()) {
+            *l = -k.im * k.im;
+        }
+        lap
     }
 
     /// Pseudoinverse matrix of Laplacian $ L^{-1} $
@@ -180,8 +187,13 @@ impl<A: FloatNum> BaseMatOpLaplacian for FourierC2c<A> {
     /// ```text
     /// D_pinv @ D = I_pinv
     /// ``
-    fn laplace_pinv(&self) -> (Array2<Self::ScalarNum>, Array2<Self::ScalarNum>) {
-        unimplemented!()
+    fn laplacian_pinv(&self) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
+        let mut d_pinv = self.laplacian();
+        for p in d_pinv.slice_mut(s![1.., 1..]).diag_mut().iter_mut() {
+            *p = A::one() / *p;
+        }
+        let i_pinv = Array2::<A>::eye(self.m);
+        (d_pinv, i_pinv.slice(s![1.., ..]).to_owned())
     }
 }
 

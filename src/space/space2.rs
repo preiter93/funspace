@@ -19,11 +19,11 @@
 #![allow(clippy::module_name_repetitions)]
 use crate::enums::{BaseKind, TransformKind};
 use crate::space::traits::{
-    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpGeneral,
+    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpStencil,
     BaseSpaceMatOpLaplacian, BaseSpaceSize, BaseSpaceTransform,
 };
 use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpStencil, BaseMatOpLaplacian, BaseSize,
     BaseTransform,
 };
 use crate::{BaseC2c, BaseR2c, BaseR2r, FloatNum, ScalarNum};
@@ -121,14 +121,11 @@ macro_rules! impl_space2 {
             }
         }
 
-        impl<A> BaseSpaceMatOpGeneral for $space<$base0<A>, $base1<A>>
+        impl<A> BaseSpaceMatOpStencil for $space<$base0<A>, $base1<A>>
         where
             A: FloatNum,
         {
-            type RealNum = A;
-
-            /// Scalar type of spectral coefficients
-            type SpectralNum = $s;
+            type NumType = A;
 
             /// Transformation stencil
             ///
@@ -173,7 +170,7 @@ macro_rules! impl_space2 {
         where
             A: FloatNum,
         {
-            type ScalarNum = A;
+            type NumType = A;
 
             /// Laplacian `L`
             ///
@@ -184,11 +181,11 @@ macro_rules! impl_space2 {
             /// # Arguments
             ///
             /// * `axis` - usize
-            fn laplace(&self, axis: usize) -> Array2<A> {
+            fn laplacian(&self, axis: usize) -> Array2<A> {
                 if axis == 0 {
-                    self.base0.laplace()
+                    self.base0.laplacian()
                 } else {
-                    self.base1.laplace()
+                    self.base1.laplacian()
                 }
             }
 
@@ -203,11 +200,11 @@ macro_rules! impl_space2 {
             /// # Arguments
             ///
             /// * `axis` - usize
-            fn laplace_pinv(&self, axis: usize) -> (Array2<A>, Array2<A>) {
+            fn laplacian_pinv(&self, axis: usize) -> (Array2<A>, Array2<A>) {
                 if axis == 0 {
-                    self.base0.laplace_pinv()
+                    self.base0.laplacian_pinv()
                 } else {
-                    self.base1.laplace_pinv()
+                    self.base1.laplacian_pinv()
                 }
             }
         }

@@ -185,13 +185,13 @@ pub use crate::enums::{BaseC2c, BaseKind, BaseR2c, BaseR2r};
 use chebyshev::{Chebyshev, ChebyshevComposite};
 use fourier::{FourierC2c, FourierR2c};
 pub use space::traits::{
-    BaseSpace, BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpGeneral,
+    BaseSpace, BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpStencil,
     BaseSpaceMatOpLaplacian, BaseSpaceSize, BaseSpaceTransform,
 };
 pub use space::{Space1, Space2, Space3};
 pub use traits::{
-    Base, BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian,
-    BaseSize, BaseTransform,
+    Base, BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpDiffmat, BaseMatOpLaplacian,
+    BaseMatOpStencil, BaseSize, BaseTransform,
 };
 pub use types::{FloatNum, ScalarNum};
 

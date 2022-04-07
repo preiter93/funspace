@@ -4,8 +4,8 @@ use super::stencils::StencilOperations;
 use super::stencils::{BiHarmonic, ChebyshevStencils, Dirichlet, DirichletNeumann, Neumann};
 use crate::enums::{BaseKind, TransformKind};
 use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpGeneral, BaseMatOpLaplacian, BaseSize,
-    BaseTransform,
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpDiffmat, BaseMatOpLaplacian,
+    BaseMatOpStencil, BaseSize, BaseTransform,
 };
 use crate::types::{FloatNum, ScalarNum};
 use ndarray::Array2;
@@ -69,17 +69,14 @@ impl<A: FloatNum> BaseElements for ChebyshevComposite<A> {
     }
 }
 
-impl<A: FloatNum> BaseMatOpGeneral for ChebyshevComposite<A> {
-    /// Real valued scalar type
-    type RealNum = A;
-
-    /// Scalar type of spectral coefficients
-    type SpectralNum = A;
+impl<A: FloatNum> BaseMatOpDiffmat for ChebyshevComposite<A> {
+    /// Scalar type of matrix
+    type NumType = A;
 
     /// Explicit differential operator $ D $
     ///
     /// Matrix-based version of [`BaseGradient::gradient()`]
-    fn diffmat(&self, deriv: usize) -> Array2<Self::SpectralNum> {
+    fn diffmat(&self, deriv: usize) -> Array2<Self::NumType> {
         self.ortho.diffmat(deriv)
     }
 
@@ -94,27 +91,32 @@ impl<A: FloatNum> BaseMatOpGeneral for ChebyshevComposite<A> {
     /// ```
     ///
     /// Can be used as a preconditioner.
-    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::SpectralNum>, Array2<Self::SpectralNum>) {
+    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
         self.ortho.diffmat_pinv(deriv)
     }
+}
+
+impl<A: FloatNum> BaseMatOpStencil for ChebyshevComposite<A> {
+    /// Scalar type of matrix
+    type NumType = A;
 
     /// Transformation stencil composite -> orthogonal space
-    fn stencil(&self) -> Array2<Self::RealNum> {
+    fn stencil(&self) -> Array2<Self::NumType> {
         self.stencil.to_array()
     }
 
     /// Inverse of transformation stencil
-    fn stencil_inv(&self) -> Array2<Self::RealNum> {
+    fn stencil_inv(&self) -> Array2<Self::NumType> {
         self.stencil.pinv()
     }
 }
 
 impl<A: FloatNum> BaseMatOpLaplacian for ChebyshevComposite<A> {
     /// Scalar type of laplacian matrix
-    type ScalarNum = A;
+    type NumType = A;
 
     /// Laplacian $ L $
-    fn laplace(&self) -> Array2<Self::ScalarNum> {
+    fn laplacian(&self) -> Array2<Self::NumType> {
         self.diffmat(2)
     }
 
@@ -126,7 +128,7 @@ impl<A: FloatNum> BaseMatOpLaplacian for ChebyshevComposite<A> {
     /// ```text
     /// D_pinv @ D = I_pinv
     /// ``
-    fn laplace_pinv(&self) -> (Array2<Self::ScalarNum>, Array2<Self::ScalarNum>) {
+    fn laplacian_pinv(&self) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
         self.diffmat_pinv(2)
     }
 }

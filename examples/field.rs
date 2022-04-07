@@ -107,12 +107,12 @@ where
     pub fn ingredients_for_hholtz(&self, axis: usize) -> (Array2<A>, Array2<A>, Option<Array2<A>>) {
         let kind = self.space.base_kind(axis);
         let sten = self.space.stencil(axis);
-        let lap = self.space.laplace(axis);
+        let lap = self.space.laplacian(axis);
 
         // Matrices and optional preconditioner
         match kind {
             BaseKind::Chebyshev => {
-                let (mut pinv, peye) = self.space.laplace_pinv(axis);
+                let (mut pinv, peye) = self.space.laplacian_pinv(axis);
                 pinv.assign(&peye.dot(&pinv));
                 let sten_sliced = sten.slice(s![.., 2..]);
                 (pinv.dot(&sten_sliced), peye.dot(&sten_sliced), Some(pinv))
@@ -121,7 +121,7 @@ where
             | BaseKind::ChebNeumann
             | BaseKind::ChebDirichletNeumann
             | BaseKind::ChebBiHarmonic => {
-                let (mut pinv, peye) = self.space.laplace_pinv(axis);
+                let (mut pinv, peye) = self.space.laplacian_pinv(axis);
                 pinv.assign(&peye.dot(&pinv));
                 (pinv.dot(&sten), peye.dot(&sten), Some(pinv))
             }
