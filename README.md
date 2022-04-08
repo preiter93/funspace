@@ -13,7 +13,7 @@ Collection of function spaces.
 | ``ChebNeumann``          | R2r            | False      | u'(-1) = u'(1) = 0                   | [`cheb_neumann()`]           |
 | ``ChebDirichletNeumann`` | R2r            | False      | u(-1) = u'(1) = 0                    | [`cheb_dirichlet_neumann()`] |
 | ``ChebBiHarmonicA``      | R2r            | False      | u(-1)  = u'(-1) = u(1)= u'(1) = 0    | [`cheb_biharmonic_a()`]      |
-| ``ChebBiHarmonicB``      | R2r            | False      | u(-1)  = u''(-1) = u(1)= u``(1) = 0  | [`cheb_biharmonic_b()`]      |
+| ``ChebBiHarmonicB``      | R2r            | False      | u(-1)  = u''(-1) = u(1)= u''(1) = 0  | [`cheb_biharmonic_b()`]      |
 | ``FourierR2c``           | R2c            | True       | Periodic                             | [`fourier_r2c()`]            |
 | ``FourierC2c``           | C2c            | True       | Periodic                             | [`fourier_c2c()`]            |
 
