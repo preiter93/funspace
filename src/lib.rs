@@ -4,15 +4,16 @@
 //!
 //! # Bases
 //!
-//! | Name                 | Transform-type | Orthogonal | Boundary conditions               | Link                         |
-//! |----------------------|----------------|------------|-----------------------------------|------------------------------|
-//! | Chebyshev            | R2r            | True       | None                              | [`chebyshev()`]              |
-//! | ChebDirichlet        | R2r            | False      | u(-1) = u(1) = 0                  | [`cheb_dirichlet()`]         |
-//! | ChebNeumann          | R2r            | False      | u'(-1) = u'(1) = 0                | [`cheb_neumann()`]           |
-//! | ChebDirichletNeumann | R2r            | False      | u(-1) = u'(1) = 0                 | [`cheb_dirichlet_neumann()`] |
-//! | ChebBiHarmonic       | R2r            | False      | u(-1)  = u'(-1) = u(1)= u'(1) = 0 | [`cheb_biharmonic()`]        |
-//! | FourierR2c           | R2c            | True       | Periodic                          | [`fourier_r2c()`]            |
-//! | FourierC2c           | C2c            | True       | Periodic                          | [`fourier_c2c()`]            |
+//! | Name                     | Transform-type | Orthogonal | Boundary conditions                  | Link                         |
+//! |--------------------------|----------------|------------|--------------------------------------|------------------------------|
+//! | ``Chebyshev``            | R2r            | True       | None                                 | [`chebyshev()`]              |
+//! | ``ChebDirichlet ``       | R2r            | False      | u(-1) = u(1) = 0                     | [`cheb_dirichlet()`]         |
+//! | ``ChebNeumann``          | R2r            | False      | u'(-1) = u'(1) = 0                   | [`cheb_neumann()`]           |
+//! | ``ChebDirichletNeumann`` | R2r            | False      | u(-1) = u'(1) = 0                    | [`cheb_dirichlet_neumann()`] |
+//! | ``ChebBiHarmonicA``      | R2r            | False      | u(-1)  = u'(-1) = u(1)= u'(1) = 0    | [`cheb_biharmonic_a()`]      |
+//! | ``ChebBiHarmonicB``      | R2r            | False      | u(-1)  = u''(-1) = u(1)= u'``(1) = 0 | [`cheb_biharmonic_b()`]      |
+//! | ``FourierR2c``           | R2c            | True       | Periodic                             | [`fourier_r2c()`]            |
+//! | ``FourierC2c``           | C2c            | True       | Periodic                             | [`fourier_c2c()`]            |
 //!
 //! ## Transform
 //! A transformation describes a conversion from physical values to spectral coefficients,
@@ -185,8 +186,8 @@ pub use crate::enums::{BaseC2c, BaseKind, BaseR2c, BaseR2r};
 use chebyshev::{Chebyshev, ChebyshevComposite};
 use fourier::{FourierC2c, FourierR2c};
 pub use space::traits::{
-    BaseSpace, BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpStencil,
-    BaseSpaceMatOpLaplacian, BaseSpaceSize, BaseSpaceTransform,
+    BaseSpace, BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpLaplacian,
+    BaseSpaceMatOpStencil, BaseSpaceSize, BaseSpaceTransform,
 };
 pub use space::{Space1, Space2, Space3};
 pub use traits::{
@@ -286,8 +287,18 @@ pub fn cheb_dirichlet_neumann<A: FloatNum>(n: usize) -> BaseR2r<A> {
 /// u(-1)=0, u(1)=0, u'(-1)=0 and u'(1)=0
 ///```
 #[must_use]
-pub fn cheb_biharmonic<A: FloatNum>(n: usize) -> BaseR2r<A> {
-    BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::biharmonic(n))
+pub fn cheb_biharmonic_a<A: FloatNum>(n: usize) -> BaseR2r<A> {
+    BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::biharmonic_a(n))
+}
+
+/// Function space with biharmonic boundary conditions, i.e
+///
+/// ```text
+/// u(-1)=0, u(1)=0, u''(-1)=0 and u''(1)=0
+///```
+#[must_use]
+pub fn cheb_biharmonic_b<A: FloatNum>(n: usize) -> BaseR2r<A> {
+    BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::biharmonic_b(n))
 }
 
 /// Function space for Fourier Polynomials

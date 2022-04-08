@@ -45,7 +45,7 @@ pub(super) struct HelperStencil3Diag<A> {
 /// Container for Chebyshev Stencil with two diagonals
 /// with offsets 0, -2, -4.
 ///
-/// This struct is used in [`super::BiHarmonic`]
+/// This struct is used in [`super::BiHarmonicA`]
 #[derive(Clone)]
 pub(super) struct HelperStencil3Diag2<A> {
     /// Main diagonal

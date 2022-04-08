@@ -24,7 +24,8 @@ pub enum ChebyshevStencils<A: FloatNum> {
     Dirichlet(Dirichlet<A>),
     Neumann(Neumann<A>),
     DirichletNeumann(DirichletNeumann<A>),
-    BiHarmonic(BiHarmonic<A>),
+    BiHarmonicA(BiHarmonicA<A>),
+    BiHarmonicB(BiHarmonicB<A>),
 }
 
 /// Container for Chebyshev Stencil with Dirichlet boundary conditions
@@ -54,7 +55,16 @@ pub struct DirichletNeumann<A> {
 /// with biharmonic (i.e dirichlet + neumann)
 /// boundary conditions at x=-1, 1
 #[derive(Clone)]
-pub struct BiHarmonic<A> {
+pub struct BiHarmonicA<A> {
+    /// Helper
+    helper: HelperStencil3Diag2<A>,
+}
+
+/// Container for Chebyshev Stencil with
+/// with biharmonic (i.e dirichlet + second derivative = zero)
+/// boundary conditions at x=-1, 1
+#[derive(Clone)]
+pub struct BiHarmonicB<A> {
     /// Helper
     helper: HelperStencil3Diag2<A>,
 }
@@ -290,14 +300,13 @@ impl<A: FloatNum> StencilOperations<A> for DirichletNeumann<A> {
     }
 }
 
-impl<A: FloatNum> BiHarmonic<A> {
-    /// Return stencil of chebyshev neumann space
-    /// ```text
-    ///  \phi_k = T_k - k^{2} \/ (k+2)^2 T_{k+2}
-    /// ```
+impl<A: FloatNum> BiHarmonicA<A> {
+    /// Return stencil of biarmonic space
     ///
     /// Reference:
-    /// J. Shen: Effcient Spectral-Galerkin Method II.
+    /// ```text
+    /// F. Liu: doi: 10.4208/nmtma.2011.42s.5
+    /// ```
     #[allow(clippy::cast_precision_loss)]
     pub fn new(n: usize) -> Self {
         let m = Self::get_m(n);
@@ -322,7 +331,87 @@ impl<A: FloatNum> BiHarmonic<A> {
     }
 }
 
-impl<A: FloatNum> StencilOperations<A> for BiHarmonic<A> {
+impl<A: FloatNum> StencilOperations<A> for BiHarmonicA<A> {
+    /// Multiply stencil with a 1d vector
+    fn dot_inplace<T>(&self, v: &[T], u: &mut [T])
+    where
+        T: Mul<Output = T>
+            + Sub<Output = T>
+            + Div<Output = T>
+            + Add<Output = T>
+            + Add<A, Output = T>
+            + Mul<A, Output = T>
+            + Div<A, Output = T>
+            + Sub<A, Output = T>
+            + Zero
+            + Clone
+            + Copy,
+    {
+        self.helper.dot_inplace(v, u);
+    }
+
+    /// Solve linear system $S v = u$
+    fn solve_inplace<T>(&self, u: &[T], v: &mut [T])
+    where
+        T: Mul<Output = T>
+            + Sub<Output = T>
+            + Div<Output = T>
+            + Add<Output = T>
+            + Add<A, Output = T>
+            + Mul<A, Output = T>
+            + Div<A, Output = T>
+            + Sub<A, Output = T>
+            + Zero
+            + Clone
+            + Copy,
+    {
+        self.helper.solve_inplace(u, v);
+    }
+
+    /// Returns transform stencil as2d ndarray
+    fn to_array(&self) -> Array2<A> {
+        self.helper.to_array()
+    }
+
+    /// Returns inverse of transform stencil as 2d ndarray
+    fn pinv(&self) -> Array2<A> {
+        self.helper.pinv()
+    }
+}
+
+impl<A: FloatNum> BiHarmonicB<A> {
+    /// Return stencil of biarmonic space
+    ///
+    /// Reference:
+    /// ```text
+    /// F. Liu: doi: 10.4208/nmtma.2011.42s.5
+    /// ```
+    #[allow(clippy::cast_precision_loss)]
+    pub fn new(n: usize) -> Self {
+        let m = Self::get_m(n);
+
+        let diag = vec![A::one(); m];
+        let mut low2 = vec![A::zero(); m];
+        let mut low4 = vec![A::zero(); m];
+        for (ki, (v2, v4)) in low2.iter_mut().zip(low4.iter_mut()).enumerate() {
+            let k = ki as f64;
+            let d2 = -1. * (2. * (k + 2.) * (15. + 2. * k * (k + 4.)))
+                / ((k + 3.) * (19. + 2. * k * (6. + k)));
+            let d4 = ((k + 1.) * (3. + 2. * k * (k + 2.))) / ((k + 3.) * (19. + 2. * k * (6. + k)));
+            *v2 = A::from_f64(d2).unwrap();
+            *v4 = A::from_f64(d4).unwrap();
+        }
+        let helper = HelperStencil3Diag2::<A>::new(diag, low2, low4);
+        Self { helper }
+    }
+
+    /// Composite spaces is 4 elements smaller than orthogonal space
+    pub fn get_m(n: usize) -> usize {
+        n - 4
+    }
+}
+
+impl<A: FloatNum> StencilOperations<A> for BiHarmonicB<A> {
     /// Multiply stencil with a 1d vector
     fn dot_inplace<T>(&self, v: &[T], u: &mut [T])
     where
@@ -415,9 +504,9 @@ mod tests {
 
     #[test]
     /// Sinv @ S = I
-    fn test_stencil_pinv_biharmonic() {
+    fn test_stencil_pinv_biharmonic_a() {
         let n = 28;
-        let stencil = BiHarmonic::<f64>::new(n);
+        let stencil = BiHarmonicA::<f64>::new(n);
         let mass = stencil.to_array();
         let pinv = stencil.helper.pinv();
         let should_be_eye = pinv.dot(&mass);

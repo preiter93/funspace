@@ -59,8 +59,10 @@ pub enum BaseKind {
     ChebNeumann,
     /// Chebyshev dirichlet - neumann base
     ChebDirichletNeumann,
-    /// Chebyshev biharmonic base
-    ChebBiHarmonic,
+    /// Chebyshev biharmonic base A
+    ChebBiHarmonicA,
+    /// Chebyshev biharmonic base B
+    ChebBiHarmonicB,
     /// Fourier real to complex
     FourierR2c,
     /// Fourier complex to complex
@@ -74,7 +76,8 @@ impl std::fmt::Display for BaseKind {
             BaseKind::ChebDirichlet => write!(f, "ChebDirichlet"),
             BaseKind::ChebNeumann => write!(f, "ChebNeumann"),
             BaseKind::ChebDirichletNeumann => write!(f, "ChebDirichletNeumann"),
-            BaseKind::ChebBiHarmonic => write!(f, "ChebBiHarmonic"),
+            BaseKind::ChebBiHarmonicA => write!(f, "ChebBiHarmonicA"),
+            BaseKind::ChebBiHarmonicB => write!(f, "ChebBiHarmonicB"),
             BaseKind::FourierR2c => write!(f, "FourierR2c"),
             BaseKind::FourierC2c => write!(f, "FourierC2c"),
         }

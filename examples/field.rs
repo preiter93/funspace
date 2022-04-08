@@ -120,7 +120,8 @@ where
             BaseKind::ChebDirichlet
             | BaseKind::ChebNeumann
             | BaseKind::ChebDirichletNeumann
-            | BaseKind::ChebBiHarmonic => {
+            | BaseKind::ChebBiHarmonicA
+            | BaseKind::ChebBiHarmonicB => {
                 let (mut pinv, peye) = self.space.laplacian_pinv(axis);
                 pinv.assign(&peye.dot(&pinv));
                 (pinv.dot(&sten), peye.dot(&sten), Some(pinv))
@@ -147,7 +148,8 @@ where
             | BaseKind::ChebDirichlet
             | BaseKind::ChebNeumann
             | BaseKind::ChebDirichletNeumann
-            | BaseKind::ChebBiHarmonic => false,
+            | BaseKind::ChebBiHarmonicA
+            | BaseKind::ChebBiHarmonicB => false,
             BaseKind::FourierR2c | BaseKind::FourierC2c => true,
             _ => panic!("No ingredients found for Base kind: {}!", kind),
         };

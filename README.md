@@ -6,15 +6,16 @@ Collection of function spaces.
 
 ## Bases
 
-| Name                 | Transform-type | Orthogonal | Boundary conditions               | Link                         |
-|----------------------|----------------|------------|-----------------------------------|------------------------------|
-| Chebyshev            | R2r            | True       | None                              | [`chebyshev()`]              |
-| ChebDirichlet        | R2r            | False      | u(-1) = u(1) = 0                  | [`cheb_dirichlet()`]         |
-| ChebNeumann          | R2r            | False      | u'(-1) = u'(1) = 0                | [`cheb_neumann()`]           |
-| ChebDirichletNeumann | R2r            | False      | u(-1) = u'(1) = 0                 | [`cheb_dirichlet_neumann()`] |
-| ChebBiHarmonic       | R2r            | False      | u(-1)  = u'(-1) = u(1)= u'(1) = 0 | [`cheb_biharmonic()`]        |
-| FourierR2c           | R2c            | True       | Periodic                          | [`fourier_r2c()`]            |
-| FourierC2c           | C2c            | True       | Periodic                          | [`fourier_c2c()`]            |
+| Name                     | Transform-type | Orthogonal | Boundary conditions                  | Link                         |
+|--------------------------|----------------|------------|--------------------------------------|------------------------------|
+| ``Chebyshev``            | R2r            | True       | None                                 | [`chebyshev()`]              |
+| ``ChebDirichlet ``       | R2r            | False      | u(-1) = u(1) = 0                     | [`cheb_dirichlet()`]         |
+| ``ChebNeumann``          | R2r            | False      | u'(-1) = u'(1) = 0                   | [`cheb_neumann()`]           |
+| ``ChebDirichletNeumann`` | R2r            | False      | u(-1) = u'(1) = 0                    | [`cheb_dirichlet_neumann()`] |
+| ``ChebBiHarmonicA``      | R2r            | False      | u(-1)  = u'(-1) = u(1)= u'(1) = 0    | [`cheb_biharmonic_a()`]      |
+| ``ChebBiHarmonicB``      | R2r            | False      | u(-1)  = u''(-1) = u(1)= u'``(1) = 0 | [`cheb_biharmonic_b()`]      |
+| ``FourierR2c``           | R2c            | True       | Periodic                             | [`fourier_r2c()`]            |
+| ``FourierC2c``           | C2c            | True       | Periodic                             | [`fourier_c2c()`]            |
 
 ### Transform
 A transformation describes a conversion from physical values to spectral coefficients,

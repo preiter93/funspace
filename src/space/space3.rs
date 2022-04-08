@@ -21,11 +21,11 @@
 #![allow(clippy::module_name_repetitions)]
 use crate::enums::{BaseKind, TransformKind};
 use crate::space::traits::{
-    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpStencil,
-    BaseSpaceMatOpLaplacian, BaseSpaceSize, BaseSpaceTransform,
+    BaseSpaceElements, BaseSpaceFromOrtho, BaseSpaceGradient, BaseSpaceMatOpLaplacian,
+    BaseSpaceMatOpStencil, BaseSpaceSize, BaseSpaceTransform,
 };
 use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpStencil, BaseMatOpLaplacian, BaseSize,
+    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpLaplacian, BaseMatOpStencil, BaseSize,
     BaseTransform,
 };
 use crate::{BaseC2c, BaseR2c, BaseR2r, FloatNum, ScalarNum};
