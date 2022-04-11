@@ -82,7 +82,7 @@ impl<A: FloatNum> Chebyshev<A> {
     ///
     /// # Panics
     /// - Num conversion fails
-    /// - deriv > 2: Not implemented
+    /// - deriv > 4: Not implemented
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
     pub fn _dmat(n: usize, deriv: usize) -> Array2<A> {
@@ -100,6 +100,31 @@ impl<A: FloatNum> Chebyshev<A> {
                 for q in p + 2..n {
                     if (p + q) % 2 == 0 {
                         dmat[[p, q]] = (q * (q * q - p * p)) as f64;
+                    }
+                }
+            }
+        } else if deriv == 3 {
+            for p in 0..n {
+                let p2 = p * p;
+                for q in p + 3..n {
+                    let q2 = q * q;
+                    if (p + q) % 2 != 0 {
+                        dmat[[p, q]] =
+                            (q * (q2 * (q2 - 2) - 2 * q2 * p2 + p2 * p2 - 2 * p2 + 1)) as f64 / 4.;
+                    }
+                }
+            }
+        } else if deriv == 4 {
+            for p in 0..n {
+                let (p2, p4) = (p * p, p * p * p * p);
+                for q in p + 4..n {
+                    let (q2, q4) = (q * q, q * q * q * q);
+                    if (p + q) % 2 == 0 {
+                        dmat[[p, q]] = (q
+                            * (q2 * (q2 - 4) * (q2 - 4) + 3 * q2 * p4 - p2 * p4 + 8 * p4
+                                - 16 * p2
+                                - 3 * q4 * p2)) as f64
+                            / 24.;
                     }
                 }
             }
@@ -126,15 +151,15 @@ impl<A: FloatNum> Chebyshev<A> {
     ///
     /// # Panics
     /// - Num conversion fails
-    /// - deriv > 2: Not implemented
+    /// - deriv > 4: Not implemented
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
     pub fn _pinv(n: usize, deriv: usize) -> Array2<A> {
-        assert!(
-            !(deriv > 2),
-            "pinv does only support deriv's 1 & 2, got {}",
-            deriv
-        );
+        // assert!(
+        //     !(deriv > 2),
+        //     "pinv does only support deriv's 1 & 2, got {}",
+        //     deriv
+        // );
         let mut pinv = Array2::<f64>::zeros([n, n]);
         if deriv == 1 {
             pinv[[1, 0]] = 1.;
@@ -155,6 +180,57 @@ impl<A: FloatNum> Chebyshev<A> {
             for i in 2..n - 4 {
                 pinv[[i, i + 2]] = 1. / (4 * i * (i + 1)) as f64; // diag + 2
             }
+        } else if deriv == 3 {
+            // diag - 3
+            for i in 3..n {
+                let d = 8 * i * (i - 1) * (i - 2);
+                pinv[[i, i - 3]] = 1. / d as f64;
+            }
+            pinv[[3, 0]] *= 2.;
+            // diag - 1
+            for i in 3..n - 2 {
+                let d = 8 * (i + 1) * (i - 2) * i;
+                pinv[[i, i - 1]] = -3. / d as f64;
+            }
+            // diag + 1
+            for i in 3..n - 4 {
+                let d = 8 * (i - 1) * (i + 2) * i;
+                pinv[[i, i + 1]] = 3. / d as f64;
+            }
+            // diag + 3
+            for i in 3..n - 6 {
+                let d = 8 * i * (i + 1) * (i + 2);
+                pinv[[i, i + 3]] = -1. / d as f64;
+            }
+        } else if deriv == 4 {
+            // diag - 4
+            for i in 4..n {
+                let d = 16 * i * (i - 1) * (i - 2) * (i - 3);
+                pinv[[i, i - 4]] = 1. / d as f64;
+            }
+            pinv[[4, 0]] *= 2.;
+            // diag - 2
+            for i in 4..n - 2 {
+                let d = 4 * (i - 3) * (i - 1) * i * (i + 1);
+                pinv[[i, i - 2]] = -1. / d as f64;
+            }
+            // diag + 0
+            for i in 4..n - 4 {
+                let d = 8 * (i - 2) * (i - 1) * (i + 1) * (i + 2);
+                pinv[[i, i]] = 3. / d as f64;
+            }
+            // diag + 2
+            for i in 4..n - 6 {
+                let d = 4 * (i - 1) * i * (i + 1) * (i + 3);
+                pinv[[i, i + 2]] = -1. / d as f64;
+            }
+            // diag + 4
+            for i in 4..n - 8 {
+                let d = 16 * i * (i + 1) * (i + 2) * (i + 3);
+                pinv[[i, i + 4]] = 1. / d as f64;
+            }
+        } else {
+            todo!()
         }
         //pinv
         pinv.mapv(|elem| A::from_f64(elem).unwrap())
@@ -412,5 +488,22 @@ mod test {
         let mut outdata = vec![0.; 4];
         cheby.forward_slice(&indata, &mut outdata);
         approx_eq(&outdata, &vec![2.5, 1.33333333, 0., 0.16666667]);
+    }
+
+    #[test]
+    fn test_chebyshev_pinv() {
+        let n = 27;
+        let ch = Chebyshev::<f64>::new(n);
+        // construct b4 by matmul
+        let (b2, _) = ch.diffmat_pinv(2);
+        let mut b4_v2 = b2.dot(&b2);
+        b4_v2.slice_mut(ndarray::s![..4, ..]).fill(0.);
+        b4_v2.slice_mut(ndarray::s![.., n - 4..]).fill(0.);
+        // get b4 directly
+        let (b4, _) = ch.diffmat_pinv(4);
+        // compare
+        for (x, y) in b4_v2.iter().zip(b4.iter()) {
+            assert!((x - y).abs() < 1e-6);
+        }
     }
 }
