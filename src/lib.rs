@@ -281,7 +281,7 @@ pub fn cheb_dirichlet_neumann<A: FloatNum>(n: usize) -> BaseR2r<A> {
     BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::dirichlet_neumann(n))
 }
 
-/// Function space with biharmonic boundary conditions, i.e
+/// Function space with biharmonic boundary conditions
 ///
 /// ```text
 /// u(-1)=0, u(1)=0, u'(-1)=0 and u'(1)=0
@@ -291,7 +291,7 @@ pub fn cheb_biharmonic_a<A: FloatNum>(n: usize) -> BaseR2r<A> {
     BaseR2r::ChebyshevComposite(ChebyshevComposite::<A>::biharmonic_a(n))
 }
 
-/// Function space with biharmonic boundary conditions, i.e
+/// Function space with biharmonic boundary conditions
 ///
 /// ```text
 /// u(-1)=0, u(1)=0, u''(-1)=0 and u''(1)=0
