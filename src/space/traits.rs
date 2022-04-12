@@ -287,60 +287,6 @@ pub trait BaseSpaceGradient<A, T, const N: usize>: BaseSpaceSize<N> {
         S: Data<Elem = T>;
 }
 
-/// Collection of explicit differential operators
-/// in matrix form
-pub trait BaseSpaceExplicitOperators<A> {
-    /// Laplacian `L`
-    ///
-    /// ```text
-    /// L_pinv @ L = I_pinv
-    /// ```
-    ///
-    /// # Arguments
-    ///
-    /// * `axis` - usize
-    fn laplace(&self, axis: usize) -> Array2<A>;
-
-    /// Pseudoinverse matrix `L_pinv` of Laplacian
-    ///
-    /// Returns (`L_pinv`, `I_pinv`)
-    ///
-    /// ```text
-    /// L_pinv @ L = I_pinv
-    /// ```
-    ///
-    /// # Arguments
-    ///
-    /// * `axis` - usize
-    fn laplace_pinv(&self, axis: usize) -> (Array2<A>, Array2<A>);
-
-    /// Transformation stencil
-    ///
-    /// Multiplication of this matrix with a coefficient vector has
-    /// the same effect as  [`BaseSpaceFromOrtho::to_ortho()`],
-    /// but is less efficient.
-    ///
-    /// Returns identity matrix for orthogonal bases
-    ///
-    /// # Arguments
-    ///
-    /// * `axis` - usize
-    fn stencil(&self, axis: usize) -> Array2<A>;
-
-    /// Inverse of transformation stencil
-    ///
-    /// Multiplication of this matrix with a coefficient vector has
-    /// the same effect as  [`BaseSpaceFromOrtho::from_ortho()`],
-    /// but is less efficient.
-    ///
-    /// Returns identity matrix for orthogonal bases
-    ///
-    /// # Arguments
-    ///
-    /// * `axis` - usize
-    fn stencil_inv(&self, axis: usize) -> Array2<A>;
-}
-
 /// # Transformation from physical values to spectral coefficients
 pub trait BaseSpaceTransform<A, const N: usize>: BaseSpaceSize<N>
 where
