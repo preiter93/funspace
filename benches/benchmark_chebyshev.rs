@@ -3,7 +3,7 @@ use criterion::{criterion_group, criterion_main};
 use funspace::*;
 use ndarray::Array2;
 
-const SIZES: [usize; 4] = [129, 265, 513, 1025];
+const SIZES: [usize; 2] = [513, 1025];
 // const SIZES: [usize; 3] = [128, 264, 512];
 const AXIS: usize = 1;
 
@@ -13,16 +13,30 @@ pub fn bench_transform(c: &mut Criterion) {
     for n in SIZES.iter() {
         let ch = cheb_dirichlet::<f64>(*n);
         let mut arr = Array2::<f64>::from_elem((*n, *n), 1.);
-        let name = format!("Size: {} x {}", *n, *n);
+        let name = format!("Fwd Size: {} x {}", *n, *n);
         group.bench_function(&name, |b| {
             b.iter(|| {
                 let _: Array2<f64> = ch.forward(&mut arr, AXIS);
             })
         });
-        let name = format!("Size: {} x {} (Par)", *n, *n);
+        let name = format!("Fwd Size: {} x {} (Par)", *n, *n);
         group.bench_function(&name, |b| {
             b.iter(|| {
                 let _: Array2<f64> = ch.forward_par(&mut arr, AXIS);
+            })
+        });
+
+        let mut arr = Array2::<f64>::from_elem((*n - 2, *n - 2), 1.);
+        let name = format!("Bwd Size: {} x {}", *n, *n);
+        group.bench_function(&name, |b| {
+            b.iter(|| {
+                let _: Array2<f64> = ch.backward(&mut arr, AXIS);
+            })
+        });
+        let name = format!("Bwd Size: {} x {} (Par)", *n, *n);
+        group.bench_function(&name, |b| {
+            b.iter(|| {
+                let _: Array2<f64> = ch.backward_par(&mut arr, AXIS);
             })
         });
     }

@@ -49,13 +49,22 @@ where
         *g.get_unchecked_mut(1) = *rhs.get_unchecked(1) / *d0.get_unchecked(1);
 
         for i in 2..n - 2 {
-            *w.get_unchecked_mut(i) = *u2.get_unchecked(i)
-                / (*d0.get_unchecked(i) - *l2.get_unchecked(i - 2) * *w.get_unchecked(i - 2));
+            let tmp = *d0.get_unchecked(i) - *l2.get_unchecked(i - 2) * *w.get_unchecked(i - 2);
+            *w.get_unchecked_mut(i) = *u2.get_unchecked(i) / tmp;
+            *g.get_unchecked_mut(i) =
+                (*rhs.get_unchecked(i) - *g.get_unchecked(i - 2) * *l2.get_unchecked(i - 2)) / tmp;
         }
-        for i in 2..n {
-            *g.get_unchecked_mut(i) = (*rhs.get_unchecked(i)
-                - *g.get_unchecked(i - 2) * *l2.get_unchecked(i - 2))
-                / (*d0.get_unchecked(i) - *l2.get_unchecked(i - 2) * *w.get_unchecked(i - 2));
+
+        if n > 3 {
+            *g.get_unchecked_mut(n - 2) = (*rhs.get_unchecked(n - 2)
+                - *g.get_unchecked(n - 4) * *l2.get_unchecked(n - 4))
+                / (*d0.get_unchecked(n - 2) - *l2.get_unchecked(n - 4) * *w.get_unchecked(n - 4));
+        }
+
+        if n > 2 {
+            *g.get_unchecked_mut(n - 1) = (*rhs.get_unchecked(n - 1)
+                - *g.get_unchecked(n - 3) * *l2.get_unchecked(n - 3))
+                / (*d0.get_unchecked(n - 1) - *l2.get_unchecked(n - 3) * *w.get_unchecked(n - 3));
         }
 
         // Back substitution

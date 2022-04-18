@@ -1,8 +1,8 @@
 //! Common traits for mpi space
 //use crate::BaseAll;
 #![cfg(feature = "mpi")]
-use crate::types::{FloatNum, ScalarNum};
 use crate::space::traits::{BaseSpaceSize, BaseSpaceTransform};
+use crate::types::{FloatNum, ScalarNum};
 use ndarray::{Array, ArrayBase, Data, DataMut, Dim};
 
 /// # Base space supertrait
