@@ -1,9 +1,15 @@
 //! # Use
 //! cargo mpirun --np 2 --example space_complex_mpi --features="mpi"
 #[cfg(feature = "mpi")]
-use funspace::space_mpi::{initialize, BaseSpaceMpi, Space2Mpi};
+use funspace::space_mpi::traits::{
+    BaseSpaceMpiFromOrtho, BaseSpaceMpiGradient, BaseSpaceMpiSize, BaseSpaceMpiTransform,
+};
 #[cfg(feature = "mpi")]
-use funspace::{cheb_dirichlet, fourier_r2c, BaseSpaceTransform};
+use funspace::space_mpi::{initialize, Space2Mpi};
+#[cfg(feature = "mpi")]
+use funspace::{cheb_dirichlet, fourier_r2c, BaseSpaceSize, BaseSpaceTransform};
+#[cfg(feature = "mpi")]
+use num_complex::Complex;
 #[cfg(feature = "mpi")]
 fn main() {
     let (nx, ny) = (32, 10);
@@ -14,44 +20,41 @@ fn main() {
         &universe,
     );
 
-    // Scatter data from too to all processor
-    let mut y_pencil = space.ndarray_physical_y_pen();
-    if space.get_nrank() == 0 {
-        let mut global = space.ndarray_physical();
-        for (i, v) in global.iter_mut().enumerate() {
-            *v = i as f64;
-        }
-        space.scatter_to_y_pencil_phys_root(&global, &mut y_pencil);
-    } else {
-        space.scatter_to_y_pencil_phys(&mut y_pencil);
-    }
+    let mut v = ndarray::Array2::<f64>::ones(space.shape_physical_mpi());
+    let mut vhat = ndarray::Array2::<Complex<f64>>::zeros(space.shape_spectral_mpi());
 
     // transform to spectral space
-    let mut x_pencil = space.ndarray_spectral_x_pen();
-    space.forward_inplace_mpi(&y_pencil, &mut x_pencil);
+    space.forward_inplace_mpi(&v, &mut vhat);
 
     // transform to physical space
-    space.backward_inplace_mpi(&x_pencil, &mut y_pencil);
-
-    // collect  data on all processors (expensive)
-    let mut v_mpi = space.ndarray_physical();
-    space.all_gather_from_y_pencil_phys(&y_pencil, &mut v_mpi);
-
-    // Serial
-    let mut v = space.ndarray_physical();
-    for (i, vi) in v.iter_mut().enumerate() {
-        *vi = i as f64;
-    }
-    let mut vhat = space.ndarray_spectral();
-    space.forward_inplace(&v, &mut vhat);
-    space.backward_inplace(&vhat, &mut v);
-
-    // Serial and parallel results should be the same
-    assert_eq!(v, v_mpi);
+    space.backward_inplace_mpi(&vhat, &mut v);
 
     // just test to ortho / from ortho transforms
-    let ortho = space.to_ortho_mpi(&x_pencil);
+    let ortho = space.to_ortho_mpi(&vhat);
     let _ = space.from_ortho_mpi(&ortho);
+
+    // Test gradient
+    let _ = space.gradient_mpi(&vhat, [2, 0], None);
+
+    // Serial
+    let mut vs = ndarray::Array2::<f64>::ones(space.shape_physical());
+    let mut vhats = ndarray::Array2::<Complex<f64>>::zeros(space.shape_spectral());
+    space.forward_inplace(&vs, &mut vhats);
+    space.backward_inplace(&vhats, &mut vs);
+
+    // Serial and parallel results should be the same
+    let dcp = space.dcp.get(&space.shape_spectral());
+    let mut ii = 0;
+    for i in dcp.x_pencil.dists[0].st..dcp.x_pencil.dists[0].en {
+        let mut jj = 0;
+        for j in dcp.x_pencil.dists[1].st..dcp.x_pencil.dists[1].en {
+            assert!((vhats[[i, j]].re - vhat[[ii, jj]].re).abs() < 1e-3);
+            assert!((vhats[[i, j]].im - vhat[[ii, jj]].im).abs() < 1e-3);
+            // println!("{:?} {:?}", vhats[[i, j]], vhat[[ii, jj]]);
+            jj += 1;
+        }
+        ii += 1;
+    }
 }
 
 #[cfg(not(feature = "mpi"))]

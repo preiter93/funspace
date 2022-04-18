@@ -1,6 +1,6 @@
 [package]
 name = "funspace"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["preiter"]
 edition = "2018"
 description = "N-dimensional function spaces and transforms"
@@ -17,7 +17,8 @@ enum_dispatch = "0.3"
 rustfft = "6.0"
 rustdct = "0.7"
 realfft = "3.0"
-mpi_crate = {package="mpi-fork-fnsp", version = "0.6", optional = true}
+mpi_crate = {package = "mpi-fork-fnsp", version = "0.6", optional = true}
+pencil_decomp = {path = "../pencil_decomp", version = "0.1", optional = true}
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
@@ -31,7 +32,7 @@ name = "benchmark_fourier"
 harness = false
 
 [features]
-mpi = ["mpi_crate"]
+mpi = ["mpi_crate", "pencil_decomp"]
 mpi-derive = ["mpi_crate"]
 
 # Enable katex in documentation

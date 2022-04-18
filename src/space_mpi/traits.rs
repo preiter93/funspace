@@ -1,113 +1,44 @@
 //! Common traits for mpi space
 //use crate::BaseAll;
 #![cfg(feature = "mpi")]
-use super::Decomp2d;
-use super::Universe;
-use crate::BaseSpace;
-use crate::BaseSpaceTransform;
-use crate::FloatNum;
+use crate::types::{FloatNum, ScalarNum};
+use crate::space::traits::{BaseSpaceSize, BaseSpaceTransform};
 use ndarray::{Array, ArrayBase, Data, DataMut, Dim};
 
-pub trait BaseSpaceMpi<A, const N: usize>: Clone + BaseSpace<A, N>
+/// # Base space supertrait
+pub trait BaseSpaceMpi<A, const N: usize>:
+    Clone
+    + BaseSpaceMpiFromOrtho<A, Self::Spectral, N>
+    + BaseSpaceMpiGradient<A, Self::Spectral, N>
+    + BaseSpaceMpiTransform<A, N>
 where
     A: FloatNum,
 {
-    /// Return reference to mpi universe
-    fn get_universe(&self) -> &Universe;
+}
 
-    /// Return processor rank
-    fn get_nrank(&self) -> usize;
+impl<A, T, const N: usize> BaseSpaceMpi<A, N> for T
+where
+    A: FloatNum,
+    T: Clone
+        + BaseSpaceMpiFromOrtho<A, Self::Spectral, N>
+        + BaseSpaceMpiGradient<A, Self::Spectral, N>
+        + BaseSpaceMpiTransform<A, N>,
+{
+}
 
-    /// Return number of processors in universe
-    fn get_nprocs(&self) -> usize;
+/// Dimensions
+pub trait BaseSpaceMpiSize<const N: usize>: BaseSpaceSize<N> {
+    /// Shape of physical space that this processors holds
+    fn shape_physical_mpi(&self) -> [usize; N];
 
-    /// Return decomposition which matches a given global arrays shape.
-    fn get_decomp_from_global_shape(&self, shape: &[usize]) -> &Decomp2d;
+    /// Shape of spectral space that this processors holds
+    fn shape_spectral_mpi(&self) -> [usize; N];
 
-    /// Shape of physical space (x pencil distribution)
-    fn shape_physical_x_pen(&self) -> [usize; N];
+    // Shape of orthogonal spectral space that this processors holds
+    fn shape_spectral_ortho_mpi(&self) -> [usize; N];
+}
 
-    /// Shape of physical space (y pencil distribution)
-    fn shape_physical_y_pen(&self) -> [usize; N];
-
-    /// Shape of spectral space (x pencil distribution)
-    fn shape_spectral_x_pen(&self) -> [usize; N];
-
-    /// Shape of spectral space (y pencil distribution)
-    fn shape_spectral_y_pen(&self) -> [usize; N];
-
-    /// Return array where size and type matches physical field (x pencil distribution)
-    fn ndarray_physical_x_pen(
-        &self,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Physical, Dim<[usize; N]>>;
-
-    /// Return array where size and type matches physical field (y pencil distribution)
-    fn ndarray_physical_y_pen(
-        &self,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Physical, Dim<[usize; N]>>;
-
-    /// Return array where size and type matches spectral field (x pencil distribution)
-    fn ndarray_spectral_x_pen(
-        &self,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Spectral, Dim<[usize; N]>>;
-
-    /// Return array where size and type matches spectral field (y pencil distribution)
-    fn ndarray_spectral_y_pen(
-        &self,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Spectral, Dim<[usize; N]>>;
-
-    /// Transformation from composite and to orthonormal space.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - *ndarray* with num type of spectral space
-    fn to_ortho_mpi<S>(
-        &self,
-        input: &ArrayBase<S, Dim<[usize; N]>>,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Spectral, Dim<[usize; N]>>
-    where
-        S: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>;
-
-    /// Transformation from composite and to orthonormal space (inplace).
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - *ndarray* with num type of spectral space
-    /// * `output` - *ndarray* with num type of spectral space
-    fn to_ortho_inplace_mpi<S1, S2>(
-        &self,
-        input: &ArrayBase<S1, Dim<[usize; N]>>,
-        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
-
-    /// Transformation from orthonormal and to composite space.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - *ndarray* with num type of spectral space
-    fn from_ortho_mpi<S>(
-        &self,
-        input: &ArrayBase<S, Dim<[usize; N]>>,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Spectral, Dim<[usize; N]>>
-    where
-        S: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>;
-
-    /// Transformation from orthonormal and to composite space (inplace).
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - *ndarray* with num type of spectral space
-    /// * `output` - *ndarray* with num type of spectral space
-    fn from_ortho_inplace_mpi<S1, S2>(
-        &self,
-        input: &ArrayBase<S1, Dim<[usize; N]>>,
-        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
-
+pub trait BaseSpaceMpiGradient<A, T, const N: usize>: BaseSpaceMpiSize<N> {
     /// Take gradient. Optional: Rescale result by a constant. (Parallel)
     ///
     /// # Arguments
@@ -121,22 +52,71 @@ where
         input: &ArrayBase<S, Dim<[usize; N]>>,
         deriv: [usize; N],
         scale: Option<[A; N]>,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Spectral, Dim<[usize; N]>>
+    ) -> Array<T, Dim<[usize; N]>>
     where
-        S: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>;
+        S: Data<Elem = T>;
+}
 
+pub trait BaseSpaceMpiFromOrtho<A, T, const N: usize>: BaseSpaceMpiSize<N>
+where
+    T: ScalarNum,
+{
+    /// Transformation from composite to orthonormal space.
+    fn to_ortho_mpi<S>(&self, input: &ArrayBase<S, Dim<[usize; N]>>) -> Array<T, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T>,
+    {
+        let mut output = self.ndarray_from_shape::<T>(self.shape_spectral_ortho_mpi());
+        self.to_ortho_inplace_mpi(input, &mut output);
+        output
+    }
+
+    /// Transformation from composite to orthogonal space (inplace).
+    fn to_ortho_inplace_mpi<S1, S2>(
+        &self,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
+        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
+    ) where
+        S1: Data<Elem = T>,
+        S2: DataMut<Elem = T>;
+
+    /// Transformation from orthonormal and to composite space.
+    fn from_ortho_mpi<S>(&self, input: &ArrayBase<S, Dim<[usize; N]>>) -> Array<T, Dim<[usize; N]>>
+    where
+        S: Data<Elem = T>,
+    {
+        let mut output = self.ndarray_from_shape::<T>(self.shape_spectral_mpi());
+        self.from_ortho_inplace_mpi(input, &mut output);
+        output
+    }
+
+    /// Transformation from orthogonal to composite space (inplace).
+    fn from_ortho_inplace_mpi<S1, S2>(
+        &self,
+        input: &ArrayBase<S1, Dim<[usize; N]>>,
+        output: &mut ArrayBase<S2, Dim<[usize; N]>>,
+    ) where
+        S1: Data<Elem = T>,
+        S2: DataMut<Elem = T>;
+}
+
+pub trait BaseSpaceMpiTransform<A, const N: usize>:
+    BaseSpaceTransform<A, N> + BaseSpaceMpiSize<N>
+where
+    A: FloatNum,
+{
     /// Transform physical -> spectral space
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - *ndarray* with num type of physical space
-    /// * `output` - *ndarray* with num type of spectral space
     fn forward_mpi<S>(
         &self,
         input: &ArrayBase<S, Dim<[usize; N]>>,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Spectral, Dim<[usize; N]>>
+    ) -> Array<Self::Spectral, Dim<[usize; N]>>
     where
-        S: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical>;
+        S: ndarray::Data<Elem = Self::Physical>,
+    {
+        let mut output = self.ndarray_from_shape::<Self::Spectral>(self.shape_spectral_mpi());
+        self.forward_inplace(input, &mut output);
+        output
+    }
 
     /// Transform physical -> spectral space (inplace)
     ///
@@ -153,23 +133,23 @@ where
         S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
 
     /// Transform spectral -> physical space
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - *ndarray* with num type of spectral space
-    /// * `output` - *ndarray* with num type of physical space
     fn backward_mpi<S>(
         &self,
         input: &ArrayBase<S, Dim<[usize; N]>>,
-    ) -> Array<<Self as BaseSpaceTransform<A, N>>::Physical, Dim<[usize; N]>>
+    ) -> Array<Self::Physical, Dim<[usize; N]>>
     where
-        S: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>;
+        S: ndarray::Data<Elem = Self::Spectral>,
+    {
+        let mut output = self.ndarray_from_shape::<Self::Physical>(self.shape_physical_mpi());
+        self.backward_inplace(input, &mut output);
+        output
+    }
 
     /// Transform spectral -> physical space (inplace)
     ///
     /// # Arguments
     ///
-    /// * `input` - *ndarray* with num type of spectral space
+    /// * `input`  - *ndarray* with num type of spectral space
     /// * `output` - *ndarray* with num type of physical space
     fn backward_inplace_mpi<S1, S2>(
         &self,
@@ -178,126 +158,13 @@ where
     ) where
         S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
         S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical> + DataMut;
+}
 
-    /// Gather data from all processors (x-pencil distributed) onto root
-    ///
-    /// # Info
-    /// Call this routine from non-root
-    fn gather_from_x_pencil_phys<S1>(&self, pencil_data: &ArrayBase<S1, Dim<[usize; N]>>)
-    where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical>;
-
-    /// Gather data from all processors (x-pencil distributed) onto root
-    ///
-    /// # Info
-    /// Call this routine from root
-    fn gather_from_x_pencil_phys_root<S1, S2>(
-        &self,
-        pencil_data: &ArrayBase<S1, Dim<[usize; N]>>,
-        global_data: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical> + DataMut;
-
-    /// Gather data from all processors (y-pencil distributed) onto root
-    ///
-    /// # Info
-    /// Call this routine from non-root
-    fn gather_from_y_pencil_phys<S1>(&self, pencil_data: &ArrayBase<S1, Dim<[usize; N]>>)
-    where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical>;
-
-    /// Gather data from all processors (y-pencil distributed) onto root
-    ///
-    /// # Info
-    /// Call this routine from non-root
-    fn gather_from_y_pencil_phys_root<S1, S2>(
-        &self,
-        pencil_data: &ArrayBase<S1, Dim<[usize; N]>>,
-        global_data: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical> + DataMut;
-
-    /// Gather data from all processors (x-pencil distributed) onto root
-    ///
-    /// # Info
-    /// Call this routine from non-root
-    fn gather_from_x_pencil_spec<S1>(&self, pencil_data: &ArrayBase<S1, Dim<[usize; N]>>)
-    where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>;
-
-    /// Gather data from all processors (x-pencil distributed) onto root
-    ///
-    /// # Info
-    /// Call this routine from root
-    fn gather_from_x_pencil_spec_root<S1, S2>(
-        &self,
-        pencil_data: &ArrayBase<S1, Dim<[usize; N]>>,
-        global_data: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
-
-    /// Gather data from all processors (x-pencil distributed) onto root
-    ///
-    /// # Info
-    /// Call this routine from non-root
-    fn gather_from_y_pencil_spec<S1>(&self, pencil_data: &ArrayBase<S1, Dim<[usize; N]>>)
-    where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>;
-
-    /// Gather data from all processors (x-pencil distributed) onto root
-    ///
-    /// # Info
-    /// Call this routine from root
-    fn gather_from_y_pencil_spec_root<S1, S2>(
-        &self,
-        pencil_data: &ArrayBase<S1, Dim<[usize; N]>>,
-        global_data: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
-
-    /// Gather data from all processors (x-pencil distributed) to all
-    /// participating processors
-    fn all_gather_from_x_pencil_phys<S1, S2>(
-        &self,
-        pencil_data: &ArrayBase<S1, Dim<[usize; N]>>,
-        global_data: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical> + DataMut;
-
-    /// Gather data from all processors (y-pencil distributed) to all
-    /// participating processors
-    fn all_gather_from_y_pencil_phys<S1, S2>(
-        &self,
-        pencil_data: &ArrayBase<S1, Dim<[usize; N]>>,
-        global_data: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Physical> + DataMut;
-    /// Gather data from all processors (x-pencil distributed) to all
-    /// participating processors
-    fn all_gather_from_x_pencil_spec<S1, S2>(
-        &self,
-        pencil_data: &ArrayBase<S1, Dim<[usize; N]>>,
-        global_data: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
-
-    /// Gather data from all processors (y-pencil distributed) to all
-    /// participating processors
-    fn all_gather_from_y_pencil_spec<S1, S2>(
-        &self,
-        pencil_data: &ArrayBase<S1, Dim<[usize; N]>>,
-        global_data: &mut ArrayBase<S2, Dim<[usize; N]>>,
-    ) where
-        S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
-        S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
-
+/*
+pub trait MpiScatter<A, const N: usize>: Clone + BaseSpace<A, N>
+where
+    A: FloatNum,
+{
     /// Scatter data from root to all processors (x-pencil distributed)
     ///
     /// # Info
@@ -377,7 +244,12 @@ where
     ) where
         S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
         S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
+}
 
+pub trait MpiTranspose<A, const N: usize>: Clone + BaseSpace<A, N>
+where
+    A: FloatNum,
+{
     /// Transpose from x pencil to y pencil for
     /// data in physical space
     fn transpose_x_to_y_phys<S1, S2>(
@@ -418,3 +290,4 @@ where
         S1: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral>,
         S2: Data<Elem = <Self as BaseSpaceTransform<A, N>>::Spectral> + DataMut;
 }
+*/
