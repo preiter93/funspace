@@ -6,7 +6,7 @@
 macro_rules! impl_funspace_elemental_for_base {
     ($base: ident, $a: ty, $b: ty, $($var:ident),*) => {
 
-        impl<A: FloatNum> BaseSize for $base<A> {
+        impl<A: Real> HasLength for $base<A> {
             /// Size in physical space
             fn len_phys(&self) -> usize {
                 match self {
@@ -22,258 +22,205 @@ macro_rules! impl_funspace_elemental_for_base {
             }
 
             /// Size of orthogonal space
-            fn len_orth(&self) -> usize {
+            fn len_ortho(&self) -> usize {
                 match self {
-                    $(Self::$var(ref b) => b.len_orth(),)*
+                    $(Self::$var(ref b) => b.len_ortho(),)*
                 }
             }
+
         }
 
-        impl<A: FloatNum> BaseElements for $base<A> {
-            /// Real valued scalar type
-            type RealNum = A;
+        impl<A: Real> HasType for $base<A> {
 
-            /// Return kind of base
+            /// Return kind of base (e.g. FourierR2c, Chebyshev, ...)
             fn base_kind(&self) -> BaseKind{
                 match self {
                     $(Self::$var(ref b) => b.base_kind(),)*
                 }
             }
 
-            /// Return kind of transform
+            /// Return type of base (e.g. Orthogonal or Composite)
+            fn base_type(&self) -> BaseType {
+                match self {
+                    $(Self::$var(ref b) => b.base_type(),)*
+                }
+            }
+
+            /// Return kind of transform (e.g, real-to-real, real-to-complex ...)
             fn transform_kind(&self) -> TransformKind {
                 match self {
                     $(Self::$var(ref b) => b.transform_kind(),)*
                 }
             }
+        }
 
-            /// Grid coordinates
-            fn coords(&self) -> Vec<Self::RealNum> {
+
+        impl<A: Real> HasCoords<A> for $base<A> {
+            fn coords(&self) -> Vec<A>{
                 match self {
                     $(Self::$var(ref b) => b.coords(),)*
                 }
             }
         }
 
-        impl<A: FloatNum> BaseMatOpDiffmat for $base<A> {
-            //// Scalar type of matrix
-            type NumType = $b;
-
-            /// Explicit differential operator $ D $
-            fn diffmat(&self, deriv: usize) -> Array2<Self::NumType> {
-                match self {
-                    $(Self::$var(ref b) => b.diffmat(deriv),)*
-                }
-            }
-
-            /// Explicit inverse of differential operator $ D^* $
-            fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
-                match self {
-                    $(Self::$var(ref b) => b.diffmat_pinv(deriv),)*
-                }
-            }
-        }
-
-        impl<A: FloatNum> BaseMatOpStencil for $base<A> {
-            //// Scalar type of matrix
-            type NumType = A;
-
-            /// Transformation stencil composite -> orthogonal space
-            fn stencil(&self) -> Array2<Self::NumType> {
-                match self {
-                    $(Self::$var(ref b) => b.stencil(),)*
-                }
-            }
-
-            /// Inverse of transformation stencil
-            fn stencil_inv(&self) -> Array2<Self::NumType> {
-                match self {
-                    $(Self::$var(ref b) => b.stencil_inv(),)*
-                }
-            }
-        }
-
-        impl<A: FloatNum> BaseMatOpLaplacian for $base<A> {
-            /// Scalar type of laplacian matrix
-            type NumType = A;
-
-            /// Laplacian $ L $
-            fn laplacian(&self) -> Array2<Self::NumType> {
-                match self {
-                    $(Self::$var(ref b) => b.laplacian(),)*
-                }
-            }
-
-            /// Pseudoinverse matrix of Laplacian $ L^{-1} $
-            ///
-            /// Returns pseudoinverse and pseudoidentity,i.e
-            /// ``(D_pinv, I_pinv)``
-            ///
-            /// ```text
-            /// D_pinv @ D = I_pinv
-            /// ``
-            fn laplacian_pinv(&self) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
-                match self {
-                    $(Self::$var(ref b) => b.laplacian_pinv(),)*
-                }
-            }
-        }
-
-        impl<A, T> BaseFromOrtho<T> for $base<A>
+        impl<A, T> Differentiate<T> for $base<A>
         where
-            A: FloatNum,
-            T: ScalarNum
+            A: Real,
+            T: ScalarOperand<A>
             + Add<$b, Output = T>
             + Mul<$b, Output = T>
             + Div<$b, Output = T>
             + Sub<$b, Output = T>,
         {
-            fn to_ortho_slice(&self, indata: &[T], outdata: &mut [T])
+            fn diff(&self, v: &[T], dv: &mut [T], order: usize)
             {
                 match self {
-                    $(Self::$var(ref b) => b.to_ortho_slice(indata,  outdata),)*
+                    $(Self::$var(ref b) => b.diff(v, dv,  order),)*
                 }
             }
 
-            fn from_ortho_slice(&self, indata: &[T], outdata: &mut [T])
+            fn diff_inplace(&self, v: &mut [T], order: usize)
             {
                 match self {
-                    $(Self::$var(ref b) => b.from_ortho_slice(indata,  outdata),)*
+                    $(Self::$var(ref b) => b.diff_inplace(v,  order),)*
                 }
             }
         }
 
-        impl<A, T> BaseGradient<T> for $base<A>
+        impl<A, T> ToOrtho<T> for $base<A>
         where
-            A: FloatNum,
-            T: ScalarNum
-            + Add<$b, Output = T>
-            + Mul<$b, Output = T>
-            + Div<$b, Output = T>
-            + Sub<$b, Output = T>,
+            A: Real,
+            T: ScalarOperand<A>,
         {
-            fn gradient_slice(&self, indata: &[T], outdata: &mut [T], n_times: usize)
+            fn to_ortho(&self, comp: &[T], ortho: &mut [T])
             {
                 match self {
-                    $(Self::$var(ref b) => b.gradient_slice(indata,  outdata, n_times),)*
+                    $(Self::$var(ref b) => b.to_ortho(comp,  ortho),)*
+                }
+            }
+
+            fn from_ortho(&self, ortho: &[T], comp: &mut [T])
+            {
+                match self {
+                    $(Self::$var(ref b) => b.from_ortho(ortho,  comp),)*
                 }
             }
         }
 
-        impl<A: FloatNum + ScalarNum> BaseTransform for $base<A> {
+        impl<A: Real + Scalar> Transform for $base<A> {
             type Physical = $a;
             type Spectral = $b;
 
-            fn forward_slice(&self, indata: &[Self::Physical], outdata: &mut [Self::Spectral])
+            fn forward(&self, phys: &[Self::Physical], spec: &mut [Self::Spectral])
             {
                 match self {
-                    $(Self::$var(ref b) => b.forward_slice(indata,  outdata),)*
+                    $(Self::$var(ref b) => b.forward(phys,  spec),)*
                 }
             }
 
-            fn backward_slice(&self, indata: &[Self::Spectral], outdata: &mut [Self::Physical])
+            fn backward(&self, spec: &[Self::Spectral], phys: &mut [Self::Physical])
             {
                 match self {
-                    $(Self::$var(ref b) => b.backward_slice(indata,  outdata),)*
+                    $(Self::$var(ref b) => b.backward(spec,  phys),)*
                 }
             }
         }
     };
 }
 
-/// Apply a method that takes a slice on multidimensional arrays
-macro_rules! apply_along_axis {
-    (
-        $(#[$meta:meta])* $i: ident, $t1: ty, $t2: ty, $f: ident, $l1: ident, $l2: ident, $e:expr
-    ) => {
-        $(#[$meta])*
-        fn $i<S1, S2, D>(
-            &self,
-            indata: &ArrayBase<S1, D>,
-            outdata: &mut ArrayBase<S2, D>,
-            axis: usize,
-        ) where
-            S1: Data<Elem = $t1>,
-            S2: Data<Elem = $t2> + DataMut,
-            D: Dimension,
-            $t1: Clone,
-            $t2: Clone + Zero + Copy,
-        {
-            assert!(indata.is_standard_layout());
-            assert!(outdata.is_standard_layout());
-            check_array_axis(indata, self.$l1(), axis, $e);
-            check_array_axis(outdata, self.$l2(), axis, $e);
+// /// Apply a method that takes a slice on multidimensional arrays
+// macro_rules! apply_along_axis {
+//     (
+//         $(#[$meta:meta])* $i: ident, $t1: ty, $t2: ty, $f: ident, $l1: ident, $l2: ident, $e:expr
+//     ) => {
+//         $(#[$meta])*
+//         fn $i<S1, S2, D>(
+//             &self,
+//             indata: &ArrayBase<S1, D>,
+//             outdata: &mut ArrayBase<S2, D>,
+//             axis: usize,
+//         ) where
+//             S1: Data<Elem = $t1>,
+//             S2: Data<Elem = $t2> + DataMut,
+//             D: Dimension,
+//             $t1: Clone,
+//             $t2: Clone + Zero + Copy,
+//         {
+//             assert!(indata.is_standard_layout());
+//             assert!(outdata.is_standard_layout());
+//             check_array_axis(indata, self.$l1(), axis, $e);
+//             check_array_axis(outdata, self.$l2(), axis, $e);
 
-            let outer_axis = indata.ndim() - 1;
-            if axis == outer_axis {
-                // Data is contiguous in memory
-                Zip::from(indata.lanes(Axis(axis)))
-                    .and(outdata.lanes_mut(Axis(axis)))
-                    .for_each(|x, mut y| {
-                        self.$f(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
-                    });
-            } else {
-                // Data is *not* contiguous in memory.
-                let mut scratch: Vec<$t2> = vec![<$t2>::zero(); outdata.shape()[axis]];
-                Zip::from(indata.lanes(Axis(axis)))
-                    .and(outdata.lanes_mut(Axis(axis)))
-                    .for_each(|x, mut y| {
-                        self.$f(&x.to_vec(), &mut scratch);
-                        for (yi, si) in y.iter_mut().zip(scratch.iter()) {
-                            *yi = *si;
-                        }
-                    });
-            }
-        }
-    };
-}
+//             let outer_axis = indata.ndim() - 1;
+//             if axis == outer_axis {
+//                 // Data is contiguous in memory
+//                 Zip::from(indata.lanes(Axis(axis)))
+//                     .and(outdata.lanes_mut(Axis(axis)))
+//                     .for_each(|x, mut y| {
+//                         self.$f(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
+//                     });
+//             } else {
+//                 // Data is *not* contiguous in memory.
+//                 let mut scratch: Vec<$t2> = vec![<$t2>::zero(); outdata.shape()[axis]];
+//                 Zip::from(indata.lanes(Axis(axis)))
+//                     .and(outdata.lanes_mut(Axis(axis)))
+//                     .for_each(|x, mut y| {
+//                         self.$f(&x.to_vec(), &mut scratch);
+//                         for (yi, si) in y.iter_mut().zip(scratch.iter()) {
+//                             *yi = *si;
+//                         }
+//                     });
+//             }
+//         }
+//     };
+// }
 
-/// Apply a method that takes a slice on multidimensional arrays.
-/// Uses parallel iterators
-macro_rules! par_apply_along_axis {
-    (
-        $(#[$meta:meta])* $i: ident, $t1: ty, $t2: ty, $f: ident, $l1: ident, $l2: ident, $e:expr
-    ) => {
-        $(#[$meta])*
-        fn $i<S1, S2, D>(
-            &self,
-            indata: &ArrayBase<S1, D>,
-            outdata: &mut ArrayBase<S2, D>,
-            axis: usize,
-        ) where
-            S1: Data<Elem = $t1>,
-            S2: Data<Elem = $t2> + DataMut,
-            D: Dimension,
-            $t1: Clone + Send + Sync,
-            $t2: Clone + Zero + Copy + Send + Sync,
-            Self: Sync,
-        {
-            assert!(indata.is_standard_layout());
-            assert!(outdata.is_standard_layout());
-            check_array_axis(indata, self.$l1(), axis, $e);
-            check_array_axis(outdata, self.$l2(), axis, $e);
+// /// Apply a method that takes a slice on multidimensional arrays.
+// /// Uses parallel iterators
+// macro_rules! par_apply_along_axis {
+//     (
+//         $(#[$meta:meta])* $i: ident, $t1: ty, $t2: ty, $f: ident, $l1: ident, $l2: ident, $e:expr
+//     ) => {
+//         $(#[$meta])*
+//         fn $i<S1, S2, D>(
+//             &self,
+//             indata: &ArrayBase<S1, D>,
+//             outdata: &mut ArrayBase<S2, D>,
+//             axis: usize,
+//         ) where
+//             S1: Data<Elem = $t1>,
+//             S2: Data<Elem = $t2> + DataMut,
+//             D: Dimension,
+//             $t1: Clone + Send + Sync,
+//             $t2: Clone + Zero + Copy + Send + Sync,
+//             Self: Sync,
+//         {
+//             assert!(indata.is_standard_layout());
+//             assert!(outdata.is_standard_layout());
+//             check_array_axis(indata, self.$l1(), axis, $e);
+//             check_array_axis(outdata, self.$l2(), axis, $e);
 
-            let outer_axis = indata.ndim() - 1;
-            if axis == outer_axis {
-                // Data is contiguous in memory
-                Zip::from(indata.lanes(Axis(axis)))
-                    .and(outdata.lanes_mut(Axis(axis)))
-                    .par_for_each(|x, mut y| {
-                        self.$f(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
-                    });
-            } else {
-                // Data is *not* contiguous in memory.
-                let scratch_len = outdata.shape()[axis];
-                Zip::from(indata.lanes(Axis(axis)))
-                    .and(outdata.lanes_mut(Axis(axis)))
-                    .par_for_each(|x, mut y| {
-                        let mut scratch: Vec<$t2> = vec![<$t2>::zero(); scratch_len];
-                        self.$f(&x.to_vec(), &mut scratch);
-                        for (yi, si) in y.iter_mut().zip(scratch.iter()) {
-                            *yi = *si;
-                        }
-                    });
-            }
-        }
-    };
-}
+//             let outer_axis = indata.ndim() - 1;
+//             if axis == outer_axis {
+//                 // Data is contiguous in memory
+//                 Zip::from(indata.lanes(Axis(axis)))
+//                     .and(outdata.lanes_mut(Axis(axis)))
+//                     .par_for_each(|x, mut y| {
+//                         self.$f(x.as_slice().unwrap(), y.as_slice_mut().unwrap());
+//                     });
+//             } else {
+//                 // Data is *not* contiguous in memory.
+//                 let scratch_len = outdata.shape()[axis];
+//                 Zip::from(indata.lanes(Axis(axis)))
+//                     .and(outdata.lanes_mut(Axis(axis)))
+//                     .par_for_each(|x, mut y| {
+//                         let mut scratch: Vec<$t2> = vec![<$t2>::zero(); scratch_len];
+//                         self.$f(&x.to_vec(), &mut scratch);
+//                         for (yi, si) in y.iter_mut().zip(scratch.iter()) {
+//                             *yi = *si;
+//                         }
+//                     });
+//             }
+//         }
+//     };
+// }

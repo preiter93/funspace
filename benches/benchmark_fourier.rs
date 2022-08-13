@@ -1,44 +1,31 @@
 use criterion::Criterion;
 use criterion::{criterion_group, criterion_main};
-use funspace::*;
-use ndarray::{Array1, Array2};
+use funspace::space::{traits::HasShape, traits::SpaceTransform, Space2};
+use funspace::{fourier_c2c, fourier_r2c};
+use ndarray::Array2;
 use num_complex::Complex;
+use num_traits::Zero;
+
 const SIZES: [usize; 4] = [128, 264, 512, 1024];
-const AXIS: usize = 1;
 
 pub fn bench_transform(c: &mut Criterion) {
-    let mut group = c.benchmark_group("TransformFourierR2c");
+    let mut group = c.benchmark_group("SpaceFourier");
     group.significance_level(0.1).sample_size(10);
     for n in SIZES.iter() {
-        let fo = fourier_r2c::<f64>(*n);
-        let mut arr = Array2::from_elem((*n, *n), 1.);
+        let r2c = fourier_r2c::<f64>(*n);
+        let c2c = fourier_c2c::<f64>(*n);
+        let space = Space2::new(&c2c, &r2c);
+        let v = Array2::from_elem(space.shape_phys(), 1.);
+        let mut vhat = Array2::from_elem(space.shape_spec(), Complex::zero());
         let name = format!("Size: {} x {}", *n, *n);
         group.bench_function(&name, |b| {
             b.iter(|| {
-                let _: Array2<Complex<f64>> = fo.forward(&mut arr, AXIS);
-            })
-        });
-        let name = format!("Size: {} x {} (Par)", *n, *n);
-        group.bench_function(&name, |b| {
-            b.iter(|| {
-                let _: Array2<Complex<f64>> = fo.forward_par(&mut arr, AXIS);
+                space.forward(&v, &mut vhat);
             })
         });
     }
     group.finish();
 }
 
-pub fn bench_differentiate(c: &mut Criterion) {
-    let mut group = c.benchmark_group("DifferentiateFourierR2c");
-    group.significance_level(0.1).sample_size(10);
-    for n in SIZES.iter() {
-        let fo = fourier_r2c::<f64>(*n);
-        let mut arr = Array1::from_elem(fo.len_spec(), Complex::new(1., 1.));
-        let name = format!("Size: {}", *n);
-        group.bench_function(&name, |b| b.iter(|| fo.gradient(&mut arr, 2, 0)));
-    }
-    group.finish();
-}
-
-criterion_group!(benches, bench_transform, bench_differentiate);
+criterion_group!(benches, bench_transform);
 criterion_main!(benches);

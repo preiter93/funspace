@@ -1,178 +1,41 @@
 //! # Composite chebyshev spaces
 use super::ortho::Chebyshev;
-use super::stencils::StencilOperations;
-use super::stencils::{
-    BiHarmonicA, BiHarmonicB, ChebyshevStencils, Dirichlet, DirichletNeumann, Neumann,
-};
-use crate::enums::{BaseKind, TransformKind};
-use crate::traits::{
-    BaseElements, BaseFromOrtho, BaseGradient, BaseMatOpDiffmat, BaseMatOpLaplacian,
-    BaseMatOpStencil, BaseSize, BaseTransform,
-};
-use crate::types::{FloatNum, ScalarNum};
-use ndarray::Array2;
+use super::stencils::{Stencil, StencilKind, StencilOperand};
+use crate::enums::{BaseKind, BaseType, TransformKind};
+use crate::traits::{Differentiate, HasCoords, HasLength, HasType, ToOrtho, Transform};
+use crate::types::{Real, Scalar, ScalarOperand};
 use std::clone::Clone;
-use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Clone)]
-pub struct ChebyshevComposite<A: FloatNum> {
+pub struct ChebyshevComposite<A: Real> {
     /// Number of coefficients in physical space
-    pub n: usize,
+    n: usize,
     /// Number of coefficients in spectral space
-    pub m: usize,
+    m: usize,
     /// Parent base
-    pub ortho: Chebyshev<A>,
+    ortho: Chebyshev<A>,
     /// Transform stencil
-    pub stencil: ChebyshevStencils<A>,
+    stencil: Stencil<A>,
 }
 
-impl<A: FloatNum> BaseSize for ChebyshevComposite<A> {
-    /// Size in physical space
+impl<A: Real> HasLength for ChebyshevComposite<A> {
     #[must_use]
     fn len_phys(&self) -> usize {
         self.n
     }
 
-    /// Size in spectral space
     #[must_use]
     fn len_spec(&self) -> usize {
         self.m
     }
 
-    /// Size of orthogonal space
     #[must_use]
-    fn len_orth(&self) -> usize {
-        self.ortho.len_orth()
+    fn len_ortho(&self) -> usize {
+        self.ortho.len_ortho()
     }
 }
 
-impl<A: FloatNum> BaseElements for ChebyshevComposite<A> {
-    /// Real valued scalar type
-    type RealNum = A;
-
-    /// Return kind of base
-    fn base_kind(&self) -> BaseKind {
-        match self.stencil {
-            ChebyshevStencils::Dirichlet(_) => BaseKind::ChebDirichlet,
-            ChebyshevStencils::Neumann(_) => BaseKind::ChebNeumann,
-            ChebyshevStencils::DirichletNeumann(_) => BaseKind::ChebDirichletNeumann,
-            ChebyshevStencils::BiHarmonicA(_) => BaseKind::ChebBiHarmonicA,
-            ChebyshevStencils::BiHarmonicB(_) => BaseKind::ChebBiHarmonicB,
-        }
-    }
-
-    /// Return kind of transform
-    fn transform_kind(&self) -> TransformKind {
-        TransformKind::R2r
-    }
-
-    /// Coordinates in physical space
-    fn coords(&self) -> Vec<A> {
-        Chebyshev::nodes(self.len_phys())
-    }
-}
-
-impl<A: FloatNum> BaseMatOpDiffmat for ChebyshevComposite<A> {
-    /// Scalar type of matrix
-    type NumType = A;
-
-    /// Explicit differential operator $ D $
-    ///
-    /// Matrix-based version of [`BaseGradient::gradient()`]
-    fn diffmat(&self, deriv: usize) -> Array2<Self::NumType> {
-        self.ortho.diffmat(deriv)
-    }
-
-    /// Explicit inverse of differential operator $ D^* $
-    ///
-    /// Returns ``(D_pinv, I_pinv)``, where `D_pinv` is the pseudoinverse
-    /// and ``I_pinv`` the corresponding pseudoidentity matrix, such
-    /// that
-    ///
-    /// ```text
-    /// D_pinv @ D = I_pinv
-    /// ```
-    ///
-    /// Can be used as a preconditioner.
-    fn diffmat_pinv(&self, deriv: usize) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
-        self.ortho.diffmat_pinv(deriv)
-    }
-}
-
-impl<A: FloatNum> BaseMatOpStencil for ChebyshevComposite<A> {
-    /// Scalar type of matrix
-    type NumType = A;
-
-    /// Transformation stencil composite -> orthogonal space
-    fn stencil(&self) -> Array2<Self::NumType> {
-        self.stencil.to_array()
-    }
-
-    /// Inverse of transformation stencil
-    fn stencil_inv(&self) -> Array2<Self::NumType> {
-        self.stencil.pinv()
-    }
-}
-
-impl<A: FloatNum> BaseMatOpLaplacian for ChebyshevComposite<A> {
-    /// Scalar type of laplacian matrix
-    type NumType = A;
-
-    /// Laplacian $ L $
-    fn laplacian(&self) -> Array2<Self::NumType> {
-        self.diffmat(2)
-    }
-
-    /// Pseudoinverse matrix of Laplacian $ L^{-1} $
-    ///
-    /// Returns pseudoinverse and pseudoidentity,i.e
-    /// ``(D_pinv, I_pinv)``
-    ///
-    /// ```text
-    /// D_pinv @ D = I_pinv
-    /// ``
-    fn laplacian_pinv(&self) -> (Array2<Self::NumType>, Array2<Self::NumType>) {
-        self.diffmat_pinv(2)
-    }
-}
-
-impl<A, T> BaseFromOrtho<T> for ChebyshevComposite<A>
-where
-    A: FloatNum,
-    T: ScalarNum
-        + Add<A, Output = T>
-        + Mul<A, Output = T>
-        + Div<A, Output = T>
-        + Sub<A, Output = T>,
-{
-    /// Composite space coefficients -> Orthogonal space coefficients
-    fn to_ortho_slice(&self, indata: &[T], outdata: &mut [T]) {
-        self.stencil.dot_inplace(indata, outdata);
-    }
-
-    /// Orthogonal space coefficients -> Composite space coefficients
-    fn from_ortho_slice(&self, indata: &[T], outdata: &mut [T]) {
-        self.stencil.solve_inplace(indata, outdata);
-    }
-}
-
-impl<A, T> BaseGradient<T> for ChebyshevComposite<A>
-where
-    A: FloatNum,
-    T: ScalarNum
-        + Add<A, Output = T>
-        + Mul<A, Output = T>
-        + Div<A, Output = T>
-        + Sub<A, Output = T>,
-{
-    fn gradient_slice(&self, indata: &[T], outdata: &mut [T], n_times: usize) {
-        let mut scratch: Vec<T> = vec![T::zero(); self.len_orth()];
-        self.to_ortho_slice(indata, &mut scratch);
-        self.ortho.gradient_slice(&scratch, outdata, n_times);
-    }
-}
-
-impl<A: FloatNum> ChebyshevComposite<A> {
+impl<A: Real> ChebyshevComposite<A> {
     /// Return function space of chebyshev space
     /// with *dirichlet* boundary conditions
     /// ```text
@@ -186,11 +49,10 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     /// Stencil has entries on diagonals 0, -2
     #[must_use]
     pub fn dirichlet(n: usize) -> Self {
-        let stencil = Dirichlet::new(n);
         Self {
             n,
-            m: Dirichlet::<A>::get_m(n),
-            stencil: ChebyshevStencils::Dirichlet(stencil),
+            m: n - 2,
+            stencil: Stencil::dirichlet(n),
             ortho: Chebyshev::<A>::new(n),
         }
     }
@@ -208,11 +70,10 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     /// Stencil has entries on diagonals 0, -2
     #[must_use]
     pub fn neumann(n: usize) -> Self {
-        let stencil = Neumann::new(n);
         Self {
             n,
-            m: Neumann::<A>::get_m(n),
-            stencil: ChebyshevStencils::Neumann(stencil),
+            m: n - 2,
+            stencil: Stencil::neumann(n),
             ortho: Chebyshev::<A>::new(n),
         }
     }
@@ -228,11 +89,10 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     /// Stencil has entries on diagonals 0, -1, -2
     #[must_use]
     pub fn dirichlet_neumann(n: usize) -> Self {
-        let stencil = DirichletNeumann::new(n);
         Self {
             n,
-            m: DirichletNeumann::<A>::get_m(n),
-            stencil: ChebyshevStencils::DirichletNeumann(stencil),
+            m: n - 2,
+            stencil: Stencil::dirichlet_neumann(n),
             ortho: Chebyshev::<A>::new(n),
         }
     }
@@ -247,11 +107,10 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     /// Stencil has entries on diagonals 0, -2, -4
     #[must_use]
     pub fn biharmonic_a(n: usize) -> Self {
-        let stencil = BiHarmonicA::new(n);
         Self {
             n,
-            m: BiHarmonicA::<A>::get_m(n),
-            stencil: ChebyshevStencils::BiHarmonicA(stencil),
+            m: n - 4,
+            stencil: Stencil::biharmonic_a(n),
             ortho: Chebyshev::<A>::new(n),
         }
     }
@@ -266,31 +125,84 @@ impl<A: FloatNum> ChebyshevComposite<A> {
     /// Stencil has entries on diagonals 0, -2, -4
     #[must_use]
     pub fn biharmonic_b(n: usize) -> Self {
-        let stencil = BiHarmonicB::new(n);
         Self {
             n,
-            m: BiHarmonicB::<A>::get_m(n),
-            stencil: ChebyshevStencils::BiHarmonicB(stencil),
+            m: n - 4,
+            stencil: Stencil::biharmonic_b(n),
             ortho: Chebyshev::<A>::new(n),
         }
     }
 }
 
-impl<A: FloatNum + ScalarNum> BaseTransform for ChebyshevComposite<A> {
+impl<A: Real> HasCoords<A> for ChebyshevComposite<A> {
+    /// Chebyshev nodes of the second kind on intervall $[-1, 1]$
+    /// $$$
+    /// x = - cos( pi*k/(npts - 1) )
+    /// $$$
+    fn coords(&self) -> Vec<A> {
+        self.ortho.coords()
+    }
+}
+
+impl<A: Real> HasType for ChebyshevComposite<A> {
+    fn base_kind(&self) -> BaseKind {
+        match self.stencil.get_kind() {
+            StencilKind::Dirichlet => BaseKind::ChebDirichlet,
+            StencilKind::Neumann => BaseKind::ChebNeumann,
+            StencilKind::DirichletNeumann => BaseKind::ChebDirichletNeumann,
+            StencilKind::BiHarmonicA => BaseKind::ChebBiHarmonicA,
+            StencilKind::BiHarmonicB => BaseKind::ChebBiHarmonicB,
+        }
+    }
+
+    fn base_type(&self) -> BaseType {
+        BaseType::Composite
+    }
+
+    fn transform_kind(&self) -> TransformKind {
+        TransformKind::R2r
+    }
+}
+
+impl<A, T> ToOrtho<T> for ChebyshevComposite<A>
+where
+    A: Real,
+    T: ScalarOperand<A>,
+{
+    fn to_ortho(&self, comp: &[T], ortho: &mut [T]) {
+        self.stencil.matvec(comp, ortho);
+    }
+
+    fn from_ortho(&self, ortho: &[T], comp: &mut [T]) {
+        self.stencil.solve(ortho, comp);
+    }
+}
+
+impl<A, T> Differentiate<T> for ChebyshevComposite<A>
+where
+    A: Real,
+    T: ScalarOperand<A>,
+{
+    fn diff(&self, v: &[T], dv: &mut [T], order: usize) {
+        self.to_ortho(v, dv);
+        self.ortho.diff_inplace(dv, order);
+    }
+}
+
+impl<A: Real + Scalar> Transform for ChebyshevComposite<A> {
     type Physical = A;
 
     type Spectral = A;
 
-    fn forward_slice(&self, indata: &[Self::Physical], outdata: &mut [Self::Spectral]) {
-        let mut scratch: Vec<Self::Spectral> = vec![Self::Spectral::zero(); self.len_orth()];
-        self.ortho.forward_slice(indata, &mut scratch);
-        self.from_ortho_slice(&scratch, outdata);
+    fn forward(&self, phys: &[Self::Physical], spec: &mut [Self::Spectral]) {
+        let mut scratch = vec![Self::Spectral::zero(); self.len_ortho()];
+        self.ortho.forward(phys, &mut scratch);
+        self.from_ortho(&scratch, spec);
     }
 
-    fn backward_slice(&self, indata: &[Self::Spectral], outdata: &mut [Self::Physical]) {
-        let mut scratch: Vec<Self::Spectral> = vec![Self::Spectral::zero(); self.len_orth()];
-        self.to_ortho_slice(indata, &mut scratch);
-        self.ortho.backward_slice(&scratch, outdata);
+    fn backward(&self, spec: &[Self::Spectral], phys: &mut [Self::Physical]) {
+        self.to_ortho(spec, phys);
+        self.ortho.backward_inplace(phys);
     }
 }
 
@@ -300,31 +212,44 @@ impl<A: FloatNum + ScalarNum> BaseTransform for ChebyshevComposite<A> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::utils::{approx_eq, approx_eq_ndarray};
-    use ndarray::{array, Array2};
+    use crate::utils::approx_eq;
 
     #[test]
-    fn test_cheb_dirichlet_transform() {
+    fn test_ch_dir_transform() {
         let ch = ChebyshevComposite::<f64>::dirichlet(6);
-        let mut indata: Vec<f64> = (0..ch.len_phys()).map(|x| x as f64).collect();
-        let mut outdata: Vec<f64> = vec![0.; ch.len_spec()];
-        ch.forward_slice(&indata, &mut outdata);
+        let mut v: Vec<f64> = (0..ch.len_phys()).map(|x| x as f64).collect();
+        let mut vhat: Vec<f64> = vec![0.; ch.len_spec()];
+        ch.forward(&v, &mut vhat);
         approx_eq(
-            &outdata,
+            &vhat,
             &vec![1.666666, 1.2610938576665822, 0.8333334, 0.7333334],
         );
-        ch.backward_slice(&outdata, &mut indata);
-        approx_eq(&indata, &vec![0.0, 0.166666, 2., 2.166666, 4., 0.]);
+        ch.backward(&vhat, &mut v);
+        approx_eq(&v, &vec![0.0, 0.166666, 2., 2.166666, 4., 0.]);
     }
 
     #[test]
-    fn test_cheb_dirichlet_neumann_transform() {
-        let ch = ChebyshevComposite::<f64>::dirichlet_neumann(6);
-        let mut indata: Vec<f64> = (0..ch.len_phys()).map(|x| x as f64).collect();
-        let mut outdata: Vec<f64> = vec![0.; ch.len_spec()];
-        ch.forward_slice(&indata, &mut outdata);
+    fn test_ch_dir_diff() {
+        let ch = ChebyshevComposite::<f64>::dirichlet(6);
+        let v: Vec<f64> = (0..ch.len_phys()).map(|x| x as f64).collect();
+        let mut vhat: Vec<f64> = vec![0.; ch.len_spec()];
+        let mut dvhat: Vec<f64> = vec![0.; ch.len_ortho()];
+        ch.forward(&v, &mut vhat);
+        ch.diff(&vhat, &mut dvhat, 2);
         approx_eq(
-            &outdata,
+            &dvhat,
+            &vec![-30.0, -100.66625258399796, -40.0, -58.6666, 0.0, 0.0],
+        );
+    }
+
+    #[test]
+    fn test_ch_dir_neu_transform() {
+        let ch = ChebyshevComposite::<f64>::dirichlet_neumann(6);
+        let mut v: Vec<f64> = (0..ch.len_phys()).map(|x| x as f64).collect();
+        let mut vhat: Vec<f64> = vec![0.; ch.len_spec()];
+        ch.forward(&v, &mut vhat);
+        approx_eq(
+            &vhat,
             &vec![
                 2.480497656739244,
                 0.12173047156497377,
@@ -332,9 +257,9 @@ mod test {
                 0.12385458652875704,
             ],
         );
-        ch.backward_slice(&outdata, &mut indata);
+        ch.backward(&vhat, &mut v);
         approx_eq(
-            &indata,
+            &v,
             &vec![
                 0.,
                 0.8809270232753428,
@@ -347,14 +272,14 @@ mod test {
     }
 
     #[test]
-    fn test_cheb_biharmonic_a_transform() {
+    fn test_ch_biharm_a_transform() {
         let n = 14;
         let ch = ChebyshevComposite::<f64>::biharmonic_a(n);
-        let indata: Vec<f64> = (0..n).map(|x| x as f64).collect();
-        let mut outdata: Vec<f64> = vec![0.; n - 4];
-        ch.forward_slice(&indata, &mut outdata);
+        let v: Vec<f64> = (0..n).map(|x| x as f64).collect();
+        let mut vhat: Vec<f64> = vec![0.; n - 4];
+        ch.forward(&v, &mut vhat);
         approx_eq(
-            &outdata,
+            &vhat,
             &vec![
                 4.56547619, 3.33647046, 4.23015873, 3.78717098, 3.62142857, 3.31016028, 2.43197279,
                 2.21938133, 1.04034392, 0.9391508,
@@ -363,112 +288,18 @@ mod test {
     }
 
     #[test]
-    fn test_cheb_biharmonic_b_transform() {
+    fn test_ch_biharm_b_transform() {
         let n = 14;
         let ch = ChebyshevComposite::<f64>::biharmonic_b(n);
-        let indata: Vec<f64> = (0..n).map(|x| x as f64).collect();
-        let mut outdata: Vec<f64> = vec![0.; n - 4];
-        ch.forward_slice(&indata, &mut outdata);
+        let v: Vec<f64> = (0..n).map(|x| x as f64).collect();
+        let mut vhat: Vec<f64> = vec![0.; n - 4];
+        ch.forward(&v, &mut vhat);
         approx_eq(
-            &outdata,
+            &vhat,
             &vec![
                 5.08540138, 3.86188728, 3.9395884, 3.57256415, 3.16060956, 2.96883245, 2.14734963,
                 2.0152583, 0.96481296, 0.89163043,
             ],
         );
-    }
-
-    #[test]
-    /// Differantiate 2d array along first and second axis
-    fn test_cheb_dirichlet_to_ortho() {
-        let (nx, ny) = (5, 4);
-        let mut composite_coeff = Array2::<f64>::zeros((nx - 2, ny));
-        let mut orthonorm_coeff = Array2::<f64>::zeros((nx, ny));
-
-        // Axis 0
-        let cheby = ChebyshevComposite::<f64>::dirichlet(nx);
-        for (i, v) in composite_coeff.iter_mut().enumerate() {
-            *v = i as f64;
-        }
-        let expected = array![
-            [0., 1., 2., 3.],
-            [4., 5., 6., 7.],
-            [8., 8., 8., 8.],
-            [-4., -5., -6., -7.],
-            [-8., -9., -10., -11.],
-        ];
-        cheby.to_ortho_inplace(&composite_coeff, &mut orthonorm_coeff, 0);
-        approx_eq_ndarray(&orthonorm_coeff, &expected);
-
-        // Axis 1
-        let mut composite_coeff = Array2::<f64>::zeros((nx, ny - 2));
-        let cheby = ChebyshevComposite::<f64>::dirichlet(ny);
-        for (i, v) in composite_coeff.iter_mut().enumerate() {
-            *v = i as f64;
-        }
-        let expected = array![
-            [0., 1., 0., -1.],
-            [2., 3., -2., -3.],
-            [4., 5., -4., -5.],
-            [6., 7., -6., -7.],
-            [8., 9., -8., -9.],
-        ];
-        cheby.to_ortho_inplace(&composite_coeff, &mut orthonorm_coeff, 1);
-        approx_eq_ndarray(&orthonorm_coeff, &expected);
-    }
-
-    #[test]
-    fn test_chebdirichlet_differentiate() {
-        let ch = ChebyshevComposite::<f64>::dirichlet(6);
-        let indata: Vec<f64> = (0..ch.len_phys()).map(|x| x as f64).collect();
-        let mut outdata: Vec<f64> = vec![0.; ch.len_spec()];
-        let mut deriv: Vec<f64> = vec![0.; ch.len_orth()];
-        ch.forward_slice(&indata, &mut outdata);
-        ch.gradient_slice(&outdata, &mut deriv, 2);
-        approx_eq(
-            &deriv,
-            &vec![-30.0, -100.66625258399796, -40.0, -58.6666, 0.0, 0.0],
-        );
-    }
-
-    #[test]
-    /// Differantiate ChebDirichlet (2d array) twice along first and second axis
-    fn test_chebdirichlet_differentiate_2d() {
-        let (nx, ny) = (6, 4);
-        let mut data = Array2::<f64>::zeros((nx, ny));
-
-        // Axis 0
-        let cheby = ChebyshevComposite::<f64>::dirichlet(nx + 2);
-        for (i, v) in data.iter_mut().enumerate() {
-            *v = i as f64;
-        }
-        let expected = array![
-            [-1440.0, -1548.0, -1656.0, -1764.0],
-            [-5568.0, -5904.0, -6240.0, -6576.0],
-            [-2688.0, -2880.0, -3072.0, -3264.0],
-            [-4960.0, -5240.0, -5520.0, -5800.0],
-            [-1920.0, -2040.0, -2160.0, -2280.0],
-            [-3360.0, -3528.0, -3696.0, -3864.0],
-            [0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0],
-        ];
-        let diff = cheby.gradient(&data, 2, 0);
-        approx_eq_ndarray(&diff, &expected);
-
-        // Axis 1
-        let cheby = ChebyshevComposite::<f64>::dirichlet(ny + 2);
-        for (i, v) in data.iter_mut().enumerate() {
-            *v = i as f64;
-        }
-        let expected = array![
-            [-56.0, -312.0, -96.0, -240.0, 0.0, 0.0],
-            [-184.0, -792.0, -288.0, -560.0, 0.0, 0.0],
-            [-312.0, -1272.0, -480.0, -880.0, 0.0, 0.0],
-            [-440.0, -1752.0, -672.0, -1200.0, 0.0, 0.0],
-            [-568.0, -2232.0, -864.0, -1520.0, 0.0, 0.0],
-            [-696.0, -2712.0, -1056.0, -1840.0, 0.0, 0.0],
-        ];
-        let diff = cheby.gradient(&data, 2, 1);
-        approx_eq_ndarray(&diff, &expected);
     }
 }

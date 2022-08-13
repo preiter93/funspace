@@ -193,55 +193,55 @@ where
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ndarray::{Array1, Array2};
-    #[test]
-    /// A x = b
-    fn test_pdma() {
-        let n = 8;
-        let b = (1..n + 1).map(|x| x as f64).collect::<Vec<f64>>();
-        // Diagonals (randomly chosen)
-        let l2 = (1..n - 1).map(|x| 1.5 * x as f64).collect::<Vec<f64>>();
-        let l1 = (1..n).map(|x| -2.5 * x as f64).collect::<Vec<f64>>();
-        let d0 = (1..n + 1).map(|x| 1.0 * x as f64).collect::<Vec<f64>>();
-        let u1 = (1..n).map(|x| 3.5 * x as f64).collect::<Vec<f64>>();
-        let u2 = (1..n - 1).map(|x| -0.5 * x as f64).collect::<Vec<f64>>();
-        // Fill diagonals in matrix, used for assertion of result
-        let mut mat = Array2::<f64>::zeros((n, n));
-        for i in 0..n {
-            mat[[i, i]] = d0[i];
-        }
-        for i in 0..n - 1 {
-            mat[[i + 1, i]] = l1[i];
-        }
-        for i in 0..n - 2 {
-            mat[[i + 2, i]] = l2[i];
-        }
-        for i in 0..n - 1 {
-            mat[[i, i + 1]] = u1[i];
-        }
-        for i in 0..n - 2 {
-            mat[[i, i + 2]] = u2[i];
-        }
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use ndarray::{Array1, Array2};
+//     #[test]
+//     /// A x = b
+//     fn test_pdma() {
+//         let n = 8;
+//         let b = (1..n + 1).map(|x| x as f64).collect::<Vec<f64>>();
+//         // Diagonals (randomly chosen)
+//         let l2 = (1..n - 1).map(|x| 1.5 * x as f64).collect::<Vec<f64>>();
+//         let l1 = (1..n).map(|x| -2.5 * x as f64).collect::<Vec<f64>>();
+//         let d0 = (1..n + 1).map(|x| 1.0 * x as f64).collect::<Vec<f64>>();
+//         let u1 = (1..n).map(|x| 3.5 * x as f64).collect::<Vec<f64>>();
+//         let u2 = (1..n - 1).map(|x| -0.5 * x as f64).collect::<Vec<f64>>();
+//         // Fill diagonals in matrix, used for assertion of result
+//         let mut mat = Array2::<f64>::zeros((n, n));
+//         for i in 0..n {
+//             mat[[i, i]] = d0[i];
+//         }
+//         for i in 0..n - 1 {
+//             mat[[i + 1, i]] = l1[i];
+//         }
+//         for i in 0..n - 2 {
+//             mat[[i + 2, i]] = l2[i];
+//         }
+//         for i in 0..n - 1 {
+//             mat[[i, i + 1]] = u1[i];
+//         }
+//         for i in 0..n - 2 {
+//             mat[[i, i + 2]] = u2[i];
+//         }
 
-        // Solve
-        let mut rhs = b.clone();
-        pdma(&l2, &l1, &d0, &u1, &u2, &mut rhs);
-        // Assert
-        let b2 = mat.dot(&Array1::from_vec(rhs));
-        for (v1, v2) in b.iter().zip(b2.iter()) {
-            assert!((v1 - v2).abs() < 1e-6, "PDMA failed, {} /= {}.", v1, v2);
-        }
+//         // Solve
+//         let mut rhs = b.clone();
+//         pdma(&l2, &l1, &d0, &u1, &u2, &mut rhs);
+//         // Assert
+//         let b2 = mat.dot(&Array1::from_vec(rhs));
+//         for (v1, v2) in b.iter().zip(b2.iter()) {
+//             assert!((v1 - v2).abs() < 1e-6, "PDMA failed, {} /= {}.", v1, v2);
+//         }
 
-        // Solve checked
-        let mut rhs = b.clone();
-        pdma_checked(&l2, &l1, &d0, &u1, &u2, &mut rhs);
-        // Assert
-        let b2 = mat.dot(&Array1::from_vec(rhs));
-        for (v1, v2) in b.iter().zip(b2.iter()) {
-            assert!((v1 - v2).abs() < 1e-6, "PDMA failed, {} /= {}.", v1, v2);
-        }
-    }
-}
+//         // Solve checked
+//         let mut rhs = b.clone();
+//         pdma_checked(&l2, &l1, &d0, &u1, &u2, &mut rhs);
+//         // Assert
+//         let b2 = mat.dot(&Array1::from_vec(rhs));
+//         for (v1, v2) in b.iter().zip(b2.iter()) {
+//             assert!((v1 - v2).abs() < 1e-6, "PDMA failed, {} /= {}.", v1, v2);
+//         }
+//     }
+// }
