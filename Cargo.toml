@@ -1,6 +1,6 @@
 [package]
 name = "funspace"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["preiter"]
 edition = "2018"
 description = "N-dimensional function spaces and transforms"
@@ -12,7 +12,7 @@ license = "MIT"
 [dependencies]
 num-traits = "0.2"
 num-complex = "0.4"
-ndarray = { version = "0.15", features = ["rayon"] }
+ndarray = { version = "0.17", features = ["rayon"] }
 enum_dispatch = "0.3"
 rustfft = "6.0"
 rustdct = "0.7"
@@ -20,7 +20,7 @@ realfft = "3.0"
 mpi_crate = {package="mpi-fork-fnsp", version = "0.6", optional = true}
 
 [dev-dependencies]
-criterion = { version = "0.3", features = ["html_reports"] }
+criterion = { version = "0.8", features = ["html_reports"] }
 
 [[bench]]
 name = "benchmark_chebyshev"

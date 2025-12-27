@@ -113,7 +113,8 @@ where
         match kind {
             BaseKind::Chebyshev => {
                 let (mut pinv, peye) = self.space.laplacian_pinv(axis);
-                pinv.assign(&peye.dot(&pinv));
+                let tmp = peye.dot(&pinv);
+                pinv.assign(&tmp);
                 let sten_sliced = sten.slice(s![.., 2..]);
                 (pinv.dot(&sten_sliced), peye.dot(&sten_sliced), Some(pinv))
             }
@@ -123,7 +124,8 @@ where
             | BaseKind::ChebBiHarmonicA
             | BaseKind::ChebBiHarmonicB => {
                 let (mut pinv, peye) = self.space.laplacian_pinv(axis);
-                pinv.assign(&peye.dot(&pinv));
+                let tmp = peye.dot(&pinv);
+                pinv.assign(&tmp);
                 (pinv.dot(&sten), peye.dot(&sten), Some(pinv))
             }
             BaseKind::FourierR2c | BaseKind::FourierC2c => (sten, lap, None),

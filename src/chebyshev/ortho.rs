@@ -249,19 +249,16 @@ impl<A: FloatNum> Chebyshev<A> {
 
 impl<A: FloatNum> BaseSize for Chebyshev<A> {
     /// Size in physical space
-    #[must_use]
     fn len_phys(&self) -> usize {
         self.n
     }
 
     /// Size in spectral space
-    #[must_use]
     fn len_spec(&self) -> usize {
         self.m
     }
 
     /// Size of orthogonal space
-    #[must_use]
     fn len_orth(&self) -> usize {
         self.m
     }
